@@ -1397,7 +1397,7 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
   'use strict';
 
   var API = 'https://api.bilibili.com';
-  var DEF_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36';
+  var DEF_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36';
 
   function $(id) { return document.getElementById(id); }
   function setVal(id, v){ var e=$(id); if(e) e.value=v; }
@@ -1457,13 +1457,47 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
     };
   })();
 
+  /* ---------- 设备指纹（buvid3/4） ----------
+     B 站现在对没带 buvid3 的请求做风控，尤其是没登录、走默认 UA 的这种
+     三方前端，一大批接口（尤其是 /x/player/wbi/playurl）直接给 412，
+     不是账号或视频的问题，是请求"看起来不像真实设备"。
+     开局先跟 finger/spi 换一份 buvid3/4，塞进 Cookie 里，风控就基本认了。
+     缓存 12 小时，换页/翻页不用每次都现要。 */
+  var buvidCache = { val: '', ts: 0 };
+  var buvidPromise = null;
+  function ensureBuvid() {
+    if (buvidCache.val && (Date.now() - buvidCache.ts) < 12 * 3600 * 1000) return Promise.resolve(buvidCache.val);
+    if (buvidPromise) return buvidPromise;
+    buvidPromise = (async function () {
+      try {
+        var j = await req('https://api.bilibili.com/x/frontend/finger/spi', { responseType: 'json', timeout: 10, _skipBuvid: true });
+        var d = j && j.data;
+        var parts = [];
+        if (d && d.b_3) parts.push('buvid3=' + d.b_3);
+        if (d && d.b_4) parts.push('buvid4=' + d.b_4);
+        buvidCache = { val: parts.join('; '), ts: Date.now() };
+      } catch (e) { /* 拿不到就算了，不阻塞正常请求——大不了还是 412，但不能因为这个卡住 */ }
+      buvidPromise = null;
+      return buvidCache.val;
+    })();
+    return buvidPromise;
+  }
+
   /* ---------- 网络：走 Native ---------- */
   async function req(url, opt) {
     opt = opt || {};
     var headers = opt.headers || {};
     if (!headers['User-Agent']) headers['User-Agent'] = prefs.ua;
     if (!headers.Referer) headers.Referer = 'https://www.bilibili.com/';
-    if (prefs.cookie && !headers.Cookie) headers.Cookie = prefs.cookie;
+    if (!headers.Cookie) {
+      var cookieParts = [];
+      if (prefs.cookie) cookieParts.push(prefs.cookie.replace(/;\s*$/, ''));
+      if (!opt._skipBuvid) {
+        var buvid = await ensureBuvid();
+        if (buvid) cookieParts.push(buvid);
+      }
+      if (cookieParts.length) headers.Cookie = cookieParts.join('; ');
+    }
 
     var wantJson = opt.responseType === 'json';
     var body;
@@ -1546,7 +1580,10 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
     return json;
   }
 
-  window.__bili = { md5: md5, wbiSign: wbiSign, req: req, apiWbi: apiWbi, prefs: prefs };
+  window.__bili = { md5: md5, wbiSign: wbiSign, req: req, apiWbi: apiWbi, prefs: prefs, ensureBuvid: ensureBuvid,
+    clearWbi: function(){ wbiCache = { key: '', ts: 0 }; },
+    clearBuvid: function(){ buvidCache = { val: '', ts: 0 }; buvidPromise = null; }
+  };
   window.__biliReq = req;
 })();
 </script>
@@ -1979,7 +2016,9 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
       var upos=cands.filter(isUpos);
       if(upos.length) return upos[0];
       var good=cands.filter(function(u){ return !isPcdn(u); });
-      return (good[0]||cands[0]);
+      if(good.length) return good[0];
+      // 实在没有干净 CDN，仍返回第一个，避免整条流直接空
+      return cands[0];
     }
     function esc(t){ return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
     function seg(f){ var sb=f.SegmentBase||f.segment_base||{}; var idx=sb.indexRange||sb.index_range||'0-0'; var ini=sb.Initialization||sb.initialization||'0-0'; return '<SegmentBase indexRange="'+idx+'"><Initialization range="'+ini+'"/></SegmentBase>'; }
@@ -2415,11 +2454,30 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
     }
     if(!cid) throw new Error('拿不到 cid');
 
-    var p={ cid:cid, qn:prefs.quality, fnval:4048, fnver:0, fourk:1 };
+    // platform=pc + try_look=1（未登录时）可显著降低个别视频 -412 / 空流概率
+    var p={ cid:cid, qn:prefs.quality, fnval:4048, fnver:0, fourk:1, platform:'pc', otype:'json' };
     if(item.bvid) p.bvid=item.bvid; else p.avid=item.aid;
-    var j=await apiWbi('/x/player/wbi/playurl', p);
+    if(!prefs.cookie) p.try_look=1;
+
+    var j, attempt=0, lastErr;
+    while(attempt<2){
+      attempt++;
+      try{
+        j=await apiWbi('/x/player/wbi/playurl', p);
+        if(j && j.code===-412){
+          // 风控：清一次 WBI / buvid 缓存再重试
+          if(window.__bili){ try{ window.__bili.clearWbi&&window.__bili.clearWbi(); window.__bili.clearBuvid&&window.__bili.clearBuvid(); }catch(e){} }
+          lastErr=new Error('风控 -412，重试中');
+          continue;
+        }
+        break;
+      }catch(e){
+        lastErr=e;
+        if(attempt>=2) throw e;
+      }
+    }
     var d=j&&j.data;
-    if(!d){ throw new Error((j&&j.message)||'playurl 失败'); }
+    if(!d){ throw new Error((j&&j.message)||(lastErr&&lastErr.message)||'playurl 失败'); }
     if(d.dash&&!d.dash.duration&&item._dur) d.dash.duration=item._dur;
     return { dash:d.dash, durl:(d.durl&&d.durl[0]&&d.durl[0].url), needLogin:(prefs.quality>=80), needVip:(prefs.quality>=112) };
   }
@@ -2776,9 +2834,10 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
     if(native&&fm.ui&&fm.ui.setChrome){ try{ fm.ui.setChrome({mode:'edge',statusBarStyle:'light',startup:true})['catch'](function(){}); }catch(e){} }
     load(true);
 
-    // 后台预热 WBI key（缓存 1 小时）。不预热的话，第一次起播要现取一次 nav，
-    // 又是一个往返。这里不 await，不挡首屏。
+    // 后台预热 WBI key（缓存 1 小时）+ buvid3/4 设备指纹（缓存 12 小时）。
+    // 不预热的话，第一次起播要现取，又是一到两个往返。这里不 await，不挡首屏。
     try { B.wbiSign({}); } catch(e) {}
+    try { B.ensureBuvid(); } catch(e) {}
   }
 
   if(window.fm&&window.fm.req) boot();

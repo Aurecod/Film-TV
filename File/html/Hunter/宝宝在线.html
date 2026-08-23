@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=5.0,user-scalable=yes">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>宝宝巴士主页</title>
+<style>
+:root {
+  --columns: 3;
+  --gap: 14px;
+  --body-padding: 16px;
+  --card-radius: 12px;
+  --btn-font-size: 13px;
+  --input-padding: 10px 16px;
+  --input-font-size: 14px;
+  --title-size: 13px;
+  --domain-size: 10px;
+  --tag-size: 9px;
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  background:linear-gradient(135deg,#0f2b1d,#1a3c2e,#153026);
+  min-height:100vh;
+  color:#e0e0e0;
+  padding:var(--body-padding);
+  -webkit-tap-highlight-color:transparent;
+}
+h1{
+  text-align:center;
+  font-size:22px;
+  color:#a7f3d0;
+  margin:8px 0 14px;
+  letter-spacing:2px;
+}
+.top-bar{
+  max-width:1200px;
+  margin:0 auto 16px;
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  align-items:center;
+}
+.search-box{flex:1;min-width:160px;position:relative;}
+.search-box input{
+  width:100%;
+  padding:var(--input-padding);
+  border-radius:25px;
+  border:1px solid rgba(167,243,208,0.15);
+  background:rgba(255,255,255,0.06);
+  color:#fff;
+  font-size:var(--input-font-size);
+  outline:none;
+  backdrop-filter:blur(10px);
+  -webkit-appearance:none;
+}
+.search-box input::placeholder{color:rgba(255,255,255,0.35);}
+.search-box input:focus{border-color:rgba(167,243,208,0.5);box-shadow:0 0 20px rgba(167,243,208,0.15);}
+
+.action-btn{
+  padding:9px 15px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,0.1);
+  background:rgba(255,255,255,0.06);
+  color:#a7f3d0;
+  cursor:pointer;
+  font-size:var(--btn-font-size);
+  white-space:nowrap;
+  transition:all 0.2s;
+  backdrop-filter:blur(10px);
+  -webkit-tap-highlight-color:transparent;
+  user-select:none;
+  -webkit-user-select:none;
+}
+.action-btn:hover,.action-btn:active{background:rgba(167,243,208,0.15);border-color:rgba(167,243,208,0.3);}
+.action-btn.active{background:rgba(239,68,68,0.25);color:#fca5a5;border-color:rgba(239,68,68,0.35);}
+
+/* ===== 卡片网格 ===== */
+.card-grid{
+  max-width:1200px;
+  margin:0 auto;
+  display:grid;
+  grid-template-columns:repeat(var(--columns),1fr);
+  gap:var(--gap);
+  padding-bottom:80px;
+}
+
+/* ===== 单个卡片 ===== */
+.site-card{
+  position:relative;
+  border-radius:var(--card-radius);
+  overflow:hidden;
+  background:#0d1f17;
+  border:1px solid rgba(255,255,255,0.06);
+  transition:transform 0.25s,box-shadow 0.25s;
+  cursor:pointer;
+  text-decoration:none;
+  color:inherit;
+  display:block;
+}
+.site-card:hover{transform:translateY(-3px);box-shadow:0 12px 32px rgba(0,0,0,0.5);}
+.site-card:active{transform:scale(0.98);}
+
+/* 预览图区域 - 3:4 竖长比例（padding-bottom 兼容方案） */
+.card-preview{
+  position:relative;
+  width:100%;
+  height:0;
+  padding-bottom:133.33%; /* 4/3 = 133.33% */
+  overflow:hidden;
+  background:#111;
+}
+
+/* iframe 预览缩放 */
+.card-iframe-wrap{
+  position:absolute;
+  top:0;left:0;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  pointer-events:none;
+}
+.card-iframe-wrap iframe{
+  border:0;
+  transform-origin:0 0;
+  pointer-events:none;
+}
+
+/* 加载中占位 */
+.card-preview-loading{
+  position:absolute;
+  top:0;left:0;right:0;bottom:0;
+  display:flex;align-items:center;justify-content:center;
+  flex-direction:column;
+  background:#1a1a2e;
+  z-index:1;
+}
+.card-preview-loading .loader-text{
+  color:rgba(255,255,255,0.7);
+  font-size:13px;font-weight:600;
+  margin-bottom:8px;
+  text-align:center;padding:0 8px;
+}
+.card-preview-loading .loader-bar{
+  width:50px;height:3px;
+  background:rgba(255,255,255,0.1);
+  border-radius:2px;overflow:hidden;
+}
+.card-preview-loading .loader-bar::after{
+  content:'';display:block;
+  width:30%;height:100%;
+  background:rgba(167,243,208,0.6);
+  border-radius:2px;
+  animation:loaderSlide 1.2s ease-in-out infinite;
+}
+@keyframes loaderSlide{
+  0%{transform:translateX(-100%);}
+  100%{transform:translateX(350%);}
+}
+
+/* 预览图上的域名标签 */
+.card-domain-tag{
+  position:absolute;
+  bottom:8px;left:8px;
+  font-size:var(--tag-size);
+  color:#fff;
+  background:rgba(0,0,0,0.5);
+  padding:2px 8px;
+  border-radius:6px;
+  z-index:3;
+  max-width:calc(100% - 16px);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  backdrop-filter:blur(6px);
+}
+
+/* 删除按钮（编辑模式） */
+.card-delete{
+  display:none;
+  position:absolute;
+  top:8px;right:8px;
+  width:24px;height:24px;
+  border-radius:50%;
+  background:rgba(239,68,68,0.85);
+  color:#fff;
+  font-size:13px;
+  line-height:24px;
+  text-align:center;
+  cursor:pointer;
+  z-index:10;
+  border:none;
+  transition:transform 0.15s;
+}
+.card-delete:hover{transform:scale(1.15);}
+.edit-mode .card-delete{display:block;}
+
+/* 卡片底部信息 */
+.card-info{
+  padding:10px 10px 12px;
+}
+.card-title{
+  font-size:var(--title-size);
+  font-weight:600;
+  color:#fff;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  line-height:1.3;
+}
+.card-title .highlight{color:#fbbf24;font-weight:700;}
+.card-sub{
+  font-size:var(--domain-size);
+  color:rgba(255,255,255,0.4);
+  margin-top:3px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+/* 预览图加载失败回退（首字母 + 背景色） */
+.card-preview-fallback{
+  width:100%;height:100%;
+  display:flex;align-items:center;justify-content:center;
+  position:absolute;top:0;left:0;
+  z-index:1;
+}
+
+/* ===== 模态框 ===== */
+.modal-overlay{
+  display:none;position:fixed;top:0;left:0;width:100%;height:100%;
+  background:rgba(0,0,0,0.6);z-index:1000;
+  justify-content:center;align-items:center;
+  padding:16px;
+}
+.modal-overlay.show{display:flex;}
+.modal{
+  background:#14271e;
+  border-radius:16px;
+  padding:24px;
+  width:100%;
+  max-width:420px;
+  border:1px solid rgba(167,243,208,0.2);
+  max-height:90vh;
+  overflow-y:auto;
+}
+.modal h3{color:#a7f3d0;margin-bottom:16px;}
+.modal input,.modal textarea,.modal select{
+  width:100%;padding:10px 14px;border-radius:10px;
+  border:1px solid rgba(255,255,255,0.1);
+  background:rgba(255,255,255,0.06);color:#fff;
+  font-size:14px;margin-bottom:12px;outline:none;
+  -webkit-appearance:none;
+}
+.modal input:focus,.modal textarea:focus{border-color:rgba(167,243,208,0.4);}
+.modal textarea{min-height:80px;resize:vertical;font-family:monospace;font-size:12px;}
+.modal-btns{display:flex;gap:10px;justify-content:flex-end;margin-top:8px;}
+.modal-btns .btn-cancel{background:rgba(255,255,255,0.08);color:#aaa;}
+.modal-btns .btn-save{background:rgba(167,243,208,0.25);color:#fff;}
+.modal-btns .btn-save:hover{background:rgba(167,243,208,0.4);}
+.btn{
+  padding:8px 18px;border-radius:10px;border:none;
+  cursor:pointer;font-size:13px;transition:all 0.2s;
+}
+
+/* ===== Toast ===== */
+.toast{
+  position:fixed;bottom:30px;left:50%;transform:translateX(-50%);
+  background:rgba(167,243,208,0.85);color:#0d1f17;
+  padding:10px 24px;border-radius:20px;font-size:14px;
+  z-index:2000;opacity:0;transition:opacity 0.3s;
+  pointer-events:none;white-space:nowrap;max-width:90vw;
+  text-overflow:ellipsis;overflow:hidden;
+  font-weight:600;
+}
+.toast.show{opacity:1;}
+
+.back-top{
+  display:none;position:fixed;bottom:24px;right:24px;
+  width:42px;height:42px;border-radius:50%;
+  background:rgba(167,243,208,0.5);color:#0d1f17;
+  font-size:18px;cursor:pointer;
+  align-items:center;justify-content:center;
+  border:none;z-index:999;transition:all 0.3s;
+}
+.back-top:hover{background:rgba(167,243,208,0.7);}
+.back-top.show{display:flex;}
+
+.import-hint{color:rgba(255,255,255,0.45);font-size:11px;margin-bottom:8px;}
+
+/* ===== 响应式: 平板 (600px - 900px) ===== */
+@media screen and (max-width:900px) and (min-width:601px) {
+  :root {
+    --columns: 3;
+    --gap: 12px;
+    --body-padding: 14px;
+    --title-size: 12px;
+    --domain-size: 9px;
+  }
+}
+
+/* ===== 响应式: 手机 (<=600px) ===== */
+@media screen and (max-width:600px) {
+  :root {
+    --columns: 2;
+    --gap: 10px;
+    --body-padding: 10px;
+    --card-radius: 10px;
+    --btn-font-size: 11px;
+    --input-padding: 9px 14px;
+    --input-font-size: 13px;
+    --title-size: 12px;
+    --domain-size: 9px;
+  }
+
+  h1{font-size:19px;margin-bottom:10px;}
+  .top-bar{gap:6px;margin-bottom:12px;}
+  .action-btn{padding:8px 12px;min-height:38px;}
+  .card-info{padding:4px 6px 6px;}
+  .back-top{bottom:16px;right:16px;width:38px;height:38px;font-size:16px;}
+  .toast{bottom:80px;padding:8px 18px;font-size:12px;}
+  .modal{padding:20px 16px;border-radius:14px;max-width:92vw;}
+  .modal-btns{gap:8px;}
+  .modal-btns .btn{padding:10px 16px;font-size:13px;}
+}
+
+/* ===== 小屏手机 (<=380px) ===== */
+@media screen and (max-width:380px) {
+  :root {
+    --gap: 8px;
+    --body-padding: 8px;
+    --title-size: 11px;
+  }
+
+  h1{font-size:17px;}
+  .top-bar{flex-direction:column;gap:6px;}
+  .top-bar .action-btn{width:100%;justify-content:center;}
+  .search-box{min-width:100%;}
+  .search-box input{font-size:12px;padding:9px 12px;}
+}
+
+/* ===== 大屏 (>=1200px) ===== */
+@media screen and (min-width:1200px) {
+  :root {
+    --gap: 18px;
+    --body-padding: 24px;
+    --card-radius: 14px;
+  }
+}
+
+/* ===== 超大屏 (>=1600px) 四列 ===== */
+@media screen and (min-width:1600px) {
+  :root {--columns: 4;}
+}
+
+/* 暗色滚动条 */
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:rgba(255,255,255,0.03);border-radius:3px;}
+::-webkit-scrollbar-thumb{background:rgba(167,243,208,0.3);border-radius:3px;}
+::-webkit-scrollbar-thumb:hover{background:rgba(167,243,208,0.5);}
+</style>
+</head>
+<body>
+<h1>🧭 宝宝巴士</h1>
+<div class="top-bar">
+  <div class="search-box">
+    <input type="text" id="searchInput" placeholder="🔍 搜索网站..." inputmode="search" autocomplete="off">
+  </div>
+  <button class="action-btn" id="editBtn" onclick="toggleEdit()">✏️ 编辑</button>
+  <button class="action-btn" onclick="openImportModal()">📥 导入</button>
+</div>
+<div class="card-grid" id="cardGrid"></div>
+<button class="back-top" id="backTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="回到顶部">↑</button>
+
+<!-- 添加链接模态框 -->
+<div class="modal-overlay" id="addModal">
+  <div class="modal">
+    <h3>➕ 添加链接</h3>
+    <input id="addTitle" placeholder="网站名称" autocomplete="off">
+    <input id="addUrl" placeholder="网址 (https://...)" inputmode="url" autocomplete="off">
+    <div class="modal-btns">
+      <button class="btn btn-cancel" onclick="closeModal('addModal')">取消</button>
+      <button class="btn btn-save" onclick="saveLink()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 导入模态框 -->
+<div class="modal-overlay" id="importModal">
+  <div class="modal">
+    <h3>📥 导入书签</h3>
+    <p class="import-hint">支持 Netscape 书签 HTML 文件或将链接粘贴到下方文本框</p>
+    <input type="file" id="bookmarkFile" accept=".html,.htm" style="padding:8px;">
+    <textarea id="bookmarkText" placeholder="或直接粘贴书签HTML内容 / 每行一个URL"></textarea>
+    <div class="modal-btns">
+      <button class="btn btn-cancel" onclick="closeModal('importModal')">取消</button>
+      <button class="btn btn-save" onclick="doImport()">导入</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+var DEFAULT_BOOKMARKS = [
+  {
+    "name": "宝宝巴士",
+    "links": [
+      {"u":"https://vvee.ccwu.cc","t":"ECLIPSE","d":"vvee.ccwu.cc"},
+      {"u":"https://live-a3r.pages.dev","t":"直播聚合","d":"live-a3r.pages.dev"},
+      {"u":"https://nostr.aws.dpdns.org","t":"NOSTR移动端","d":"nostr.aws.dpdns.org"},
+      {"u":"https://wo26.vivas.cc.cd","t":"玩偶聚合26","d":"wo26.vivas.cc.cd"},
+      {"u":"https://wo.vivas.cc.cd","t":"玩偶聚合","d":"wo.vivas.cc.cd"},
+      {"u":"https://pomo.920410.xyz","t":"POMO","d":"pomo.920410.xyz"},
+      {"u":"https://cyber.920410.xyz","t":"塞博","d":"cyber.920410.xyz"},
+      {"u":"https://pl-d8z.pages.dev","t":"盘链","d":"pl-d8z.pages.dev"},
+      {"u":"https://q-16a.pages.dev","t":"QQ音乐","d":"q-16a.pages.dev"},
+      {"u":"https://av-9du.pages.dev","t":"VAVA","d":"av-9du.pages.dev"},
+      {"u":"https://bili-1k4.pages.dev","t":"B站","d":"bili-1k4.pages.dev"},
+      {"u":"https://yt-cas.pages.dev","t":"油管","d":"yt-cas.pages.dev"}
+    ]
+  }
+];
+
+var LINKS = [];
+var isEditMode = false;
+
+/* ===== 工具函数 ===== */
+function extractDomain(url) {
+  try { return new URL(url).hostname.replace(/^www\./, ''); } catch(e) {
+    return url.replace(/https?:\/\/(www\.)?/, '').split('/')[0];
+  }
+}
+function escapeHtml(s) {
+  var d = document.createElement('div'); d.textContent = s; return d.innerHTML;
+}
+
+/* ===== 渲染 ===== */
+
+var IFRAME_SIZE = 450; /* iframe 内部宽高（正方形），模拟小屏渲染 */
+
+function renderAll() {
+  var grid = document.getElementById('cardGrid');
+  var html = '';
+  LINKS.forEach(function(link, i) {
+    html += '<a class="site-card" href="' + escapeHtml(link.u) + '" target="_blank" rel="noopener" data-idx="' + i + '">';
+    /* 删除按钮 */
+    html += '<span class="card-delete" onclick="event.preventDefault();event.stopPropagation();deleteLink(' + i + ')">×</span>';
+    /* 封面: iframe 预览 */
+    html += '<div class="card-preview" id="preview-' + i + '">';
+    html += '<div class="card-preview-loading" id="loader-' + i + '">';
+    html += '<div class="loader-text">' + escapeHtml(link.t) + '</div>';
+    html += '<div class="loader-bar"></div>';
+    html += '</div>';
+    html += '<span class="card-domain-tag">' + escapeHtml(link.d) + '</span>';
+    html += '</div>';
+    /* 信息 */
+    html += '<div class="card-info">';
+    html += '<div class="card-title">' + escapeHtml(link.t) + '</div>';
+    html += '<div class="card-sub">' + escapeHtml(link.u) + '</div>';
+    html += '</div>';
+    html += '</a>';
+  });
+
+  /* 添加按钮卡片 */
+  html += '<div class="site-card" onclick="openAddModal()" style="display:flex;align-items:center;justify-content:center;min-height:180px;background:rgba(167,243,208,0.03);border:1px dashed rgba(167,243,208,0.15);cursor:pointer;">';
+  html += '<div style="text-align:center;color:rgba(167,243,208,0.4);">';
+  html += '<div style="font-size:36px;line-height:1;">＋</div>';
+  html += '<div style="font-size:12px;margin-top:6px;">添加链接</div>';
+  html += '</div></div>';
+
+  grid.innerHTML = html;
+  applyEditMode();
+  applySearch();
+  initIframes();
+}
+
+/* ===== iframe 预览缩放 ===== */
+function initIframes() {
+  LINKS.forEach(function(link, i) {
+    var wrap = document.createElement('div');
+    wrap.className = 'card-iframe-wrap';
+    var iframe = document.createElement('iframe');
+    iframe.src = link.u;
+    iframe.width = IFRAME_SIZE;
+    iframe.height = IFRAME_SIZE;
+    iframe.loading = 'lazy';
+    iframe.sandbox = 'allow-same-origin allow-scripts';
+    iframe.title = link.t;
+
+    var preview = document.getElementById('preview-' + i);
+    var loader = document.getElementById('loader-' + i);
+    var scaled = false;
+
+    iframe.onload = function() {
+      var pw = preview.clientWidth;
+      var ph = preview.clientHeight;
+      if (pw && ph) {
+        var scale = Math.max(pw / IFRAME_SIZE, ph / IFRAME_SIZE);
+        iframe.style.transform = 'scale(' + scale + ')';
+        scaled = true;
+      }
+      if (loader) loader.style.display = 'none';
+    };
+
+    /* 兜底：2s 后无论如何缩放并隐藏 loading */
+    setTimeout(function() {
+      if (!scaled) {
+        var pw = preview.clientWidth;
+        var ph = preview.clientHeight;
+        if (pw && ph) {
+          var scale = Math.max(pw / IFRAME_SIZE, ph / IFRAME_SIZE);
+          iframe.style.transform = 'scale(' + scale + ')';
+        }
+      }
+      if (loader) loader.style.display = 'none';
+    }, 2500);
+
+    wrap.appendChild(iframe);
+    preview.appendChild(wrap);
+  });
+}
+
+/* ===== 编辑模式 ===== */
+function toggleEdit() {
+  isEditMode = !isEditMode;
+  var btn = document.getElementById('editBtn');
+  if (isEditMode) { btn.textContent = '✅ 完成'; btn.classList.add('active'); }
+  else { btn.textContent = '✏️ 编辑'; btn.classList.remove('active'); }
+  applyEditMode();
+}
+function applyEditMode() {
+  document.querySelectorAll('.site-card').forEach(function(c) {
+    if (isEditMode && c.getAttribute('data-idx') !== null) {
+      c.classList.add('edit-mode');
+    } else {
+      c.classList.remove('edit-mode');
+    }
+  });
+}
+
+/* ===== 删除链接 ===== */
+function deleteLink(i) {
+  if (!isEditMode) return;
+  var link = LINKS[i];
+  if (confirm('确定删除「' + link.t + '」？')) {
+    LINKS.splice(i, 1);
+    renderAll();
+    saveData();
+    showToast('已删除: ' + link.t);
+  }
+}
+
+/* ===== 添加链接 ===== */
+function openAddModal() {
+  document.getElementById('addTitle').value = '';
+  document.getElementById('addUrl').value = '';
+  document.getElementById('addModal').classList.add('show');
+}
+function saveLink() {
+  var title = document.getElementById('addTitle').value.trim();
+  var url = document.getElementById('addUrl').value.trim();
+  if (!title || !url) { showToast('请填写完整信息'); return; }
+  if (!/^https?:\/\//.test(url)) url = 'https://' + url;
+  LINKS.push({ t: title, u: url, d: extractDomain(url) });
+  closeModal('addModal');
+  renderAll();
+  saveData();
+  showToast('已添加: ' + title);
+}
+
+/* ===== 搜索 ===== */
+function applySearch() {
+  var kw = document.getElementById('searchInput').value.trim().toLowerCase();
+  var cards = document.querySelectorAll('.site-card[data-idx]');
+  cards.forEach(function(card) {
+    if (!kw) {
+      card.style.display = '';
+      var titleEl = card.querySelector('.card-title');
+      if (titleEl) titleEl.innerHTML = escapeHtml(titleEl.textContent);
+      return;
+    }
+    var titleEl = card.querySelector('.card-title');
+    var subEl = card.querySelector('.card-sub');
+    var title = titleEl ? titleEl.textContent.toLowerCase() : '';
+    var sub = subEl ? subEl.textContent.toLowerCase() : '';
+    var match = title.indexOf(kw) >= 0 || sub.indexOf(kw) >= 0;
+    card.style.display = match ? '' : 'none';
+    if (match && titleEl) {
+      highlightKeyword(titleEl, kw);
+    }
+  });
+}
+
+function highlightKeyword(el, kw) {
+  var text = el.textContent;
+  var lower = text.toLowerCase();
+  var idx = lower.indexOf(kw);
+  if (idx < 0) return;
+  var before = text.substring(0, idx);
+  var match = text.substring(idx, idx + kw.length);
+  var after = text.substring(idx + kw.length);
+  el.innerHTML = escapeHtml(before) + '<span class="highlight">' + escapeHtml(match) + '</span>' + escapeHtml(after);
+}
+
+var searchTimer;
+document.getElementById('searchInput').addEventListener('input', function() {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(applySearch, 150);
+});
+document.getElementById('searchInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') {
+    var v = this.value.trim();
+    if (v) window.open('https://www.baidu.com/s?wd=' + encodeURIComponent(v), '_blank');
+  }
+});
+
+/* ===== 导入 ===== */
+function openImportModal() {
+  document.getElementById('bookmarkFile').value = '';
+  document.getElementById('bookmarkText').value = '';
+  document.getElementById('importModal').classList.add('show');
+}
+
+function doImport() {
+  var fileInput = document.getElementById('bookmarkFile');
+  var textInput = document.getElementById('bookmarkText').value.trim();
+
+  if (fileInput.files.length > 0) {
+    var reader = new FileReader();
+    reader.onload = function(e) { parseAndImport(e.target.result); };
+    reader.readAsText(fileInput.files[0]);
+  } else if (textInput) {
+    parseAndImport(textInput);
+  } else {
+    showToast('请选择文件或粘贴内容');
+  }
+}
+
+function parseAndImport(html) {
+  var parser = new DOMParser();
+  var doc = parser.parseFromString(html, 'text/html');
+  var imported = 0;
+  var urls = [];
+
+  /* 已有URL去重 */
+  LINKS.forEach(function(l) { urls.push(l.u); });
+
+  /* 解析 DT > A */
+  doc.querySelectorAll('DT > A, DT > H3 + DL > DT > A').forEach(function(a) {
+    var url = a.getAttribute('HREF');
+    var title = a.textContent.trim();
+    if (url && title && /^https?:\/\//.test(url) && urls.indexOf(url) < 0) {
+      LINKS.push({ t: title, u: url, d: extractDomain(url) });
+      urls.push(url);
+      imported++;
+    }
+  });
+
+  if (imported > 0) {
+    closeModal('importModal');
+    renderAll();
+    saveData();
+    showToast('导入成功: ' + imported + ' 项');
+    return;
+  }
+
+  /* 按行解析URL */
+  var lines = (typeof textInput !== 'undefined' ? textInput : '').split('\n');
+  if (lines.length === 0) {
+    var ta = document.getElementById('bookmarkText').value.trim().split('\n');
+    lines = ta;
+  }
+  lines.forEach(function(line) {
+    line = line.trim();
+    if (/^https?:\/\//.test(line) && urls.indexOf(line) < 0) {
+      LINKS.push({ t: extractDomain(line), u: line, d: extractDomain(line) });
+      urls.push(line);
+      imported++;
+    }
+  });
+
+  if (imported > 0) {
+    closeModal('importModal');
+    renderAll();
+    saveData();
+    showToast('导入成功: ' + imported + ' 项');
+  } else {
+    showToast('未找到可导入内容');
+  }
+}
+
+/* ===== 模态框 / Toast ===== */
+function closeModal(id) {
+  document.getElementById(id).classList.remove('show');
+}
+
+document.querySelectorAll('.modal-overlay').forEach(function(overlay) {
+  overlay.addEventListener('click', function(e) {
+    if (e.target === overlay) overlay.classList.remove('show');
+  });
+});
+
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(function() { t.classList.remove('show'); }, 2500);
+}
+
+/* ===== 持久化 ===== */
+function saveData() {
+  localStorage.setItem('nav_links', JSON.stringify(LINKS));
+}
+function loadData() {
+  var saved = localStorage.getItem('nav_links');
+  if (saved) {
+    try {
+      var data = JSON.parse(saved);
+      if (data && data.length) { LINKS = data; return; }
+    } catch(e) {}
+  }
+  /* 默认数据：合并所有分类的链接 */
+  LINKS = [];
+  DEFAULT_BOOKMARKS.forEach(function(cat) {
+    cat.links.forEach(function(link) {
+      LINKS.push({ t: link.t, u: link.u, d: link.d });
+    });
+  });
+}
+
+/* ===== 回到顶部 ===== */
+window.addEventListener('scroll', function() {
+  var btn = document.getElementById('backTop');
+  if (window.scrollY > 300) btn.classList.add('show');
+  else btn.classList.remove('show');
+});
+
+/* ===== 初始化 ===== */
+loadData();
+renderAll();
+</script>
+</body>
+</html>

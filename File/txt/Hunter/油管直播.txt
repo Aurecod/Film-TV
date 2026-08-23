@@ -1,39 +1,48 @@
 台湾直播,#genre#
+凤凰卫视资讯,https://www.youtube.com/watch?v=HFib76ySpbU
+凤凰卫视资讯台,https://www.youtube.com/watch?v=LNux6O0Fj6A
+凤凰资讯台,https://www.youtube.com/watch?v=fN9uYWCjQaw
+中天新闻台,https://www.youtube.com/watch?v=vr3XyVCR4T0
 TaiwanPlus,https://www.youtube.com/watch?v=Vrs-AeKZIEg
-Tvbs選新聞,https://www.youtube.com/watch?v=o_-hSMgpAzs
-Tvbs新聞台,https://www.youtube.com/watch?v=2mCSYvcfhtc
-Tvbs網路台,https://www.youtube.com/watch?v=m_dhMSvUCIc
-Tvbs優選台,https://www.youtube.com/watch?v=WAUECPu9EOw
-寰宇新聞台,https://www.youtube.com/watch?v=6IquAgfvYmc
-寰宇新聞二,https://www.youtube.com/watch?v=Ej3LQM_lTEw
+TVBS选新闻,https://www.youtube.com/watch?v=o_-hSMgpAzs
+TVBS新闻台,https://www.youtube.com/watch?v=2mCSYvcfhtc
+TVBS网络台,https://www.youtube.com/watch?v=m_dhMSvUCIc
+TVBS优选台,https://www.youtube.com/watch?v=WAUECPu9EOw
+寰宇新闻台,https://www.youtube.com/watch?v=6IquAgfvYmc
+寰宇新闻二,https://www.youtube.com/watch?v=Ej3LQM_lTEw
 寰宇台湾台,https://www.youtube.com/watch?v=w87VGpgd90U
-寰宇財經台,https://www.youtube.com/watch?v=yAUQQ0DhPxI
-中天新聞台,https://www.youtube.com/watch?v=vr3XyVCR4T0
-東森新聞台,https://www.youtube.com/watch?v=V1p33hqPrUk
-東森直播台,https://www.youtube.com/watch?v=E0zhe2gkXBs
-東森財經台,https://www.youtube.com/watch?v=1I2iq41Akmo
-東森財經台,https://www.youtube.com/watch?v=AEBeWMM1atA
-東森綜合台,https://www.youtube.com/watch?v=cimbpAZUjzw
-三立新聞台,https://www.youtube.com/watch?v=pF507BLtbqU
+寰宇财经台,https://www.youtube.com/watch?v=yAUQQ0DhPxI
+东森新闻台,https://www.youtube.com/watch?v=V1p33hqPrUk
+东森直播台,https://www.youtube.com/watch?v=E0zhe2gkXBs
+东森财经台,https://www.youtube.com/watch?v=1I2iq41Akmo
+东森财经台,https://www.youtube.com/watch?v=AEBeWMM1atA
+东森综合台,https://www.youtube.com/watch?v=cimbpAZUjzw
+三立新闻台,https://www.youtube.com/watch?v=pF507BLtbqU
 三立海外台,https://www.youtube.com/watch?v=hGJkDZDchYI
-公視新聞台,https://www.youtube.com/watch?v=quwqlazU-c8
-民視新聞台,https://www.youtube.com/watch?v=ylYJSBUgaMA
-華視新聞台,https://www.youtube.com/watch?v=wM0g8EoUZ_E
-中視新聞台,https://www.youtube.com/watch?v=TCnaIE_SAtM
-非凡新聞台,https://www.youtube.com/watch?v=wAUx3pywTt8
-鏡電視新聞,https://www.youtube.com/watch?v=5n0y6b0Q25o
-倪珍播新聞,https://www.youtube.com/watch?v=RRybv1kEnCU
-鳳凰資訊台,https://www.youtube.com/watch?v=fN9uYWCjQaw
-亞洲新聞台,https://www.youtube.com/watch?v=XWq5kBlakcQ
-半島新聞台,https://www.youtube.com/watch?v=gCNeDWCI0vo
-新唐人亞太,https://www.youtube.com/watch?v=Bhp_V7H5QoY
-新傳媒娛樂,https://www.youtube.com/watch?v=ipqTkEH3mhE
-台灣大搜索,https://www.youtube.com/watch?v=Q0jusAya5s4
-經典綜藝台,https://www.youtube.com/watch?v=ADDSmXoPDY8
-信大電視台,https://www.youtube.com/watch?v=3MakY86sYn8
-大陸尋奇台,https://www.youtube.com/watch?v=LqXVZ_hK3Xs
-大愛電視台,https://www.youtube.com/watch?v=MIqUplvSRWA
-大愛電視二,https://www.youtube.com/watch?v=QDxRJP-wfeI
+公视新闻台,https://www.youtube.com/watch?v=quwqlazU-c8
+民视新闻台,https://www.youtube.com/watch?v=ylYJSBUgaMA
+华视新闻台,https://www.youtube.com/watch?v=wM0g8EoUZ_E
+中视新闻台,https://www.youtube.com/watch?v=TCnaIE_SAtM
+非凡新闻台,https://www.youtube.com/watch?v=wAUx3pywTt8
+台视新闻台,https://www.youtube.com/watch?v=xL0ch83RAK8
+TVBS选新闻,https://www.youtube.com/watch?v=d1jUeoc3pio
+三立新闻,https://www.youtube.com/watch?v=MV9mI0GChwo
+三立 iNEWS,https://www.youtube.com/watch?v=BlKaF8og0jo
+寰宇财经新闻,https://www.youtube.com/watch?v=WTRQiVWK1jY
+大爱电视2,https://www.youtube.com/watch?v=DTNkEm6jaqQ
+中视综艺台,https://www.youtube.com/watch?v=A98LJq71BZg
+中天亚洲台,https://www.youtube.com/watch?v=dKkyfjn8xq8
+镜电视新闻,https://www.youtube.com/watch?v=5n0y6b0Q25o
+倪珍播新闻,https://www.youtube.com/watch?v=RRybv1kEnCU
+亚洲新闻台,https://www.youtube.com/watch?v=XWq5kBlakcQ
+半岛新闻台,https://www.youtube.com/watch?v=gCNeDWCI0vo
+新传媒娱乐,https://www.youtube.com/watch?v=ipqTkEH3mhE
+台湾大搜索,https://www.youtube.com/watch?v=Q0jusAya5s4
+经典综艺台,https://www.youtube.com/watch?v=ADDSmXoPDY8
+信大电视台,https://www.youtube.com/watch?v=3MakY86sYn8
+大陆寻奇台,https://www.youtube.com/watch?v=LqXVZ_hK3Xs
+大爱电视台,https://www.youtube.com/watch?v=MIqUplvSRWA
+大爱电视二,https://www.youtube.com/watch?v=QDxRJP-wfeI
 太阳马戏团,https://www.youtube.com/watch?v=swgouFE-5e4
 
 海外直播,#genre#
@@ -45,40 +54,33 @@ SunWave,https://www.youtube.com/watch?v=RVk6c_SjOm8
 AlanWalker,https://www.youtube.com/watch?v=9l63T77YL2c
 RelaxingNature,https://www.youtube.com/watch?v=vdeJ3QY6w6g
 DiscoveryRelaxation,https://www.youtube.com/watch?v=6iQCt1X8jZU
-
-
 BBC Earth,https://www.youtube.com/watch?v=1LhlXiSc5NY
 BBC Earth Science,https://www.youtube.com/watch?v=KGZtDK8hZ60
-
 Discovery,https://www.youtube.com/watch?v=OnI-uUxJZuE
 Discovery,https://www.youtube.com/watch?v=ohKj2ma9mfM
-
 Love Nature,https://www.youtube.com/watch?v=Zns4k_dICzs
 Love Nature,https://www.youtube.com/watch?v=QhahoVG0BfI
-
 Earth Planet,https://www.youtube.com/watch?v=sYod9dCf5Cw
 Earth Planet,https://www.youtube.com/watch?v=QXeCPubARfo
-
 Nat Geo Kids,https://www.youtube.com/watch?v=q5xC6wv9Ut0
 Nat Geo Kids,https://www.youtube.com/watch?v=H-h657jXQyA
-
 Nat Geo Animals,https://www.youtube.com/watch?v=J4IYwyEUwrI
 Nat Geo Animals,https://www.youtube.com/watch?v=MiQe9ob9aDc
-
 National Geographic,https://www.youtube.com/watch?v=eVty8-fUGJY
 National Geographic,https://www.youtube.com/watch?v=lJOROUvD8sU
-
 Love Nature Predators,https://www.youtube.com/watch?v=YRIkyaX2in0
 Love Nature Predators,https://www.youtube.com/watch?v=7ByKk5NPsRw
-
 Ultimate Nature Documentaries,https://www.youtube.com/watch?v=i6DH-eLlLjo
 Ultimate Nature Documentaries,https://www.youtube.com/watch?v=JVXC4DrH6PA
-
-
-
-
-
-
-
-
-
+CCTV4 中文国际,https://www.youtube.com/watch?v=SdzewdkJa-o
+FRANCE 24,https://www.youtube.com/watch?v=l8PMl7tUDIE
+ANN新闻,https://www.youtube.com/watch?v=coYw-eVU0Ks
+TBS新闻,https://www.youtube.com/watch?v=ohI356mwBp8
+NHK WORLD,https://www.youtube.com/watch?v=f0lYkdA-Gtw
+ABC新闻,https://www.youtube.com/watch?v=-mvUkiILTqI
+ABC7纽约,https://www.youtube.com/watch?v=VrhYz4CL70I
+CBS新闻,https://www.youtube.com/watch?v=e_vEct0OMT4
+FOX,https://www.youtube.com/watch?v=YDfiTGGPYCk
+联合国,https://www.youtube.com/watch?v=wfAa1GiNdgM
+FRANCE24,https://www.youtube.com/watch?v=Ap-UM1O9RBU
+欧洲新闻,https://www.youtube.com/watch?v=pykpO5kQJ98

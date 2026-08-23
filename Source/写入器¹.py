@@ -9,15 +9,13 @@ import urllib.parse
 from base.spider import Spider
 
 class Spider(Spider):
-    # ===== Py 扫描路径 =====
     PY_PATH_1 = "/storage/emulated/0/Film-TV/File/py/Abalone"
     PY_PATH_2 = "F:\\模拟共享\\Film-TV\\File\\py\\Abalone"
-    # ===== HTML 扫描路径 =====    
     HTML_PATH_1 = "/storage/emulated/0/Film-TV/File/html/Abalone"
     HTML_PATH_2 = "F:\\模拟共享\\Film-TV\\File\\html\\Abalone"
 
-    REGISTRY_PATH = "/storage/emulated/0/TV/CustomCsp/registry.json"
-    GENERATED_PREFIX = "local_py_"
+    REGISTRY_PATH = "/storage/emulated/0/Film-TV/Abalone.json"
+    GENERATED_PREFIX = "local_"
 
     ICON_SCAN = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2NCIgaGVpZ2h0PSI2NCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM0Q0FGNTAiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48Y2lyY2xlIGN4PSIxMSIgY3k9IjExIiByPSI4Ii8+PGxpbmUgeDE9IjIxIiB5MT0iMjEiIHgyPSIxNi42NSIgeTI9IjE2LjY1Ii8+PC9zdmc+"
     ICON_CLEAR = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2NCIgaGVpZ2h0PSI2NCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiNFNTM3MzciIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cG9seWxpbmUgcG9pbnRzPSIzIDYgNSA2IDIxIDYiLz48cGF0aCBkPSJNMTkgNnYxNGEyIDIgMCAwIDEtMiAySDdhMiAyIDAgMCAxLTItMlY2bDMgMEg0Ii8+PHBhdGggZD0iTTEwIDExdjYiLz48cGF0aCBkPSJNMTQgMTF2NiIvPjwvc3ZnPg=="
@@ -35,8 +33,27 @@ class Spider(Spider):
         if os.path.exists(self.HTML_PATH_2) and self.HTML_PATH_2 not in self.html_paths:
             self.html_paths.append(self.HTML_PATH_2)
 
+        # ===== 新增：从 extend 读取目标 JSON 路径 =====
+        self.target_path = self.REGISTRY_PATH
+        if extend:
+            ext = extend.strip().strip('"').strip("'").replace("file://", "")
+            if ext.lower() == "auto":
+                detected = self._detect_active_json()
+                if detected:
+                    self.target_path = detected
+            elif ext:
+                self.target_path = ext
+
+        # 确保目录存在
+        d = os.path.dirname(self.target_path)
+        if d and not os.path.exists(d):
+            try:
+                os.makedirs(d)
+            except:
+                pass
+
     def getName(self):
-        return "注入器 (PY+HTML)"
+        return "写入器 (PY+HTML)"
 
     def _to_superscript(self, num):
         superscript_map = {
@@ -50,7 +67,7 @@ class Spider(Spider):
         py_count, html_count = self._count_injected_types(auto_items)
         py_sup = self._to_superscript(py_count)
         html_sup = self._to_superscript(html_count)
-        class_name = f"已注入站点:   html{html_sup}   py{py_sup}"
+        class_name = f"已写入站点:   html{html_sup}   py{py_sup}"
         classes = [{"type_id": "injected", "type_name": class_name}]
         return {"class": classes, "list": []}
 
@@ -58,9 +75,7 @@ class Spider(Spider):
         py = 0
         html = 0
         for item in items:
-            kind = item.get("kind", "")
-            site = item.get("site", {})
-            if kind == "webHome" or site.get("webHome") or site.get("homePage"):
+            if item.get("homePage"):
                 html += 1
             else:
                 py += 1
@@ -69,8 +84,8 @@ class Spider(Spider):
     def categoryContent(self, tid, pg, filter, extend):
         if tid == "injected":
             items = [
-                {"vod_id": "__inject__", "vod_name": "注入", "vod_remarks": "扫描目录，注入所有spider", "vod_pic": self.ICON_SCAN, "action": "inject"},
-                {"vod_id": "__clear__", "vod_name": "清除", "vod_remarks": "移除所有注入站点", "vod_pic": self.ICON_CLEAR, "action": "clear"}
+                {"vod_id": "__inject__", "vod_name": "写入", "vod_remarks": "扫描目录，写入所有站点", "vod_pic": self.ICON_SCAN, "action": "inject"},
+                {"vod_id": "__clear__", "vod_name": "清除", "vod_remarks": "移除所有写入站点", "vod_pic": self.ICON_CLEAR, "action": "clear"}
             ]
             return self._paged_result(items, pg)
         else:
@@ -105,56 +120,101 @@ class Spider(Spider):
     def destroy(self):
         pass
 
-    # --------------------- 辅助方法 ---------------------
-    def _load_registry(self):
-        if os.path.exists(self.REGISTRY_PATH):
-            try:
-                with open(self.REGISTRY_PATH, 'r', encoding='utf-8') as f:
-                    data = json.load(f)
-                    if "items" in data:
-                        return data
-            except:
-                pass
-        return {"enabled": True, "items": []}
+    # --------------------- 核心 ---------------------
+    def _load_target(self):
+        if not os.path.exists(self.target_path):
+            return {"sites": []}
+        try:
+            with open(self.target_path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                if not isinstance(data, dict):
+                    return {"sites": []}
+                if "sites" not in data:
+                    data["sites"] = []
+                return data
+        except:
+            return {"sites": []}
 
-    def _save_registry(self, registry):
-        with open(self.REGISTRY_PATH, 'w', encoding='utf-8') as f:
-            json.dump(registry, f, ensure_ascii=False, indent=2)
+    def _save_target(self, data):
+        with open(self.target_path, 'w', encoding='utf-8') as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
 
-    def _item_key(self, item):
-        site = item.get("site", {})
-        return site.get("key", "")
-
-    def _is_generated(self, item):
-        key = self._item_key(item)
-        return key.startswith(self.GENERATED_PREFIX)
+    def _is_generated(self, site):
+        return site.get("key", "").startswith(self.GENERATED_PREFIX)
 
     def _get_injected_sites_raw(self):
-        registry = self._load_registry()
-        return [item for item in registry.get("items", []) if self._is_generated(item)]
+        data = self._load_target()
+        return [s for s in data.get("sites", []) if self._is_generated(s)]
 
-    # ===== 修改：显示后缀 =====
+    def _detect_active_json(self):
+        try:
+            for port in range(9978, 9999):
+                try:
+                    req = urllib.request.Request(
+                        f"http://127.0.0.1:{port}/manage/configs",
+                        headers={"Accept": "application/json"}
+                    )
+                    with urllib.request.urlopen(req, timeout=0.5) as resp:
+                        data = json.loads(resp.read().decode())
+                        for item in data.get("items", []):
+                            if item.get("type") == 0 and item.get("active"):
+                                url = item.get("url", "")
+                                if url.startswith("file://"):
+                                    return url[7:]
+                                elif os.path.exists(url):
+                                    return url
+                except Exception:
+                    continue
+        except Exception:
+            pass
+        return None
+
     def _build_site(self, file_path, ext):
-        name = os.path.basename(file_path)
+        full_name = os.path.basename(file_path)          # 含扩展名
+        base_name = os.path.splitext(full_name)[0]       # 不含扩展名
+        key = self.GENERATED_PREFIX + base_name          # "local_文件名"
+        
+        # ---- 改为相对路径 ----
+        # 获取配置文件所在目录的绝对路径
+        target_dir = os.path.dirname(os.path.abspath(self.target_path))
+        # 计算相对路径
+        rel_path = os.path.relpath(file_path, target_dir)
+        # 统一为 Unix 风格斜杠，并添加 "./"
+        file_url = "./" + rel_path.replace(os.sep, "/")
+        # 如果相对路径为空（即文件就在配置目录下），则直接 "./文件名"
+        if rel_path == ".":
+            file_url = "./" + full_name
+        # ---------------------
+
         if ext == '.py':
-            display_name = name[:-3] + "ᵖʸ" if name.endswith(".py") else name + "ᵖʸ"
-        else:  # .html
-            display_name = name[:-5] + "ʰᵗᵐˡ" if name.endswith(".html") else name + "ʰᵗᵐˡ"
-        key = self.GENERATED_PREFIX + hashlib.md5(file_path.encode()).hexdigest()[:12]
-        site = {"key": key, "name": display_name, "type": 3, "searchable": 1, "quickSearch": 1}
-        if ext == '.py':
-            site["api"] = "file://" + file_path
-        else:
-            site["api"] = ""
-            site["homePage"] = "file://" + file_path
-            site["webHome"] = True
+            display_name = full_name[:-3] + "ᵖʸ" if full_name.endswith(".py") else full_name + "ᵖʸ"
+            site = {
+                "key": key,
+                "name": display_name,
+                "type": 3,
+                "api": file_url,
+                "searchable": 1,
+                "quickSearch": 1,
+                "filterable": 1,
+                "order_num": 0,
+                "style": {"type": "rect"},
+                "ext": ""
+            }
+        else:  # html
+            display_name = full_name[:-5] + "ʰᵗᵐˡ" if full_name.endswith(".html") else full_name + "ʰᵗᵐˡ"
+            site = {
+                "key": key,
+                "name": display_name,
+                "type": 3,
+                "homePage": file_url
+            }
         return site
 
-    # ===== 修改：先 HTML 后 Py =====
     def _action_inject(self):
-        registry = self._load_registry()
-        manual_items = [item for item in registry.get("items", []) if not self._is_generated(item)]
-        new_items = []
+        data = self._load_target()
+        sites = data.get("sites", [])
+        manual = [s for s in sites if not self._is_generated(s)]
+        new_sites = []
 
         # HTML 优先
         for path in self.html_paths:
@@ -163,8 +223,7 @@ class Spider(Spider):
             for f in os.listdir(path):
                 if f.endswith(".html") and not f.startswith("__"):
                     full_path = os.path.join(path, f)
-                    site = self._build_site(full_path, '.html')
-                    new_items.append({"id": site["key"], "enabled": True, "kind": "webHome", "site": site})
+                    new_sites.append(self._build_site(full_path, '.html'))
 
         # Py 其次
         for path in self.py_paths:
@@ -173,21 +232,22 @@ class Spider(Spider):
             for f in os.listdir(path):
                 if f.endswith(".py") and not f.startswith("__"):
                     full_path = os.path.join(path, f)
-                    site = self._build_site(full_path, '.py')
-                    new_items.append({"id": site["key"], "enabled": True, "kind": "csp", "site": site})
+                    new_sites.append(self._build_site(full_path, '.py'))
 
-        registry["items"] = new_items + manual_items
-        self._save_registry(registry)
+        data["sites"] = new_sites + manual
+        self._save_target(data)
         self._reload_app()
-        count = len(new_items)
-        return {"code": 0, "msg": f"✅ 已注入 {count} 个站点（HTML + Py，已置顶）"}
+
+        count = len(new_sites)
+        target = os.path.basename(self.target_path)
+        return {"code": 0, "msg": f"✅ 已写入 {count} 个站点到 {target}（HTML + Py，已置顶）\n⚠️ FongMi 请手动点「配置地址」刷新"}
 
     def _action_clear(self):
-        registry = self._load_registry()
-        registry["items"] = [item for item in registry.get("items", []) if not self._is_generated(item)]
-        self._save_registry(registry)
+        data = self._load_target()
+        data["sites"] = [s for s in data.get("sites", []) if not self._is_generated(s)]
+        self._save_target(data)
         self._reload_app()
-        return {"code": 0, "msg": "🗑 已移除所有本地注入站点"}
+        return {"code": 0, "msg": "🗑 已移除所有写入站点\n⚠️ FongMi 请手动点「配置地址」刷新"}
 
     def _reload_app(self):
         try:
@@ -206,9 +266,9 @@ class Spider(Spider):
                                     )
                                     urllib.request.urlopen(reload_req, timeout=0.5)
                                     return
-                except:
+                except Exception:
                     continue
-        except:
+        except Exception:
             pass
 
     def _paged_result(self, items, pg):

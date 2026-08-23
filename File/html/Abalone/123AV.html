@@ -1,9 +1,7 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
+<!DOCTYPE html><html lang="zh-CN" style="--cover-ratio: 16 / 9; --cover-pad: 56.25%; --hero-pad: 118%; --hero-pos: 100% 50%; --hero-scrim: 52%;" class="poster-pan"><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>AV</title>
+<title>Jable</title>
 
 <!-- ===== 兼容引导层：ES5 书写，任何内核先跑起来 ===== -->
 <script>
@@ -283,37 +281,6 @@ body.searching .wrap, body.searching .tabs{ opacity:.4; }
 /* ============ 列表 grid ============ */
 .wrap{ padding:12px; padding-left:calc(var(--safe-left) + 12px); padding-right:calc(var(--safe-right) + 12px);
   padding-bottom:calc(var(--safe-bottom) + 104px); }
-/* 搜索结果顶部的「频道 / 女優」卡：一行一个，头像 + 名字 + 数量 + 箭头 */
-.chanrow{ display:none; }
-.chanrow.on{ display:block; margin:0 0 14px; }
-.chanrow .chan-sec{ font-size:12px; color:var(--muted); margin:0 2px 8px; letter-spacing:.4px; }
-.chan-card{
-  display:flex; align-items:center; gap:12px; width:100%;
-  padding:10px 12px; margin-bottom:8px;
-  background:var(--panel); border:1px solid var(--line); border-radius:14px;
-  color:var(--text); text-align:left; cursor:pointer;
-  -webkit-tap-highlight-color:transparent;
-}
-.chan-card:active{ background:var(--panel-2); }
-.chan-card:focus-visible{ outline:2px solid var(--rose); outline-offset:2px; }
-.chan-av{
-  flex:0 0 auto; width:52px; height:52px; border-radius:50%; overflow:hidden;
-  background:rgba(255,255,255,0.06); display:flex; align-items:center; justify-content:center;
-  font-size:18px; font-weight:700; color:var(--muted);
-}
-.chan-av img{ width:100%; height:100%; object-fit:cover; display:block; }
-.chan-meta{ flex:1 1 auto; min-width:0; }
-.chan-name{ font-size:15px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.chan-vf{
-  display:inline-flex; align-items:center; justify-content:center;
-  width:15px; height:15px; margin-left:5px; vertical-align:1px;
-  border-radius:50%; background:#3EA6FF; color:#0B0B0B;
-  font-size:10px; font-weight:800; line-height:1;
-}
-.chan-sub{ margin-top:2px; font-size:12px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.chan-chev{ flex:0 0 auto; color:var(--muted); font-size:20px; line-height:1; padding-left:4px; }
-.fm-tv .chan-card{ padding:14px 16px; }
-
 .grid{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
 .no-grid .grid{ display:block; }
 .no-grid .card{ display:inline-block; width:48%; vertical-align:top; margin:1%; }
@@ -620,15 +587,15 @@ body.detail-active .switcher, body.set-open .switcher, body.searching .switcher{
 .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
 @media (prefers-reduced-motion: reduce){ .toast{ transition:opacity .2s ease; } }
 </style>
-</head>
+<style type="text/css">* {user-select: auto !important; -webkit-user-select: auto !important;}</style><input type="hidden" id="inject_idm_text_selection"><style></style></head>
 <body>
 <div class="app">
   <header class="top">
     <div class="top-row">
       <button class="brand" id="brand" tabindex="0">
         <span class="mark" id="netDot" aria-hidden="true">
-          <svg width="27" height="27" viewBox="0 0 60 60"><defs><filter id="jglow" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><g filter="url(#jglow)"><path d="M13 46 L13 16 L30 35 L47 16 L47 46" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></g><path d="M13 46 L13 16 L30 35 L47 16 L47 46" fill="none" stroke="#fff" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </span><span class="word">MissAV</span>
+          <svg width="27" height="27" viewBox="0 0 60 60"><defs><filter id="jglow" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="3" result="b"></feGaussianBlur><feMerge><feMergeNode in="b"></feMergeNode><feMergeNode in="SourceGraphic"></feMergeNode></feMerge></filter></defs><g filter="url(#jglow)"><path d="M42 14 L42 36 Q42 47 29 47 Q17 47 15 35" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"></path></g><path d="M42 14 L42 36 Q42 47 29 47 Q17 47 15 35" fill="none" stroke="#fff" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+        </span><span class="word">Jable</span>
       </button>
       <button class="gear" id="gear" aria-label="设置" tabindex="0">
         <svg width="26" height="18" viewBox="0 0 526 367" aria-hidden="true"><g transform="translate(0.000000,367.000000) scale(0.100000,-0.100000)" fill="currentColor" stroke="none">
@@ -699,7 +666,7 @@ body.detail-active .switcher, body.set-open .switcher, body.searching .switcher{
 21 1 26 18 26 12 0 25 -10 32 -25z m71 -78 c6 -16 -3 -67 -12 -67 -10 0 -38
 55 -33 68 5 16 39 15 45 -1z M3640 2095 c-84 -44 -130 -113 -130 -194 0 -29
 11 -49 49 -97 54 -67 71 -74 168 -74 73 0 119 23 155 79 28 43 29 51 25 122
--6 88 -18 113 -71 142 -21 12 -48 28 -60 34 -32 19 -86 15 -136 -12z"/>
+-6 88 -18 113 -71 142 -21 12 -48 28 -60 34 -32 19 -86 15 -136 -12z"></path>
 </g><g transform="translate(0.000000,367.000000) scale(0.100000,-0.100000)" fill="#fff" stroke="none">
 <path d="M4518 2863 c-36 -41 -39 -60 -23 -117 9 -30 25 -66 36 -80 35 -44
 115 -310 129 -428 15 -128 8 -444 -13 -533 -15 -68 -94 -272 -108 -281 -5 -3
@@ -768,33 +735,32 @@ body.detail-active .switcher, body.set-open .switcher, body.searching .switcher{
 21 1 26 18 26 12 0 25 -10 32 -25z m71 -78 c6 -16 -3 -67 -12 -67 -10 0 -38
 55 -33 68 5 16 39 15 45 -1z M3640 2095 c-84 -44 -130 -113 -130 -194 0 -29
 11 -49 49 -97 54 -67 71 -74 168 -74 73 0 119 23 155 79 28 43 29 51 25 122
--6 88 -18 113 -71 142 -21 12 -48 28 -60 34 -32 19 -86 15 -136 -12z"/>
+-6 88 -18 113 -71 142 -21 12 -48 28 -60 34 -32 19 -86 15 -136 -12z"></path>
 </g></svg>
       </button>
     </div>
     <div class="search">
       <input id="q" type="search" autocomplete="off" placeholder="搜索番号 / 女優 / 关键词" tabindex="0">
       <button class="go" id="go" aria-label="搜索" tabindex="0">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>
       </button>
       <div class="sug" id="sug"></div>
     </div>
   </header>
 
-  <nav class="tabs" id="tabs"></nav>
-  <nav class="cats" id="cats"></nav>
+  <nav class="tabs" id="tabs"><button class="tab on" tabindex="0">最新</button><button class="tab" tabindex="0">热门</button><button class="tab" tabindex="0">新片</button><button class="tab" tabindex="0">中文字幕</button><button class="tab" tabindex="0">角色剧情</button><button class="tab" tabindex="0">制服</button><button class="tab" tabindex="0">POV</button><button class="tab" tabindex="0">人妻</button><button class="tab" tabindex="0">巨乳</button><button class="tab" tabindex="0">丝袜</button><button class="tab" tabindex="0">中出</button></nav>
+  <nav class="cats off" id="cats"></nav>
   <div class="subbar" id="subbar">
     <button class="bk" id="subBack" aria-label="返回" tabindex="0">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"></path></svg>
     </button>
     <div class="st" id="subTitle"></div>
   </div>
 
   <main class="wrap">
-    <div class="chanrow" id="chanRow"></div>
     <div class="grid" id="list"></div>
     <div class="more-wrap" id="more"></div>
-    <div class="state" id="state"></div>
+    <div class="state" id="state"><div class="empty"><div class="big">📱</div><div class="ttl">请在 App 内打开</div><div>浏览器预览无法跨域抓取 Jable，需在装了本 App 的环境里运行 WebHome。</div><div class="diag-box" id="diagBox" style="display:none">/latest-updates/?mode=async&amp;function=get_block&amp;block_id=list → 失败 Failed to fetch<br>/latest-updates/?from=1 → 失败 Failed to fetch<br>/ → 失败 Failed to fetch</div><div style="margin-top: 12px;"><button class="state act" tabindex="0">重试</button><button class="state act" tabindex="0" style="margin-left: 8px;">查看详情</button></div></div></div>
   </main>
 </div>
 
@@ -802,7 +768,7 @@ body.detail-active .switcher, body.set-open .switcher, body.searching .switcher{
 <section class="sheet" id="sheet" aria-hidden="true">
   <div class="sheet-hd">
     <button class="bk" id="dBack" aria-label="返回" tabindex="0">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"></path></svg>
     </button>
     <div class="tt" id="dHeadTitle"></div>
   </div>
@@ -814,7 +780,7 @@ body.detail-active .switcher, body.set-open .switcher, body.searching .switcher{
   <div class="set-in">
     <div class="set-hd">
       <button class="bk" id="setBack" aria-label="返回" tabindex="0">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"></path></svg>
       </button>
       <div class="tt">设置</div>
     </div>
@@ -866,14 +832,13 @@ body.detail-active .switcher, body.set-open .switcher, body.searching .switcher{
 </section>
 
 <div class="switcher" id="switcher" role="tablist">
-  <span class="switch-ind" id="switchInd"></span>
+  <span class="switch-ind" id="switchInd" style="width: 57px; transform: translateX(0px);"></span>
   <button class="sseg on" data-src="jable" tabindex="0">Jable</button>
   <button class="sseg" data-src="missav" tabindex="0">MissAV</button>
   <button class="sseg x2-seg" data-src="ph" tabindex="0">PH</button>
   <button class="sseg" data-src="hanime" tabindex="0">Hanime1</button>
   <button class="sseg" data-src="av123" tabindex="0">123AV</button>
   <button class="sseg x3-seg" data-src="supjav" tabindex="0">SupJav</button>
-  <button class="sseg" data-src="xvideos" tabindex="0">Xvideos</button>
 </div>
 <div class="tipbox" id="tipbox" aria-hidden="true">
   <span class="tip-glow"></span><span class="tip-ring"></span>
@@ -890,252 +855,21 @@ body.detail-active .switcher, body.set-open .switcher, body.searching .switcher{
   /* ---------- 常量 ---------- */
   // ===== 站点适配器：站点差异全部收敛在这里 =====
   var ADAPTERS = {
-    xvideos: {
-      id:'xvideos', label:'Xvideos', word:'Xvideos', site:'https://www.xvideos.com', ns:'xvideos',
-      siteName:'xvideos.com', refererDefault:true, proxyHosts:'xvideos.com / *.xvideos-cdn.com',
-      streamFormat:'hls',
-      markPath:'M14 16 L46 44 M46 16 L14 44',
-      tabs:[ {id:'best',  name:'\u6700\u4f73', path:'/best'},
-             {id:'home',  name:'\u9996\u9875', path:'/'},
-             {id:'asian', name:'\u4e9a\u6d32', path:'/c/Asian_Woman-32'},
-             {id:'amateur',name:'\u4e1a\u4f59', path:'/c/Amateur-65'},
-             {id:'creampie',name:'\u4e2d\u51fa', path:'/c/Creampie-40'},
-             {id:'milf',  name:'\u8fa3\u5988', path:'/c/Milf-19'},
-             {id:'teen',  name:'\u5c11\u5973', path:'/c/Teen-13'} ],
-      // 视频页地址：/video.xxxx/数字/0/slug 或旧版 /video数字/slug
-      isVideoUrl:function(href){
-        href=String(href).replace(/[?#].*$/,'');
-        return /\/video(?:\.[a-z0-9]+|\d+)(?:\/|$)/i.test(href);
-      },
-      // xvideos 没有「番号」，返回空即可（卡片不显示 code 小标）；vod_id 由通用层用 url 兜底
-      codeOf:function(){ return ''; },
-      listUrls:function(page){
-        if(view.mode==='search'){
-          var s=this.site+'/?k='+encodeURIComponent(view.kw);
-          if(page>1)s+='&p='+(page-1);              // 搜索页 0 基
-          return [s];
-        }
-        var p=view.path||'/new/0', pg=page-1;        // 页码 0 基
-        if(p==='/best'){
-          // 「最佳」翻页必须带当月路径 /best/YYYY-MM[/pg]，否则服务端会把 /best/1 当无效月份
-          // 重定向回第 1 页，导致「加载更多」出来的内容和首页一模一样
-          var d=new Date(), ym=d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2);
-          p='/best/'+ym+(pg>0?('/'+pg):'');
-          return [this.site+p];
-        }
-        var m=p.match(/^(.*?)\/(\d+)\/?$/);          // 路径已自带页码（如 /new/0）
-        if(m){ p=m[1]+'/'+pg; }                       // 直接替换末尾页码：/new/0 -> /new/1 ...
-        else if(pg>0){                                // 其余路径（/best、/c/...）翻页才追加
-          if(p==='/'||p==='')p='/new';
-          p=p.replace(/\/+$/,'')+'/'+pg;
-        }
-        return [this.site+p];
-      },
-      parseCards:function(html){
-        var self=this,doc=parseDoc(html),out=[],seen={};
-        var blocks=doc.querySelectorAll('div.thumb-block');
-        if(!blocks.length)blocks=doc.querySelectorAll('.thumb-block, .mozaique .thumb');
-        Array.prototype.forEach.call(blocks,function(bl){
-          // 卡片里找出真正的视频链接
-          var link=null,as=bl.querySelectorAll('a[href]');
-          for(var i=0;i<as.length;i++){ if(self.isVideoUrl(as[i].getAttribute('href')||'')){ link=as[i]; break; } }
-          if(!link)return;
-          var href=(link.getAttribute('href')||'').replace(/[#].*$/,'');
-          if(href.indexOf('http')!==0)href=self.site+(href.charAt(0)==='/'?'':'/')+href;
-          if(seen[href])return; seen[href]=1;
-          var img=bl.querySelector('img');
-          // 缩略图真地址直接在 src；个别布局在 data-src，占位/模糊图在 data-sfwthumb 兜底
-          var pic=img?(img.getAttribute('data-src')||img.getAttribute('src')||img.getAttribute('data-sfwthumb')||''):'';
-          var tEl=bl.querySelector('p.title a')||bl.querySelector('.title a')||link;
-          var title=(tEl&&(tEl.getAttribute('title')||txt(tEl)))||'';
-          title=title.replace(/\s*\d+\s*(?:\u5206\u949f|\u5206\u9418|min|sec)\b.*$/i,'').replace(/\s+/g,' ').replace(/^ | $/g,'');
-          var dur=txt(bl.querySelector('.duration'))||'';
-          // 上传者 / 频道 / 演员
-          var who='';
-          var up=bl.querySelector('.metadata a[href*="/channels/"], .metadata a[href*="/amateur-channels/"], .metadata a[href*="/pornstars/"], .metadata a[href*="/profiles/"], .uploader a, .metadata .name');
-          if(up)who=txt(up);
-          out.push({url:href,pic:pic,preview:'',uuid:'',title:title,dur:dur,hits:who});
-        });
-        return out;
-      },
-      parseDetail:function(html){
-        var self=this,doc=parseDoc(html);
-        function ogc(p){ var m=doc.querySelector('meta[property="'+p+'"]'); return m?m.getAttribute('content'):''; }
-        var title=(ogc('og:title')||txt(doc.querySelector('h2.page-title'))||txt(doc.querySelector('h1'))||'')
-                  .replace(/\s*-\s*XVIDEOS.*$/i,'').replace(/\s+/g,' ').replace(/^ | $/g,'');
-        var poster=ogc('og:image')||'';
-        var models=[],tags=[],seenM={},seenT={};
-        doc.querySelectorAll('a[href*="/pornstars/"], a[href*="/models/"], a[href*="/profiles/"], a[href*="/channels/"], a[href*="/amateur-channels/"]').forEach(function(a){
-          var href=a.getAttribute('href')||'', name=txt(a);
-          if(!name||name.length>24)return;
-          if(href.indexOf('http')!==0)href=self.site+(href.charAt(0)==='/'?'':'/')+href;
-          if(seenM[href])return; seenM[href]=1;
-          models.push({name:name,url:href});
-        });
-        doc.querySelectorAll('a.is-keyword, a[href*="/tags/"], a[href*="/c/"]').forEach(function(a){
-          var href=a.getAttribute('href')||'', name=txt(a).replace(/^#\s*/,'');
-          if(!name||name.length>20)return;
-          if(href.indexOf('http')!==0)href=self.site+(href.charAt(0)==='/'?'':'/')+href;
-          if(seenT[href])return; seenT[href]=1;
-          tags.push({name:name,url:href});
-        });
-        var flat=String(html).replace(/<[^>]+>/g,' ').replace(/\s+/g,' ');
-        var meta=[];
-        var vm=flat.match(/([\d.,]+)\s*(?:views|\u6b21\u89c2\u770b|\u6b21\u89c0\u770b)/i); if(vm)meta.push(vm[1]+' views');
-        var related=self.parseCards(html).slice(0,24);
-        return {title:title,poster:poster,models:models.slice(0,8),tags:tags.slice(0,24),
-                meta:meta.join('  \u00b7  '),related:related};
-      },
-      // 取流：视频页内联 JS 里的 setVideoHLS(master.m3u8)；没有就交给 App 嗅探
-      extractStream:async function(raw){
-        if(!raw)return '';
-        var t=String(raw);
-        var m=t.match(/setVideoHLS\(\s*['"]([^'"]+)['"]/i)||t.match(/https?:\/\/[^"'\s]+?\.m3u8[^"'\s]*/i);
-        return m?String(m[1]||m[0]).replace(/\\+\//g,'/'):'';
-      },
-      sniffUrl:function(raw,item){ return item?item.url:''; }
-    },
     jable: {
       id:'jable', label:'Jable', word:'Jable', site:'https://jable.tv', ns:'jable',
       siteName:'jable.tv', refererDefault:false, proxyHosts:'jable.tv',
       markPath:'M42 14 L42 36 Q42 47 29 47 Q17 47 15 35',
-      // 官网侧边「选片」大菜单核实过的完整结构：最新/新片/热门是独立一级项；
-      // 影片主题(10个 /categories/ 分类) + 衣著/身材/交合/玩法/剧情/角色/地点/杂项
-      // 这 8 组 tag（共 111 个 /tags/ 标签）都是一级里带 subs 的分组，点了默认加载组内第一个
-      tabs:[ {id:'latest',name:'\u6700\u65b0',path:'/latest-updates/',block:'list_videos_latest_videos_list',sort:'post_date'},
-             {id:'new',name:'\u65b0\u7247',path:'/new-release/',block:'list_videos_common_videos_list',sort:'post_date'},
-             {id:'hot',name:'\u70ed\u95e8',path:'/hot/',block:'list_videos_common_videos_list',sort:'video_viewed'},
-             {id:'theme',name:'\u5f71\u7247\u4e3b\u984c',subs:[
-               {id:'cat-roleplay',name:'\u89d2\u8272\u5287\u60c5',path:'/categories/roleplay/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'cat-chinese-subtitle',name:'\u4e2d\u6587\u5b57\u5e55',path:'/categories/chinese-subtitle/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'cat-uniform',name:'\u5236\u670d\u8a98\u60d1',path:'/categories/uniform/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'cat-pantyhose',name:'\u7d72\u896a\u7f8e\u817f',path:'/categories/pantyhose/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'cat-sex-only',name:'\u76f4\u63a5\u958b\u556a',path:'/categories/sex-only/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'cat-groupsex',name:'\u591aP\u7fa4\u4ea4',path:'/categories/groupsex/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'cat-bdsm',name:'\u4e3b\u5974\u8abf\u6559',path:'/categories/bdsm/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'cat-pov',name:'\u7537\u53cb\u8996\u89d2',path:'/categories/pov/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'cat-insult',name:'\u51cc\u8fb1\u5feb\u611f',path:'/categories/insult/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'cat-private-cam',name:'\u76dc\u651d\u5077\u62cd',path:'/categories/private-cam/',block:'list_videos_common_videos_list',sort:'post_date'} ]},
-             {id:'wear',name:'\u8863\u8457',subs:[
-               {id:'tag-black-pantyhose',name:'\u9ed1\u7d72',path:'/tags/black-pantyhose/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-knee-socks',name:'\u904e\u819d\u896a',path:'/tags/knee-socks/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-sportswear',name:'\u904b\u52d5\u88dd',path:'/tags/sportswear/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-flesh-toned-pantyhose',name:'\u8089\u7d72',path:'/tags/flesh-toned-pantyhose/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-pantyhose',name:'\u7d72\u896a',path:'/tags/pantyhose/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-glasses',name:'\u773c\u93e1\u5a18',path:'/tags/glasses/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-kemonomimi',name:'\u7378\u8033',path:'/tags/kemonomimi/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-fishnets',name:'\u6f01\u7db2',path:'/tags/fishnets/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-swimsuit',name:'\u6c34\u7740',path:'/tags/swimsuit/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-school-uniform',name:'\u6821\u670d',path:'/tags/school-uniform/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-cheongsam',name:'\u65d7\u888d',path:'/tags/cheongsam/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-wedding-dress',name:'\u5a5a\u7d17',path:'/tags/wedding-dress/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-maid',name:'\u5973\u50d5',path:'/tags/maid/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-kimono',name:'\u548c\u670d',path:'/tags/kimono/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-stockings',name:'\u540a\u5e36\u896a',path:'/tags/stockings/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-bunny-girl',name:'\u5154\u5973\u90ce',path:'/tags/bunny-girl/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-Cosplay',name:'Cosplay',path:'/tags/Cosplay/',block:'list_videos_common_videos_list',sort:'post_date'} ]},
-             {id:'body',name:'\u8eab\u6750',subs:[
-               {id:'tag-suntan',name:'\u9ed1\u8089',path:'/tags/suntan/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-tall',name:'\u9577\u8eab',path:'/tags/tall/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-flexible-body',name:'\u8edf\u9ad4',path:'/tags/flexible-body/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-small-tits',name:'\u8ca7\u4e73',path:'/tags/small-tits/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-beautiful-leg',name:'\u7f8e\u817f',path:'/tags/beautiful-leg/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-beautiful-butt',name:'\u7f8e\u5c3b',path:'/tags/beautiful-butt/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-tattoo',name:'\u7d0b\u8eab',path:'/tags/tattoo/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-short-hair',name:'\u77ed\u9aee',path:'/tags/short-hair/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-hairless-pussy',name:'\u767d\u864e',path:'/tags/hairless-pussy/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-mature-woman',name:'\u719f\u5973',path:'/tags/mature-woman/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-big-tits',name:'\u5de8\u4e73',path:'/tags/big-tits/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-girl',name:'\u5c11\u5973',path:'/tags/girl/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-dainty',name:'\u5b0c\u5c0f',path:'/tags/dainty/',block:'list_videos_common_videos_list',sort:'post_date'} ]},
-             {id:'act',name:'\u4ea4\u5408',subs:[
-               {id:'tag-facial',name:'\u984f\u5c04',path:'/tags/facial/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-footjob',name:'\u8173\u4ea4',path:'/tags/footjob/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-anal-sex',name:'\u809b\u4ea4',path:'/tags/anal-sex/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-spasms',name:'\u75d9\u6523',path:'/tags/spasms/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-squirting',name:'\u6f6e\u5439',path:'/tags/squirting/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-deep-throat',name:'\u6df1\u5589',path:'/tags/deep-throat/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-kiss',name:'\u63a5\u543b',path:'/tags/kiss/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-cum-in-mouth',name:'\u53e3\u7206',path:'/tags/cum-in-mouth/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-blowjob',name:'\u53e3\u4ea4',path:'/tags/blowjob/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-tit-wank',name:'\u4e73\u4ea4',path:'/tags/tit-wank/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-creampie',name:'\u4e2d\u51fa',path:'/tags/creampie/',block:'list_videos_common_videos_list',sort:'post_date'} ]},
-             {id:'play',name:'\u73a9\u6cd5',subs:[
-               {id:'tag-outdoor',name:'\u9732\u51fa',path:'/tags/outdoor/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-gang-intrusion',name:'\u96c6\u5718\u9032\u72af',path:'/tags/gang-intrusion/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-intrusion',name:'\u9032\u72af',path:'/tags/intrusion/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-tune',name:'\u8abf\u6559',path:'/tags/tune/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-bondage',name:'\u7d91\u7d81',path:'/tags/bondage/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-quickie',name:'\u77ac\u9593\u63d2\u5165',path:'/tags/quickie/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-chikan',name:'\u75f4\u6f22',path:'/tags/chikan/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-chizyo',name:'\u75f4\u5973',path:'/tags/chizyo/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-masochism-guy',name:'\u7537M',path:'/tags/masochism-guy/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-crapulence',name:'\u6ce5\u9189',path:'/tags/crapulence/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-soapland',name:'\u6ce1\u59ec',path:'/tags/soapland/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-breast-milk',name:'\u6bcd\u4e73',path:'/tags/breast-milk/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-piss',name:'\u653e\u5c3f',path:'/tags/piss/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-massage',name:'\u6309\u6469',path:'/tags/massage/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-groupsex',name:'\u591aP',path:'/tags/groupsex/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-grip',name:'\u5211\u5177',path:'/tags/grip/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-insult',name:'\u51cc\u8fb1',path:'/tags/insult/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-10-times-a-day',name:'\u4e00\u65e5\u5341\u56de',path:'/tags/10-times-a-day/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-3p',name:'3P',path:'/tags/3p/',block:'list_videos_common_videos_list',sort:'post_date'} ]},
-             {id:'plot',name:'\u5287\u60c5',subs:[
-               {id:'tag-black',name:'\u9ed1\u4eba',path:'/tags/black/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-ugly-man',name:'\u919c\u7537',path:'/tags/ugly-man/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-temptation',name:'\u8a98\u60d1',path:'/tags/temptation/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-kinship',name:'\u89aa\u5c6c',path:'/tags/kinship/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-virginity',name:'\u7ae5\u8c9e',path:'/tags/virginity/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-time-stop',name:'\u6642\u9593\u505c\u6b62',path:'/tags/time-stop/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-avenge',name:'\u5fa9\u4ec7',path:'/tags/avenge/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-age-difference',name:'\u5e74\u9f61\u5dee',path:'/tags/age-difference/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-giant',name:'\u5de8\u6f22',path:'/tags/giant/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-love-potion',name:'\u5a9a\u85e5',path:'/tags/love-potion/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-sex-beside-husband',name:'\u592b\u76ee\u524d\u72af',path:'/tags/sex-beside-husband/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-affair',name:'\u51fa\u8ecc',path:'/tags/affair/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-hypnosis',name:'\u50ac\u7720',path:'/tags/hypnosis/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-private-cam',name:'\u5077\u62cd',path:'/tags/private-cam/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-rainy-day',name:'\u4e0b\u96e8\u5929',path:'/tags/rainy-day/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-ntr',name:'NTR',path:'/tags/ntr/',block:'list_videos_common_videos_list',sort:'post_date'} ]},
-             {id:'role',name:'\u89d2\u8272',subs:[
-               {id:'tag-club-hostess-and-sex-worker',name:'\u98a8\u4fd7\u5a18',path:'/tags/club-hostess-and-sex-worker/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-doctor',name:'\u91ab\u751f',path:'/tags/doctor/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-fugitive',name:'\u9003\u72af',path:'/tags/fugitive/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-nurse',name:'\u8b77\u58eb',path:'/tags/nurse/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-teacher',name:'\u8001\u5e2b',path:'/tags/teacher/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-flight-attendant',name:'\u7a7a\u59d0',path:'/tags/flight-attendant/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-team-manager',name:'\u7403\u968a\u7d93\u7406',path:'/tags/team-manager/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-widow',name:'\u672a\u4ea1\u4eba',path:'/tags/widow/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-detective',name:'\u641c\u67e5\u5b98',path:'/tags/detective/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-couple',name:'\u60c5\u4fb6',path:'/tags/couple/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-housewife',name:'\u5bb6\u653f\u5a66',path:'/tags/housewife/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-private-teacher',name:'\u5bb6\u5ead\u6559\u5e2b',path:'/tags/private-teacher/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-idol',name:'\u5076\u50cf',path:'/tags/idol/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-wife',name:'\u4eba\u59bb',path:'/tags/wife/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-female-anchor',name:'\u4e3b\u64ad',path:'/tags/female-anchor/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-ol',name:'OL',path:'/tags/ol/',block:'list_videos_common_videos_list',sort:'post_date'} ]},
-             {id:'place',name:'\u5730\u9ede',subs:[
-               {id:'tag-magic-mirror',name:'\u9b54\u93e1\u865f',path:'/tags/magic-mirror/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-tram',name:'\u96fb\u8eca',path:'/tags/tram/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-first-night',name:'\u8655\u5973',path:'/tags/first-night/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-prison',name:'\u76e3\u7344',path:'/tags/prison/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-hot-spring',name:'\u6eab\u6cc9',path:'/tags/hot-spring/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-bathing-place',name:'\u6d17\u6d74\u5834',path:'/tags/bathing-place/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-swimming-pool',name:'\u6cf3\u6c60',path:'/tags/swimming-pool/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-car',name:'\u6c7d\u8eca',path:'/tags/car/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-toilet',name:'\u5ec1\u6240',path:'/tags/toilet/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-school',name:'\u5b78\u6821',path:'/tags/school/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-library',name:'\u5716\u66f8\u9928',path:'/tags/library/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-gym-room',name:'\u5065\u8eab\u623f',path:'/tags/gym-room/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-store',name:'\u4fbf\u5229\u5e97',path:'/tags/store/',block:'list_videos_common_videos_list',sort:'post_date'} ]},
-             {id:'misc',name:'\u96dc\u9805',subs:[
-               {id:'tag-video-recording',name:'\u9304\u50cf',path:'/tags/video-recording/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-debut-retires',name:'\u8655\u5973\u4f5c/\u5f15\u9000\u4f5c',path:'/tags/debut-retires/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-variety-show',name:'\u7d9c\u85dd',path:'/tags/variety-show/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-festival',name:'\u7bc0\u65e5\u4e3b\u984c',path:'/tags/festival/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-thanksgiving',name:'\u611f\u8b1d\u796d',path:'/tags/thanksgiving/',block:'list_videos_common_videos_list',sort:'post_date'},
-               {id:'tag-more-than-4-hours',name:'4\u5c0f\u6642\u4ee5\u4e0a',path:'/tags/more-than-4-hours/',block:'list_videos_common_videos_list',sort:'post_date'} ]}
-      ],
+      tabs:[ {id:'latest',name:'最新',path:'/latest-updates/',block:'list_videos_latest_videos_list',sort:'post_date'},
+             {id:'hot',name:'热门',path:'/hot/',block:'list_videos_common_videos_list',sort:'video_viewed'},
+             {id:'new',name:'新片',path:'/new-release/',block:'list_videos_common_videos_list',sort:'post_date'},
+             {id:'zh',name:'中文字幕',path:'/categories/chinese-subtitle/',block:'list_videos_common_videos_list',sort:'post_date'},
+             {id:'roleplay',name:'角色剧情',path:'/categories/roleplay/',block:'list_videos_common_videos_list',sort:'post_date'},
+             {id:'uniform',name:'制服',path:'/categories/uniform/',block:'list_videos_common_videos_list',sort:'post_date'},
+             {id:'pov',name:'POV',path:'/categories/pov/',block:'list_videos_common_videos_list',sort:'post_date'},
+             {id:'wife',name:'人妻',path:'/tags/wife/',block:'list_videos_common_videos_list',sort:'post_date'},
+             {id:'bigtits',name:'巨乳',path:'/tags/big-tits/',block:'list_videos_common_videos_list',sort:'post_date'},
+             {id:'pantyhose',name:'丝袜',path:'/tags/pantyhose/',block:'list_videos_common_videos_list',sort:'post_date'},
+             {id:'creampie',name:'中出',path:'/tags/creampie/',block:'list_videos_common_videos_list',sort:'post_date'} ],
       isVideoUrl:function(h){ return String(h).indexOf('/videos/')!==-1; },
       codeOf:function(url){ var m=String(url).match(/\/videos\/([^/]+)\//); return m?m[1].toUpperCase():''; },
       parseCards:function(html){
@@ -1194,87 +928,17 @@ body.detail-active .switcher, body.set-open .switcher, body.searching .switcher{
       id:'missav', label:'MissAV', word:'MissAV', site:'https://missav.ws', ns:'missav',
       siteName:'missav.ws', refererDefault:true, proxyHosts:'missav.ws / surrit.com / fourhoi.com',
       markPath:'M13 46 L13 16 L30 35 L47 16 L47 46',
-      // 官网导航是"主菜单(一级) + 下拉(二级)"，不是一整排。这里照官网结构还原：
-      // 中文字幕是独立的一级项（点了直接加载）；其余 4 个一级项本身不可点（官网上是 href="#"，
-      // 只用来展开下拉），点了默认加载组内第一个二级项，二级项才是真正的视频列表页。
-      tabs:[
-        {id:'cnsub',name:'中文字幕',path:'/dm278/cn/chinese-subtitle'},
-        {id:'jav',name:'观看日本AV',subs:[
-          {id:'new',name:'最近更新',path:'/dm539/cn/new'},
-          {id:'release',name:'新作上市',path:'/dm635/cn/release'},
-          {id:'leak',name:'无码流出',path:'/dm817/cn/uncensored-leak'},
-          {id:'today',name:'今日热门',path:'/dm301/cn/today-hot'},
-          {id:'weekly',name:'本周热门',path:'/dm170/cn/weekly-hot'},
-          {id:'monthly',name:'本月热门',path:'/dm273/cn/monthly-hot'},
-          {id:'vr',name:'VR',path:'/cn/genres/VR'},
-          {id:'ensub',name:'英文字幕',path:'/dm21/cn/english-subtitle'} ]},
-        {id:'amateur',name:'素人',subs:[
-          {id:'siro',name:'SIRO',path:'/dm36/cn/siro'},
-          {id:'luxu',name:'LUXU',path:'/dm34/cn/luxu'},
-          {id:'gana',name:'GANA',path:'/dm34/cn/gana'},
-          {id:'maan',name:'PRESTIGE PREMIUM',path:'/dm1004/cn/maan'},
-          {id:'scute',name:'S-CUTE',path:'/dm38/cn/scute'},
-          {id:'ara',name:'ARA',path:'/dm34/cn/ara'} ]},
-        {id:'uncensored',name:'无码影片',subs:[
-          {id:'leak2',name:'无码流出',path:'/dm817/cn/uncensored-leak'},
-          {id:'fc2',name:'FC2',path:'/dm597/cn/fc2'},
-          {id:'heyzo',name:'HEYZO',path:'/dm2208642/cn/heyzo'},
-          {id:'tokyohot',name:'东京热',path:'/dm42/cn/tokyohot'},
-          {id:'onepondo',name:'一本道',path:'/dm5199603/cn/1pondo'},
-          {id:'caribbeancom',name:'Caribbeancom',path:'/dm7704788/cn/caribbeancom'},
-          {id:'caribbeancompr',name:'Caribbeancompr',path:'/dm91887/cn/caribbeancompr'},
-          {id:'musume10',name:'10musume',path:'/dm7208981/cn/10musume'},
-          {id:'pacopacomama',name:'pacopacomama',path:'/dm3600557/cn/pacopacomama'},
-          {id:'gachinco',name:'Gachinco',path:'/dm150/cn/gachinco'},
-          {id:'xxxav',name:'XXX-AV',path:'/dm42/cn/xxxav'},
-          {id:'marriedslash',name:'人妻斩',path:'/dm37/cn/marriedslash'},
-          {id:'naughty4610',name:'顽皮4610',path:'/dm33/cn/naughty4610'},
-          {id:'naughty0930',name:'顽皮0930',path:'/dm37/cn/naughty0930'} ]},
-        {id:'asia',name:'亚洲AV',subs:[
-          {id:'madou',name:'麻豆传媒',path:'/dm63/cn/madou'},
-          {id:'twav',name:'TWAV',path:'/dm31/cn/twav'},
-          {id:'furuke',name:'Furuke',path:'/dm15/cn/furuke'},
-          // 直播这两个页面结构没验证过（大概率不是常规的分页视频列表，而是直播间列表/嵌入播放器），
-          // parseCards 找不到匹配就是空列表，不会报错崩溃，但也别指望它跟其他分类一样好用——
-          // 真要打磨好的话，最好把 /cn/klive 或 /cn/clive 的页面快照发我核实一下卡片结构。
-          {id:'klive',name:'韩国直播',path:'/cn/klive'},
-          {id:'clive',name:'中国直播',path:'/cn/clive'} ]}
-      ],
-      /* ---- 女優卡 ----
-         搜索页顶部就有这么一条：圆头像 + 名字 + "357 条影片"，
-         链接是 /cn/actresses/<名字>，正好当频道卡用。 */
-      chanRe:/^\/[a-z]{2}\/actresses\/([^/?#]+)/,
-      parseChannels:function(html){
-        var self=this,doc=parseDoc(html),out=[],seen={};
-        var links=doc.querySelectorAll('a[href*="/actresses/"]');
-        Array.prototype.forEach.call(links,function(a){
-          var href=(a.getAttribute('href')||'').replace(/&amp;/g,'&');
-          if(!href||href.charAt(0)==='#')return;
-          var rel=href.replace(/^https?:\/\/[^/]+/,'').replace(/[?#].*$/,'');
-          var m=rel.match(self.chanRe);
-          if(!m)return;
-          var slug=m[1];
-          if(/^(ranking|new|popular)$/i.test(slug))return;      // 榜单入口不是人
-          if(seen[rel])return;
-          var img=a.querySelector('img');
-          // 名字和头像分挂在两个 <a> 上（一个包图、一个包文字），所以往外找一层再取
-          var card=a.closest?(a.closest('li')||a.parentNode):a.parentNode;
-          var h=card&&card.querySelector?card.querySelector('h4, h3, .title'):null;
-          var name=(img&&img.getAttribute('alt'))||txt(h)||txt(a)||'';
-          name=name.replace(/\s+/g,' ').trim();
-          if(!name)name=decodeURIComponent(slug).replace(/[-_+]/g,' ');
-          if(!name||name.length>40)return;
-          if(!img&&card&&card.querySelector)img=card.querySelector('img');
-          var pic=img?(img.getAttribute('src')||img.getAttribute('data-src')||''):'';
-          if(pic&&pic.indexOf('//')===0)pic='https:'+pic;
-          else if(pic&&pic.charAt(0)==='/')pic=self.site+pic;
-          var stats=chanStatsFrom(card?txt(card):txt(a));
-          seen[rel]=1;
-          out.push({ kind:'chan', name:name, url:self.site+rel, pic:pic,
-                     meta:stats.join('  \u00b7  '), verified:false, badge:'\u5973\u512a' });
-        });
-        return out;
-      },
+      tabs:[ {id:'new',name:'最新',path:'/dm539/en/new'},
+             {id:'today',name:'今日热门',path:'/dm301/en/today-hot'},
+             {id:'weekly',name:'本周热门',path:'/dm170/en/weekly-hot'},
+             {id:'monthly',name:'本月热门',path:'/dm273/en/monthly-hot'},
+             {id:'release',name:'新发行',path:'/dm634/en/release'},
+             {id:'leak',name:'无码流出',path:'/dm817/en/uncensored-leak'},
+             {id:'ensub',name:'英文字幕',path:'/dm21/en/english-subtitle'},
+             {id:'gana',name:'素人GANA',path:'/dm34/en/gana'},
+             {id:'siro',name:'SIRO',path:'/dm36/en/siro'},
+             {id:'tokyohot',name:'东京热',path:'/dm42/en/tokyohot'},
+             {id:'madou',name:'麻豆',path:'/dm63/en/madou'} ],
       isVideoUrl:function(href){
         if(!href|| (href.indexOf('/')!==0 && href.indexOf('http')!==0))return false;
         var path=href.replace(/^https?:\/\/[^/]+/,'').replace(/[?#].*$/,'').replace(/\/+$/,'');
@@ -1340,7 +1004,7 @@ body.detail-active .switcher, body.set-open .switcher, body.searching .switcher{
       listUrls:function(page){
         if(view.mode==='search'){
           var kw=encodeURIComponent(view.kw), pg=(page>1?'?page='+page:'');
-          return [ this.site+'/cn/search/'+kw+pg, this.site+'/search/'+kw+pg ];
+          return [ this.site+'/en/search/'+kw+pg, this.site+'/search/'+kw+pg ];
         }
         var b=this.site+view.path;
         if(page>1)b+=(b.indexOf('?')===-1?'?':'&')+'page='+page;
@@ -1369,41 +1033,19 @@ body.detail-active .switcher, body.set-open .switcher, body.searching .switcher{
       isVideoUrl:function(href){ return /\/watch\?v=\d+/.test(String(href)); },
       codeOf:function(url){ var m=String(url).match(/[?&]v=(\d+)/); return m?m[1]:''; },
       parseCards:function(html){
-        var self=this,doc=parseDoc(html),out=[],index={};
-        // hanime1 有两种卡片结构（用 泡麵番/裏番/Motion Anime/频道页/详情页相关推荐 的页面快照核实过）：
-        // 1) /search?genre=泡麵番|裏番 这类：<a href="/watch?v=x">...<div class="home-rows-videos-title">标题</div></a>
-        //    标题是 a 的后代节点。
-        // 2) Motion Anime/Cosplay/3D/2D/AI/MMD、频道页、详情页“相关推荐”这类：
-        //    <div title="标题" class="video-item-container"><div class="horizontal-card">
-        //      <a class="video-link" href="/watch?v=x"><div class="thumb-container">...</div><div class="title">标题</div></a>
-        //    ...</div></div>
-        //    标题既是 video-item-container 容器的 title 属性，也是 a 内部 .title 节点的文本。
-        // 另外“本影片的播放列表”这类小组件里，缩图和标题是两个分开的 <a>（同一个 href），
-        // 谁先出现在 DOM 里就决定 seen[href] 锁定谁 —— 如果先遇到的是缩图那个空标题的 a，
-        // 标题就会一直是空的。这里改成按 href 合并多个 a，谁有标题就用谁的。
-        var links=doc.querySelectorAll('a[href*="/watch?v="]');
+        var self=this,doc=parseDoc(html),out=[],seen={};
+        var links=doc.querySelectorAll('a.video-link[href*="/watch?v="], a[href*="/watch?v="]');
         Array.prototype.forEach.call(links,function(a){
           var href=a.getAttribute('href')||''; if(!self.isVideoUrl(href))return;
           if(href.indexOf('http')!==0)href=self.site+(href.charAt(0)==='/'?'':'/')+href;
-          var img=a.querySelector('img');
+          if(seen[href])return; seen[href]=1;
+          var box=a.closest('.video-item-container')||a.parentNode;
+          var img=a.querySelector('img')||(box&&box.querySelector('img'));
           var pic=pickImg(img);
-          var dur=a.querySelector('.duration, .video-duration');
-          var titleEl=a.querySelector('.home-rows-videos-title, .card-mobile-title, .title');
-          var container=a.closest('.video-item-container');
-          var title=txt(titleEl)
-            ||(container&&(container.getAttribute('title')||'').trim())
-            ||a.getAttribute('title')
-            ||(img?(img.getAttribute('alt')||''):txt(a))
-            ||'';
-          var entry=index[href];
-          if(!entry){
-            entry={url:href,pic:pic,preview:'',uuid:'',title:title,dur:txt(dur),hits:''};
-            index[href]=entry; out.push(entry);
-          } else {
-            if(!entry.title&&title)entry.title=title;
-            if(!entry.pic&&pic)entry.pic=pic;
-            if(!entry.dur&&dur)entry.dur=txt(dur);
-          }
+          var dur=box&&box.querySelector('.duration');
+          var titleEl=box&&(box.querySelector('.card-mobile-title, .home-rows-videos-title'));
+          var title=txt(titleEl)||(box&&box.getAttribute('title'))||a.getAttribute('title')||(img&&img.getAttribute('alt'))||'';
+          out.push({url:href,pic:pic,preview:'',uuid:'',title:title,dur:txt(dur),hits:''});
         });
         return out;
       },
@@ -1451,207 +1093,17 @@ body.detail-active .switcher, body.set-open .switcher, body.searching .switcher{
              {id:'week',name:'\u672c\u5468',path:'o=mv&t=w'},
              {id:'month',name:'\u672c\u6708',path:'o=mv&t=m'},
              {id:'long',name:'\u6700\u957f',path:'o=lg'} ],
-      // 分类 ID 取自 PH 分类页快照核实（105 个分类卡片里，87 个是 c=数字 这种简单查询过滤，能直接拼进现有的
-      // cats 机制；剩下十几个官网自己也是跳到完全不同的路径（/vr、/transgender、/categories/xxx 等），
-      // 不是加个查询参数就行，跟这套 cats 机制（只认『在当前 tab 路径后面拼字符串』）对不上，先没收进来：
-      // 18-25歲、色情日漫、Ai生成、上班时观赏、交互式、反应、大学、女性之选、深喉、自述视频、色情明星、虚拟现实、跨性别、风情少女、高清色情片
+      // 分类 ID 取自 PH 站内菜单（已核实）
       cats:[ {id:'all',name:'\u5168\u90e8',q:''},
-             {id:'c28',name:'\u719f\u5973',q:'c=28'},
-             {id:'c29',name:'\u8fa3\u5988',q:'c=29'},
-             {id:'c17',name:'\u9ed1\u4eba\u5973',q:'c=17'},
-             {id:'c35',name:'\u7206\u83ca',q:'c=35'},
-             {id:'c181',name:'\u8001\u5c11\u6b22',q:'c=181'},
-             {id:'c27',name:'\u5973\u540c',q:'c=27'},
-             {id:'c65',name:'3P',q:'c=65'},
-             {id:'c111',name:'\u65e5\u672c\u4eba',q:'c=111'},
-             {id:'c105',name:'60\u5e27',q:'c=105'},
-             {id:'c241',name:'Cosplay',q:'c=241'},
-             {id:'c2',name:'\u4e71\u4ea4\u7fa4\u6b22',q:'c=2'},
-             {id:'c1',name:'\u4e9a\u6d32\u4eba',q:'c=1'},
-             {id:'c542',name:'\u4f69\u6234\u5f0f\u9633\u5177',q:'c=542'},
-             {id:'c99',name:'\u4fc4\u56fd\u4eba',q:'c=99'},
-             {id:'c24',name:'\u516c\u4f17\u91ce\u6218',q:'c=24'},
-             {id:'c15',name:'\u5185\u5c04\u4e2d\u51fa',q:'c=15'},
-             {id:'c732',name:'\u5185\u5d4c\u5b57\u5e55',q:'c=732'},
-             {id:'c21',name:'\u52b2\u7206\u91cd\u53e3\u5473',q:'c=21'},
-             {id:'c86',name:'\u5361\u901a',q:'c=86'},
-             {id:'c101',name:'\u5370\u5ea6\u4eba',q:'c=101'},
-             {id:'c76',name:'\u53cc\u6027\u604b\u7537',q:'c=76'},
-             {id:'c72',name:'\u53cc\u9f99\u5165\u6d1e',q:'c=72'},
-             {id:'c13',name:'\u53e3\u4ea4',q:'c=13'},
-             {id:'c43',name:'\u53e4\u5178\u6d3e',q:'c=43'},
-             {id:'c57',name:'\u5408\u96c6',q:'c=57'},
-             {id:'c12',name:'\u540d\u4eba',q:'c=12'},
-             {id:'c6',name:'\u5927\u53f7\u7f8e\u5973',q:'c=6'},
-             {id:'c492',name:'\u5973\u6027\u81ea\u6170',q:'c=492'},
-             {id:'c502',name:'\u5973\u6027\u9ad8\u6f6e',q:'c=502'},
-             {id:'c242',name:'\u5a07\u59bb\u5077\u5403',q:'c=242'},
-             {id:'c16',name:'\u5c04\u7cbe',q:'c=16'},
-             {id:'c8',name:'\u5de8\u4e73',q:'c=8'},
-             {id:'c7',name:'\u5de8\u5c4c',q:'c=7'},
-             {id:'c482',name:'\u5df2\u8ba4\u8bc1\u60c5\u4fa3',q:'c=482'},
-             {id:'c139',name:'\u5df2\u8ba4\u8bc1\u6a21\u7279',q:'c=139'},
-             {id:'c138',name:'\u5df2\u8ba4\u8bc1\u7d20\u4eba',q:'c=138'},
-             {id:'c102',name:'\u5df4\u897f\u4eba',q:'c=102'},
-             {id:'c95',name:'\u5fb7\u56fd\u4eba',q:'c=95'},
-             {id:'c23',name:'\u6027\u73a9\u5177',q:'c=23'},
-             {id:'c18',name:'\u604b\u7269\u7656',q:'c=18'},
-             {id:'c93',name:'\u604b\u8db3',q:'c=93'},
-             {id:'c97',name:'\u610f\u5927\u5229\u4eba',q:'c=97'},
-             {id:'c20',name:'\u624b\u4ea4',q:'c=20'},
-             {id:'c22',name:'\u624b\u6deb',q:'c=22'},
-             {id:'c91',name:'\u62bd\u70df',q:'c=91'},
-             {id:'c26',name:'\u62c9\u4e01\u88d4\u7f8e\u5973',q:'c=26'},
-             {id:'c19',name:'\u62f3\u4ea4',q:'c=19'},
-             {id:'c592',name:'\u6307\u4ea4',q:'c=592'},
-             {id:'c78',name:'\u6309\u6469',q:'c=78'},
-             {id:'c10',name:'\u6346\u7ed1',q:'c=10'},
-             {id:'c100',name:'\u6377\u514b\u4eba',q:'c=100'},
-             {id:'c32',name:'\u641e\u7b11',q:'c=32'},
-             {id:'c211',name:'\u6492\u5c3f',q:'c=211'},
-             {id:'c891',name:'\u64ad\u5ba2',q:'c=891'},
-             {id:'c88',name:'\u6821\u56ed',q:'c=88'},
-             {id:'c55',name:'\u6b27\u6d32\u4eba',q:'c=55'},
-             {id:'c94',name:'\u6cd5\u56fd\u4eba',q:'c=94'},
-             {id:'c522',name:'\u6d6a\u6f2b',q:'c=522'},
-             {id:'c11',name:'\u6df1\u53d1\u5973',q:'c=11'},
-             {id:'c201',name:'\u6ed1\u7a3d\u6a21\u4eff',q:'c=201'},
-             {id:'c69',name:'\u6f6e\u5439',q:'c=69'},
-             {id:'c89',name:'\u706b\u8fa3\u4fdd\u59c6',q:'c=89'},
-             {id:'c141',name:'\u7247\u573a\u76f4\u51fb',q:'c=141'},
-             {id:'c115',name:'\u72ec\u5bb6',q:'c=115'},
-             {id:'c92',name:'\u7537\u6027\u81ea\u6170',q:'c=92'},
-             {id:'c31',name:'\u771f\u4eba\u5b9e\u62cd',q:'c=31'},
-             {id:'c41',name:'\u7b2c\u4e00\u89c6\u89d2',q:'c=41'},
-             {id:'c67',name:'\u7c97\u66b4\u6027\u7231',q:'c=67'},
-             {id:'c3',name:'\u7d20\u4eba',q:'c=3'},
-             {id:'c42',name:'\u7ea2\u6bdb',q:'c=42'},
-             {id:'c562',name:'\u7eb9\u8eab\u5973',q:'c=562'},
-             {id:'c444',name:'\u7ee7\u5bb6\u5ead\u5e7b\u60f3',q:'c=444'},
-             {id:'c53',name:'\u805a\u4f1a',q:'c=53'},
-             {id:'c512',name:'\u808c\u8089\u7537',q:'c=512'},
-             {id:'c4',name:'\u80a5\u81c0',q:'c=4'},
-             {id:'c33',name:'\u8131\u8863\u821e',q:'c=33'},
-             {id:'c131',name:'\u8214\u5c44',q:'c=131'},
-             {id:'c96',name:'\u82f1\u56fd\u4eba',q:'c=96'},
-             {id:'c61',name:'\u89c6\u9891\u6fc0\u60c5',q:'c=61'},
-             {id:'c81',name:'\u89d2\u8272\u626e\u6f14',q:'c=81'},
-             {id:'c90',name:'\u8bd5\u955c',q:'c=90'},
-             {id:'c59',name:'\u8d2b\u4e73',q:'c=59'},
-             {id:'c881',name:'\u8d4c\u535a',q:'c=881'},
-             {id:'c25',name:'\u8de8\u79cd\u65cf',q:'c=25'},
-             {id:'c80',name:'\u8f6e\u4ea4',q:'c=80'},
-             {id:'c9',name:'\u91d1\u53d1\u5973',q:'c=9'},
-             {id:'c98',name:'\u963f\u62c9\u4f2f\u4eba',q:'c=98'},
-             {id:'c14',name:'\u96c6\u4f53\u989c\u5c04',q:'c=14'},
-             {id:'c103',name:'\u97e9\u56fd\u4eba',q:'c=103'},
-             {id:'c121',name:'\u97f3\u4e50',q:'c=121'} ],
+             {id:'jp',name:'\u65e5\u672c\u4eba',q:'c=111'},
+             {id:'milf',name:'\u719f\u5973',q:'c=28'},
+             {id:'mom',name:'\u8fa3\u5988',q:'c=29'},
+             {id:'les',name:'\u5973\u540c',q:'c=27'},
+             {id:'anal',name:'\u7206\u83ca',q:'c=35'},
+             {id:'3p',name:'3P',q:'c=65'},
+             {id:'ebony',name:'\u9ed1\u4eba\u5973',q:'c=17'} ],
       isVideoUrl:function(href){ return /view_video\.php\?viewkey=/.test(String(href)); },
       codeOf:function(url){ var m=String(url).match(/viewkey=([a-z0-9]+)/i); return m?m[1]:''; },
-      /* ---- 频道 / 博主 ----
-         PH 把「人」分成四类，路径不同但页面结构一样：
-           /pornstar/xxx  官方明星    /model/xxx     模特(自主入驻)
-           /channels/xxx  厂牌频道    /users/xxx     普通用户上传者
-         搜索关键词时，除了视频搜索页本身会带出相关的人，PH 还有各自的专用搜索页。 */
-      chanRe:/^\/(pornstar|model|channels|users)\/([^/?#]+)/,
-      // 频道页顶部导航/按钮的文案，绝不是人名
-      navWordRe:/^(\u9996\u9875|\u89c6\u9891|\u5f71\u7247|\u7167\u7247|\u76f8\u518c|\u76f4\u64ad|\u5173\u4e8e|\u66f4\u591a|\u8ba2\u9605|\u4fe1\u606f|\u94fe\u63a5|\u4e3e\u62a5\u7528\u6237|\u67e5\u770b\u5168\u90e8|home|videos?|photos?|albums?|stream|about|more|subscribe|message|links?)$/i,
-      chanKindName:function(seg){
-        return seg==='channels' ? '\u9891\u9053' : seg==='users' ? '\u7528\u6237' :
-               seg==='model' ? '\u6a21\u7279' : '\u660e\u661f';
-      },
-      channelUrls:function(kw){
-        var k=encodeURIComponent(kw);
-        return [ this.site+'/pornstars/search?search='+k,
-                 this.site+'/channels/search?search='+k,
-                 this.site+'/user/search?search='+k ];
-      },
-      parseChannels:function(html){
-        var self=this,doc=parseDoc(html),out=[],seen={};
-        var links=doc.querySelectorAll('a[href*="/pornstar/"], a[href*="/model/"], a[href*="/channels/"], a[href*="/users/"]');
-        Array.prototype.forEach.call(links,function(a){
-          var href=(a.getAttribute('href')||'').replace(/&amp;/g,'&');
-          if(!href||href.charAt(0)==='#')return;
-          var rel=href.replace(/^https?:\/\/[^/]+/,'');
-          var m=rel.match(self.chanRe);
-          if(!m)return;
-          var seg=m[1],slug=m[2];
-          if(!slug||slug==='search')return;                 // /pornstars/search 这类索引页不算
-          var key='/'+seg+'/'+slug;
-          if(seen[key])return;
-          // 名字：优先头像 alt，其次链接文本，最后拿 slug 反推。
-          // 注意链接文本可能是导航标签而不是人名（频道页顶部的「首页/视频/照片/关于」
-          // 指向的就是同一个 /model/xxx），这类词一律不认，退回 slug。
-          var img=a.querySelector('img');
-          var name=(img&&(img.getAttribute('alt')||''))||txt(a)||'';
-          name=name.replace(/\s*(\u7684\u4e2a\u4eba\u9875|profile|channel)\s*$/i,'').replace(/\s+/g,' ').trim();
-          if(name&&self.navWordRe.test(name))name='';
-          if(!name||name.length>40){
-            name=decodeURIComponent(slug).replace(/[-_+]/g,' ')
-                 .replace(/\b[a-z]/g,function(ch){return ch.toUpperCase();});
-          }
-          if(!name)return;
-          var pic=img?(img.getAttribute('src')||img.getAttribute('data-src')||img.getAttribute('data-thumb_url')||img.getAttribute('data-path')||''):'';
-          if(pic&&pic.indexOf('data:')===0)pic=img.getAttribute('data-src')||img.getAttribute('data-thumb_url')||'';
-          if(pic&&pic.indexOf('//')===0)pic='https:'+pic;
-          else if(pic&&pic.charAt(0)==='/')pic=self.site+pic;
-          // 数量：订阅者 / 次观看 / 视频数，能抓到几个算几个。
-          // 只看链接自身和它的直接父节点——再往上就会串到隔壁条目的数字上；
-          // 文本过长说明这层已经不是"这一条"的容器，也不采信。
-          var stats=[],box=a,hop=0,t='',hit='';
-          while(box&&hop<2){
-            t=txt(box);
-            if(t&&t.length<120&&/\d[\d,.]*\s*[KMB]?\s*(\u8ba2\u9605|\u6b21\u89c2\u770b|\u4e2a?\u89c6\u9891|subscribers?|views?|videos?)/i.test(t)){ hit=t; break; }
-            box=box.parentNode; hop++;
-          }
-          if(hit) stats=self.statsFrom(hit);
-          // 认证标（PH 的蓝勾）：链接内或同层有 verified 类名
-          var vf=!!(a.querySelector('.verifiedIcon, .verified-icon, .verified')||
-                    (a.parentNode&&a.parentNode.querySelector&&a.parentNode.querySelector('.verifiedIcon, .verified-icon')));
-          seen[key]=1;
-          out.push({ kind:'chan', name:name, url:self.site+key, pic:(pic||'').replace(/&amp;/g,'&'),
-                     meta:stats.join('  \u00b7  '), verified:vf, badge:self.chanKindName(seg) });
-        });
-        return out;
-      },
-      /* 从一段文本里挑出「N 订阅者 / N 次观看 / N 视频」，按这个顺序排（跟 PH 频道页一致） */
-      statsFrom:function(text){
-        var s=String(text||''),out=[],m;
-        m=s.match(/([\d][\d,.]*\s*[KMB]?)\s*(?:\u4f4d)?\s*(?:\u8ba2\u9605\u8005|\u8ba2\u9605|subscribers?)/i);
-        if(m)out.push(m[1].replace(/\s+/g,'')+' \u8ba2\u9605');
-        m=s.match(/([\d][\d,.]*\s*[KMB]?)\s*(?:\u6b21\u89c2\u770b|\u89c2\u770b|views?)/i);
-        if(m)out.push(m[1].replace(/\s+/g,'')+' \u89c2\u770b');
-        m=s.match(/([\d][\d,.]*\s*[KMB]?)\s*(?:\u4e2a)?\s*(?:\u89c6\u9891|videos?)/i);
-        if(m)out.push(m[1].replace(/\s+/g,'')+' \u89c6\u9891');
-        return out;
-      },
-      /* 频道/明星主页本身：补齐搜索页给不全的头像和数量。
-         对应你截图里那一屏——圆头像、名字+蓝勾、模特排名/次观看/订阅者。 */
-      parseChanProfile:function(html){
-        var doc=parseDoc(html),o={};
-        function ogc(p){ var m=doc.querySelector('meta[property="'+p+'"]'); return m?m.getAttribute('content'):''; }
-        var h1=doc.querySelector('.profileInfos h1, .nameSubscribe h1, .name h1, h1.pornstarName, h1');
-        o.name=txt(h1)||(ogc('og:title')||'').replace(/\s*[-|]\s*Pornhub.*$/i,'');
-        var av=doc.querySelector('#getAvatar, .avatarPosition img, .avatarTrigger img, .thumbImage img, .previewAvatar img');
-        var pic=av?(av.getAttribute('src')||av.getAttribute('data-src')||''):'';
-        if(!pic)pic=ogc('og:image')||'';
-        if(pic&&pic.indexOf('//')===0)pic='https:'+pic;
-        o.pic=(pic||'').replace(/&amp;/g,'&');
-        // 数量块：PH 实际用的是 .mobileRanks（里面几个 span.rankInfo），
-        // 早先猜的 .infoBox / .userInfoBlock 在真实页面上都不存在，留着当别的版式的兜底。
-        var infoEl=doc.querySelector('.mobileRanks, .profileDetails, .profileInfos, .infoBox, .userInfoBlock, .profileTopInfo');
-        var infoTxt=infoEl?txt(infoEl):'';
-        // 整页兜底容易抓串（页面别处的"159,555 视频"之类会被当成这个人的数据），
-        // 所以退回整页时只认订阅/观看，不认视频数。
-        if(!/\d/.test(infoTxt)){
-          var body=txt(doc.body).slice(0,4000);
-          var keep=body.match(/[\d][\d,.]*\s*[KMB]?\s*(?:\u4f4d)?\s*(?:\u8ba2\u9605\u8005|\u8ba2\u9605|subscribers?|\u6b21\u89c2\u770b|views?)/gi);
-          infoTxt=keep?keep.join(' '):'';
-        }
-        o.stats=this.statsFrom(infoTxt);
-        o.verified=!!doc.querySelector('.verified-icon, .verifiedIcon, .modelVerified, .verifiedMember');
-        return o;
-      },
       parseCards:function(html){
         var self=this,doc=parseDoc(html),out=[],seen={};
         var links=doc.querySelectorAll('a[href*="view_video.php?viewkey="]');
@@ -1723,15 +1175,6 @@ body.detail-active .switcher, body.set-open .switcher, body.searching .switcher{
           if(page>1)sb+='&page='+page;
           return [sb];
         }
-        // 二级页（点了频道/明星卡进来）：view.path 是真正的路径，不是排序查询串。
-        // ph 的一级 tab 用 path 存 'o=ht' 这种查询串，所以只能靠开头的 / 来区分两者。
-        if(view.path&&view.path.charAt(0)==='/'){
-          var p=String(view.path).replace(/[?#].*$/,'').replace(/\/+$/,'');
-          if(this.chanRe.test(p)&&!/\/videos$/.test(p))p+='/videos';   // 人的主页默认落在简介，视频在 /videos
-          var u=this.site+p;
-          if(page>1)u+='?page='+page;
-          return [u];
-        }
         var qs=[];
         if(view.catQ)qs.push(view.catQ);      // 分类 c=NN
         if(view.path)qs.push(view.path);      // 排序 o=xx[&t=x]
@@ -1743,43 +1186,18 @@ body.detail-active .switcher, body.set-open .switcher, body.searching .switcher{
       id:'supjav', label:'SupJav', word:'SupJav', site:'https://supjav.com', ns:'supjav',
       siteName:'supjav.com', refererDefault:true, proxyHosts:'supjav.com / img.supjav.com + 线路CDN',
       markPath:'M44 18 C44 12 37 10 30 10 C20 10 15 15 15 22 C15 29 22 31 30 31 C38 31 45 33 45 40 C45 47 39 50 30 50 C22 50 16 47 16 41',
-      tabs:[ {id:'new',name:'\u6700\u65b0',path:'/zh'},
-             {id:'week',name:'\u672c\u5468\u70ed\u95e8',path:'/zh/popular?sort=week'},
-             {id:'month',name:'\u672c\u6708\u70ed\u95e8',path:'/zh/popular?sort=month'},
-             {id:'all',name:'\u603b\u699c',path:'/zh/popular'},
-             {id:'cen',name:'\u6709\u7801',path:'/zh/category/censored-jav'},
-             {id:'uncen',name:'\u65e0\u7801',path:'/zh/category/uncensored-jav'},
-             {id:'chn',name:'\u4e2d\u6587\u5b57\u5e55',path:'/zh/category/chinese-subtitles'},
-             {id:'eng',name:'\u82f1\u6587\u5b57\u5e55',path:'/zh/category/english-subtitles'},
-             {id:'amateur',name:'\u7d20\u4eba',path:'/zh/category/amateur'},
-             {id:'mosaic',name:'\u7834\u89e3\u9a6c\u8d5b\u514b',path:'/zh/category/reducing-mosaic'} ],
+      tabs:[ {id:'new',name:'\u6700\u65b0',path:'/'},
+             {id:'week',name:'\u672c\u5468\u70ed\u95e8',path:'/popular?sort=week'},
+             {id:'month',name:'\u672c\u6708\u70ed\u95e8',path:'/popular?sort=month'},
+             {id:'all',name:'\u603b\u699c',path:'/popular'},
+             {id:'cen',name:'\u6709\u7801',path:'/category/censored-jav'},
+             {id:'uncen',name:'\u65e0\u7801',path:'/category/uncensored-jav'},
+             {id:'chn',name:'\u4e2d\u6587\u5b57\u5e55',path:'/category/chinese-subtitles'},
+             {id:'eng',name:'\u82f1\u6587\u5b57\u5e55',path:'/category/english-subtitles'},
+             {id:'amateur',name:'\u7d20\u4eba',path:'/category/amateur'},
+             {id:'mosaic',name:'\u7834\u89e3\u9a6c\u8d5b\u514b',path:'/category/reducing-mosaic'} ],
       isVideoUrl:function(href){ return /\/\d+\.html(?:$|[?#])/.test(String(href)); },
       codeOf:function(url){ var m=String(url).match(/\/(\d+)\.html/); return m?m[1]:''; },
-      // 女优频道：/zh/cast 名单页快照核实过，链接是 /category/cast/{slug}，
-      // 文字是「名字 (作品数)」；点进去就是普通分类页，直接吃现成的 parseCards
-      chanRe:/^\/(?:[a-z]{2}\/)?category\/cast\/([^/?#]+)/,
-      parseChannels:function(html){
-        var self=this,doc=parseDoc(html),out=[],seen={};
-        var links=doc.querySelectorAll('a[href*="/category/cast/"]');
-        Array.prototype.forEach.call(links,function(a){
-          var href=(a.getAttribute('href')||'').replace(/&amp;/g,'&');
-          if(!href||href.charAt(0)==='#')return;
-          var rel=href.replace(/^https?:\/\/[^/]+/,'');
-          var m=rel.match(self.chanRe);
-          if(!m)return;
-          var slug=m[1];
-          if(seen[slug])return;
-          var raw=txt(a);
-          var mCount=raw.match(/^(.*?)\s*\((\d+)\)\s*$/);
-          var name=(mCount?mCount[1]:raw).trim();
-          if(!name)name=decodeURIComponent(slug).replace(/[-_]/g,' ');
-          if(!name||name.length>40)return;
-          seen[slug]=1;
-          out.push({ kind:'chan', name:name, url:self.site+rel, pic:'',
-                     meta:mCount?(mCount[2]+' \u90e8\u5f71\u7247'):'', verified:false, badge:'\u5973\u512a' });
-        });
-        return out;
-      },
       parseCards:function(html){
         var self=this,doc=parseDoc(html),boxes=doc.querySelectorAll('.post'),out=[],seen={};
         boxes.forEach(function(box){
@@ -2024,8 +1442,8 @@ body.detail-active .switcher, body.set-open .switcher, body.searching .switcher{
       sniffUrl:function(raw,item){ return (item&&item._embed)||(item&&item.url)||''; },
       listUrls:function(page){
         if(view.mode==='search'){ var kw=encodeURIComponent(view.kw);
-          return [ page>1 ? this.site+'/zh/page/'+page+'?s='+kw : this.site+'/zh/?s='+kw ]; }
-        var path=view.path||'/zh/', q='';
+          return [ page>1 ? this.site+'/page/'+page+'?s='+kw : this.site+'/?s='+kw ]; }
+        var path=view.path||'/', q='';
         var qi=path.indexOf('?'); if(qi!==-1){ q=path.slice(qi); path=path.slice(0,qi); }
         path=path.replace(/\/+$/,'');
         return [ this.site + path + (page>1 ? '/page/'+page : '') + q ];
@@ -2321,18 +1739,6 @@ body.detail-active .switcher, body.set-open .switcher, body.searching .switcher{
   }
 
   /* ---------- 解析：列表卡片 ---------- */
-  /* 从一段文本里挑出「N 条影片 / N 订阅 / N 观看」这类数量，供各站的 parseChannels 复用 */
-  function chanStatsFrom(text){
-    var s=String(text||''),out=[],m;
-    m=s.match(/([\d][\d,.]*\s*[KMB]?)\s*(?:\u4f4d)?\s*(?:\u8ba2\u9605\u8005|\u8ba2\u9605|subscribers?)/i);
-    if(m)out.push(m[1].replace(/\s+/g,'')+' \u8ba2\u9605');
-    m=s.match(/([\d][\d,.]*\s*[KMB]?)\s*(?:\u6b21\u89c2\u770b|\u89c2\u770b|views?)/i);
-    if(m)out.push(m[1].replace(/\s+/g,'')+' \u89c2\u770b');
-    m=s.match(/([\d][\d,.]*\s*[KMB]?)\s*(?:\u6761|\u90e8|\u4e2a)?\s*(?:\u5f71\u7247|\u89c6\u9891|videos?)/i);
-    if(m)out.push(m[1].replace(/\s+/g,'')+' \u5f71\u7247');
-    return out;
-  }
-
   function parseDoc(html){
     try { return new DOMParser().parseFromString(html, 'text/html'); }
     catch (e) { var d = document.implementation.createHTMLDocument(''); d.documentElement.innerHTML = html; return d; }
@@ -2431,26 +1837,15 @@ body.detail-active .switcher, body.set-open .switcher, body.searching .switcher{
   }
 
   /* ---------- tabs ---------- */
-  /* TABS 由适配器提供（见 ADAPTERS.tabs）。
-     一级 tab 可以带 subs:[{id,name,path,...}]（MissAV 用来还原官网"主菜单+二级下拉"的结构）；
-     没有 subs 的 tab 就是普通叶子（点了直接加载自己的 path），其他站源完全不受影响。 */
-  function primaryDefault(t){ return (t.subs && t.subs.length) ? t.subs[0] : t; }
+  /* TABS 由适配器提供（见 ADAPTERS.tabs） */
 
-  var _first = primaryDefault(A.tabs[0]);
-  var view = { mode: 'tab', tab: _first.id, path: _first.path, block: _first.block, sort: _first.sort, kw: '', title: '', page: 1, more: true, loading: false, token: 0 };
+  var view = { mode: 'tab', tab: A.tabs[0].id, path: A.tabs[0].path, block: A.tabs[0].block, sort: A.tabs[0].sort, kw: '', title: '', page: 1, more: true, loading: false, token: 0 };
 
-  function groupOfTab(){                                              // 当前 view.tab 属于哪个带 subs 的一级分组（没有就返回 null）
-    for (var i = 0; i < TABS.length; i++) {
-      if (TABS[i].subs && TABS[i].subs.some(function (s) { return s.id === view.tab; })) return TABS[i];
-    }
-    return null;
-  }
   function renderTabs(){
     elTabs.replaceChildren();
     TABS.forEach(function (t) {
-      var active = t.subs ? t.subs.some(function (s) { return s.id === view.tab; }) : (t.id === view.tab);
       var b = document.createElement('button');
-      b.className = 'tab' + (view.mode === 'tab' && active ? ' on' : '');
+      b.className = 'tab' + (view.mode === 'tab' && t.id === view.tab ? ' on' : '');
       b.textContent = t.name;
       b.setAttribute('tabindex', '0');
       b.addEventListener('click', function () { selectTab(t); });
@@ -2460,23 +1855,7 @@ body.detail-active .switcher, body.set-open .switcher, body.searching .switcher{
   var elCats = $('cats');
   function renderCats(){
     if (!elCats) return;
-    if (view.mode !== 'search') {
-      var group = groupOfTab();
-      if (group) {                                                    // 二级菜单：来自当前一级分组的 subs，点了直接换 path
-        elCats.className = 'cats';
-        elCats.replaceChildren();
-        group.subs.forEach(function (s) {
-          var b = document.createElement('button');
-          b.className = 'cat' + (s.id === view.tab ? ' on' : '');
-          b.textContent = s.name;
-          b.setAttribute('tabindex', '0');
-          b.addEventListener('click', function () { selectSub(s); });
-          elCats.appendChild(b);
-        });
-        return;
-      }
-    }
-    var cats = A.cats;                                                // 旧逻辑：适配器级别的静态排序/分类（hanime、ph 用，不受影响）
+    var cats = A.cats;
     if (!cats || !cats.length || view.mode === 'search') { elCats.className = 'cats off'; elCats.replaceChildren(); return; }
     elCats.className = 'cats';
     elCats.replaceChildren();
@@ -2489,34 +1868,24 @@ body.detail-active .switcher, body.set-open .switcher, body.searching .switcher{
       elCats.appendChild(b);
     });
   }
-  function selectSub(s){
-    if (s.id === view.tab) return;
-    view.tab = s.id; view.path = s.path; view.block = s.block; view.sort = s.sort;
-    renderTabs(); renderCats(); load(true); window.scrollTo(0, 0);
-  }
   function selectCat(c){
     if (c.id === view.cat) return;
     view.cat = c.id; view.catQ = c.q;
     renderCats(); load(true); window.scrollTo(0, 0);
   }
   function initCats(){
-    if (groupOfTab()) { view.cat = ''; view.catQ = ''; return; }
     if (A.cats && A.cats.length) { view.cat = A.cats[0].id; view.catQ = A.cats[0].q; }
     else { view.cat = ''; view.catQ = ''; }
   }
   function selectTab(t){
     clearSearch();
-    var eff = primaryDefault(t);                                      // 一级带 subs 就默认选组内第一项，叶子 tab 就用自己
-    view.mode = 'tab'; view.tab = eff.id; view.path = eff.path; view.block = eff.block; view.sort = eff.sort; view.kw = '';
+    view.mode = 'tab'; view.tab = t.id; view.path = t.path; view.block = t.block; view.sort = t.sort; view.kw = '';
     elSub.className = 'subbar'; elTabs.className = 'tabs';
     renderTabs(); renderCats(); load(true); scrollTabIntoView();
   }
   /* ---------- 左右滑动切换分类 ---------- */
   function tabIndex(){
-    for (var i = 0; i < TABS.length; i++) {
-      if (TABS[i].id === view.tab) return i;
-      if (TABS[i].subs && TABS[i].subs.some(function (s) { return s.id === view.tab; })) return i;
-    }
+    for (var i = 0; i < TABS.length; i++) if (TABS[i].id === view.tab) return i;
     return 0;
   }
   var elWrap = document.querySelector('.wrap');
@@ -2634,109 +2003,6 @@ body.detail-active .switcher, body.set-open .switcher, body.searching .switcher{
     for (i = 0; i < items.length; i++) f.appendChild(card(items[i]));
     elList.appendChild(f);
   }
-
-  /* ---------- 搜索结果顶部的频道 / 博主卡（点进去 = 该博主的视频列表） ---------- */
-  var lastListHtml = '';
-  var chanCache = { kw: '', list: null };          // 同一个搜索词重复加载时直接复用，不再清场重来
-  var elChanRow = $('chanRow');
-  function clearChanRow(){ elChanRow.className = 'chanrow'; elChanRow.replaceChildren(); }
-  /* load(true) 会被很多地方触发（源恢复、下拉刷新、左右滑分类…）。
-     以前这里无条件清空，结果刚画好的频道卡被后一次 reset 抹掉——
-     现在只有"离开这次搜索"才清，同一个词重载则立刻用缓存重画。 */
-  function resetChanRow(){
-    if (view.mode === 'search' && chanCache.kw === view.kw && chanCache.list && chanCache.list.length) {
-      paintChanRow(chanCache.list);
-      return;
-    }
-    if (view.mode !== 'search' || chanCache.kw !== view.kw) chanCache = { kw: '', list: null };
-    clearChanRow();
-  }
-  function chanCard(c){
-    var b = document.createElement('button'); b.className = 'chan-card'; b.type = 'button'; b.setAttribute('tabindex', '0');
-    var av = document.createElement('div'); av.className = 'chan-av';
-    if (c.pic) { var img = document.createElement('img'); img.alt = ''; img.setAttribute('data-src', c.pic); av.appendChild(img); lazyList.push(img); }
-    else av.textContent = (c.name || '?').slice(0, 1).toUpperCase();
-    var me = document.createElement('div'); me.className = 'chan-meta';
-    var nm = document.createElement('div'); nm.className = 'chan-name';
-    nm.textContent = c.name;
-    if (c.verified) { var vk = document.createElement('span'); vk.className = 'chan-vf'; vk.textContent = '\u2713'; vk.title = '\u5df2\u8ba4\u8bc1'; nm.appendChild(vk); }
-    var sb = document.createElement('div'); sb.className = 'chan-sub';
-    // 第一行样式对齐 YT 的「@handle · 112万位订阅者」：类型/账号名 + 各项数量
-    sb.textContent = [c.badge || '', c.handle || '', c.meta || ''].filter(Boolean).join('  \u00b7  ') || '\u67e5\u770b\u5168\u90e8\u89c6\u9891';
-    me.appendChild(nm); me.appendChild(sb);
-    var cv = document.createElement('span'); cv.className = 'chan-chev'; cv.textContent = '\u203a';
-    b.appendChild(av); b.appendChild(me); b.appendChild(cv);
-    b.addEventListener('click', function () { openListing(pathOf(c.url), c.name); });
-    return b;
-  }
-  function paintChanRow(list){
-    clearChanRow();
-    if (!list.length) return;
-    if (view.mode === 'search') chanCache = { kw: view.kw, list: list };   // 记下来，重载时直接复原
-    var sec = document.createElement('div'); sec.className = 'chan-sec'; sec.textContent = '\u9891\u9053 / \u535a\u4e3b';
-    elChanRow.appendChild(sec);
-    var f = document.createDocumentFragment(), i;
-    for (i = 0; i < list.length; i++) f.appendChild(chanCard(list[i]));
-    elChanRow.appendChild(f);
-    elChanRow.className = 'chanrow on';
-    lazyScan();
-  }
-  /* 不 await、不阻塞视频列表：先用刚抓回来的搜索页白嫖一遍，
-     再去站点的专用频道搜索页补齐。任一环节失败都静默跳过，页面照常。 */
-  async function loadChannels(tk, kw){
-    if (!A.parseChannels) { clearChanRow(); return; }
-    var got = [], seen = {};
-    // 视频搜索页里每张卡都挂着上传者链接，全收会冒出一堆跟搜索词无关的人，
-    // 所以从搜索页白嫖的这批要按名字跟关键词对得上才留；专用频道搜索页的结果不用过滤。
-    function looseMatch(name){
-      var a = String(name || '').toLowerCase().replace(/[\s._+-]/g, '');
-      var b = String(kw || '').toLowerCase().replace(/[\s._+-]/g, '');
-      if (!a || !b) return false;
-      return a.indexOf(b) >= 0 || b.indexOf(a) >= 0;
-    }
-    function add(list, needMatch){
-      (list || []).forEach(function (c) {
-        if (!c || !c.url || !c.name || seen[c.url]) return;
-        if (needMatch && !looseMatch(c.name)) return;
-        seen[c.url] = 1; got.push(c);
-      });
-    }
-    try { if (lastListHtml) add(A.parseChannels(lastListHtml), true); } catch (e) {}
-    if (tk !== view.token) return;
-    if (got.length) paintChanRow(got.slice(0, 8));
-    // 专用频道搜索页只在"搜索页里一个人都没扒到"时才去试。
-    // 实测搜索页本身就带着博主链接（Mchan love 就是这么找到的），
-    // 常规情况下省掉这几个请求，也避免地址猜错时白等。
-    var urls = got.length ? [] : (A.channelUrls ? A.channelUrls(kw) : []);
-    for (var i = 0; i < urls.length && got.length < 8; i++) {
-      var r;
-      try { r = await netGet(urls[i]); } catch (e) { continue; }
-      if (tk !== view.token) return;                        // 用户已经切走了，别再往页面上画
-      if (!r || !r.ok || !r.body) continue;
-      try { add(A.parseChannels(r.body)); } catch (e) {}
-      if (tk !== view.token) return;
-      if (got.length) paintChanRow(got.slice(0, 8));
-    }
-    // 排最前那张卡如果没头像或没数量，去它主页抓一次补齐（只补一张，不额外拖慢）
-    if (tk === view.token && got.length && A.parseChanProfile) {
-      var top = got[0];
-      if (!top.pic || !top.meta) {
-        try {
-          var pr = await netGet(top.url);
-          if (tk === view.token && pr && pr.ok && pr.body) {
-            var p = A.parseChanProfile(pr.body);
-            if (p) {
-              if (!top.pic && p.pic) top.pic = p.pic;
-              if (!top.meta && p.stats && p.stats.length) top.meta = p.stats.join('  \u00b7  ');
-              if (p.verified) top.verified = true;
-              if (p.name && p.name.length <= 40) top.name = p.name;
-              paintChanRow(got.slice(0, 8));
-            }
-          }
-        } catch (e) {}
-      }
-    }
-  }
   function skeleton(n){
     var f = document.createDocumentFragment(), i, c, inner, th, me;
     for (i = 0; i < n; i++) {
@@ -2752,20 +2018,17 @@ body.detail-active .switcher, body.set-open .switcher, body.searching .switcher{
 
   /* ---------- 加载 ---------- */
   async function load(reset){
-    if (view.loading && !reset) return;   // 追加加载(reset=false)才去重；显式切换(reset=true)要能抢占，不能被卡住的旧请求锁死
+    if (view.loading) return;
     view.loading = true;
     var tk = ++view.token;
     if (reset) {
       view.page = 1; view.more = true; lazyList = [];
       elList.className = 'grid skel'; elList.replaceChildren(skeleton(10));
       elMore.replaceChildren(); elState.textContent = '';
-      resetChanRow();
     }
     try {
       var items = await fetchList(view.page);
       if (tk !== view.token) return;
-      // 搜索页：顺带把「这个名字对应的频道/博主」找出来放最上面
-      if (reset && view.mode === 'search') loadChannels(tk, view.kw);
       if (reset) {
         elList.className = 'grid fresh'; elList.replaceChildren();
         clearTimeout(freshTimer);
@@ -2813,10 +2076,8 @@ body.detail-active .switcher, body.set-open .switcher, body.searching .switcher{
       urls = A.listUrls(page);
     }
     var items = [], i, r, got;
-    lastListHtml = '';
     for (i = 0; i < urls.length; i++) {
       r = await netGet(urls[i]);
-      if (r.ok && r.body && !lastListHtml) lastListHtml = r.body;   // 顺手留着给频道解析用，不额外发请求
       got = r.ok ? parseCards(r.body) : [];
       attempts.push({ url: urls[i], ok: r.ok, status: r.status, bytes: r.bytes, cards: got.length, cf: r.cf, err: r.err });
       dlog('fetch', urls[i], '-> ok=' + r.ok, 'status=' + r.status, 'bytes=' + r.bytes, 'cards=' + got.length, r.cf ? 'CLOUDFLARE' : '');
@@ -2894,7 +2155,6 @@ body.detail-active .switcher, body.set-open .switcher, body.searching .switcher{
 
   /* ---------- 二级列表（女优 / 标签 chip 点击） ---------- */
   function openListing(path, title){
-    navBegin();
     clearSearch();
     view.mode = 'listing'; view.path = path; view.block = 'list_videos_common_videos_list'; view.sort = ''; view.kw = ''; view.title = title;
     elTabs.className = 'tabs off'; elSub.className = 'subbar on'; elSubTitle.textContent = title;
@@ -3294,7 +2554,7 @@ body.detail-active .switcher, body.set-open .switcher, body.searching .switcher{
 
   async function play(item, d){
     var title = (d && d.title) || item.title || codeOf(item.url);
-    var code = codeOf(item.url) || ('v' + String(item.url).replace(/[?#].*$/, '').replace(/[^a-z0-9]+/gi, '').slice(-14)) || '正片';
+    var code = codeOf(item.url) || '正片';
     var big = (d && d.poster) || item.pic || '';
     var small = item.pic || (d && d.poster) || '';
     var pic = resolvePic(big);
@@ -3384,7 +2644,6 @@ body.detail-active .switcher, body.set-open .switcher, body.searching .switcher{
     var kw = (elQ.value || '').replace(/^ | $/g, '');
     if (!kw) { toast('输入点什么吧'); return; }
     if (chkQ(kw)) { elQ.value = ''; try { elQ.blur(); } catch (e) {} closeSug(); toggleAlt(); return; }
-    navBegin();
     addHist(kw); closeSug();
     try { elQ.blur(); } catch (e) {}
     view.mode = 'search'; view.kw = kw; view.title = '搜索：' + kw;
@@ -3405,95 +2664,22 @@ body.detail-active .switcher, body.set-open .switcher, body.searching .switcher{
     if (!e.target.closest('.search')) closeSug();
   });
 
-  /* ---------- 路由 / 返回 ----------
-     原来 pushRoute 每次都无条件 pushState，而 popstate 一步就把 listing/search
-     塌回一级 tab —— 多压进去的历史条目没人消费，按下去界面毫无变化，
-     表现就是"要按两次返回才生效"。
-     现在的规则：一条历史 = 一个真实界面。
-       · listing/search 入栈时顺便记下"它上面那一层长什么样"，返回时原样恢复
-         （搜索 → 点女優卡 → 返回，能回到搜索结果，而不是被踢回首页）
-       · detail / set 是浮层，压一条但不动 view
-       · 从浮层直接跳去二级页（详情页点女優 chip）用 replaceState 把浮层那条吃掉 */
-  var ROUTE_LV = { '': 0, listing: 1, detail: 2, set: 3 };
-  var curRoute = '', viewStack = [], routeDepth = 0, ignorePop = 0, pendingSnap = null;
-  /* 进入二级页/搜索之前先拍一张当前界面的快照，供返回时还原 */
-  function navBegin(){ pendingSnap = snapView(); }
-
-  function snapView(){
-    return { mode: view.mode, path: view.path, kw: view.kw, tab: view.tab, block: view.block,
-             sort: view.sort, title: view.title, catQ: view.catQ };
-  }
-  function restoreView(s){
-    if (!s) return false;
-    view.mode = s.mode; view.path = s.path; view.kw = s.kw; view.tab = s.tab;
-    view.block = s.block; view.sort = s.sort; view.title = s.title; view.catQ = s.catQ;
-    if (s.mode === 'tab') { elSub.className = 'subbar'; elTabs.className = 'tabs'; }
-    else { elTabs.className = 'tabs off'; elSub.className = 'subbar on'; elSubTitle.textContent = s.title || ''; }
-    renderTabs(); renderCats(); load(true); window.scrollTo(0, 0);
-    return true;
-  }
-  function pushRoute(kind){
-    try {
-      var lv = ROUTE_LV[kind] || 0, cur = ROUTE_LV[curRoute] || 0;
-      if (kind === 'listing') {
-        // 必须用进入前拍的快照：调用方是先改 view.mode 再调 pushRoute 的，
-        // 这时候现拍等于把目的地当成来处，返回时会恢复成同一个界面（看着像没反应）
-        viewStack.push(pendingSnap || snapView()); pendingSnap = null;
-        // 只有从浮层（详情/设置）跳过来才 replace 把那条吃掉；
-        // 二级页之间互跳（连续搜索、搜索→女優页）要各压一条，
-        // 否则快照压了两张、历史只有一条，对不上就会出现空按。
-        if (cur > lv) history.replaceState({ r: kind }, '', '#' + kind);
-        else { history.pushState({ r: kind }, '', '#' + kind); routeDepth++; }
-      } else if (cur >= lv) {
-        history.replaceState({ r: kind }, '', '#' + kind);
-      } else {
-        history.pushState({ r: kind }, '', '#' + kind); routeDepth++;
-      }
-      curRoute = kind;
-    } catch (e) {}
-  }
-  /* 切换站点时界面整个重置，历史里残留的条目也要一次性退掉，
-     否则之后每按一次返回都是空响应 */
-  var popGuardTimer = null;
-  function resetRoutes(){
-    var n = routeDepth;
-    routeDepth = 0; curRoute = ''; viewStack.length = 0;
-    if (n > 0) {
-      // history.go(-n) 是一次性跳转，规范里只派发一个 popstate，不是 n 个。
-      // 早先按 n 累加抵消数，多记的那几次会把用户之后真正的返回吞掉，
-      // 表现就是"返回要按两次才生效"。所以这里固定只抵消 1 次。
-      ignorePop = 1;
-      clearTimeout(popGuardTimer);
-      // 兜底：万一那次 popstate 压根没来（已在历史起点等），别让抵消数一直挂着
-      popGuardTimer = setTimeout(function () { ignorePop = 0; }, 700);
-      try { history.go(-n); } catch (e) { ignorePop = 0; }
-    }
-  }
-  window.addEventListener('popstate', function (e) {
-    if (ignorePop > 0) { ignorePop--; clearTimeout(popGuardTimer); return; }
-    if (routeDepth > 0) routeDepth--;
-    var to = (e && e.state && e.state.r) || '';
-    if (elSet.className.indexOf('on') !== -1) { closeSet(); curRoute = to; return; }
-    if (elSheet.className.indexOf('on') !== -1) { closeDetail(true); curRoute = to; return; }
+  /* ---------- 路由 / 返回 ---------- */
+  function pushRoute(kind){ try { history.pushState({ r: kind, t: Date.now() }, '', '#' + kind); } catch (e) {} }
+  window.addEventListener('popstate', function () {
+    if (elSet.className.indexOf('on') !== -1) { closeSet(); return; }
+    if (elSheet.className.indexOf('on') !== -1) { closeDetail(true); return; }
     if (view.mode === 'listing' || view.mode === 'search') {
+      // 回到普通 tab
       clearSearch();
-      curRoute = to;
-      if (restoreView(viewStack.pop())) return;
-      var t = findLeafById(view.tab) || primaryDefault(TABS[0]);      // 栈空了（异常情况）就退回一级 tab（可能带 subs，取组内第一项）
+      var t = tabById(view.tab) || TABS[0];
       view.mode = 'tab'; view.tab = t.id; view.path = t.path; view.block = t.block; view.sort = t.sort; view.kw = '';
       elSub.className = 'subbar'; elTabs.className = 'tabs';
-      renderTabs(); renderCats(); load(true); window.scrollTo(0, 0);
+      renderTabs(); load(true); window.scrollTo(0, 0);
       return;
     }
-    curRoute = to;
   });
-  function findLeafById(id){                                          // 找有实际 path 的叶子项：可能是普通一级 tab，也可能是某个分组下的 sub
-    for (var i = 0; i < TABS.length; i++) {
-      if (TABS[i].id === id && TABS[i].path) return TABS[i];
-      if (TABS[i].subs) { for (var j = 0; j < TABS[i].subs.length; j++) if (TABS[i].subs[j].id === id) return TABS[i].subs[j]; }
-    }
-    return null;
-  }
+  function tabById(id){ for (var i = 0; i < TABS.length; i++) if (TABS[i].id === id) return TABS[i]; return null; }
 
   /* ---------- 设置 ---------- */
   function openSet(){ elSet.className = 'set on'; elSet.setAttribute('aria-hidden', 'false'); document.body.classList.add('set-open'); syncToggles(); pushRoute('set'); }
@@ -3641,10 +2827,9 @@ body.detail-active .switcher, body.set-open .switcher, body.searching .switcher{
     SRC = id; A = ADAPTERS[id]; SITE = A.site; NS = A.ns; TABS = A.tabs;
     saveSourceId(id);
     view.token++; view.loading = false;
-    clearSearch(); closeDetail(true); closeSet(); resetRoutes();
+    clearSearch(); closeDetail(true); closeSet();
     elSub.className = 'subbar'; elTabs.className = 'tabs';
-    var _sf = primaryDefault(A.tabs[0]);
-    view.mode = 'tab'; view.tab = _sf.id; view.path = _sf.path; view.block = _sf.block; view.sort = _sf.sort; view.kw = '';
+    view.mode = 'tab'; view.tab = A.tabs[0].id; view.path = A.tabs[0].path; view.block = A.tabs[0].block; view.sort = A.tabs[0].sort; view.kw = '';
     updateBrand(); updateSwitcher(); initCats();
     await loadPrefs(); await loadHist();
     renderTabs(); renderCats(); load(true); window.scrollTo(0, 0);
@@ -3791,8 +2976,7 @@ body.detail-active .switcher, body.set-open .switcher, body.searching .switcher{
     if (sid === 'supjav') sid = 'jable';
     if (sid === 'ph' && !extOn) sid = 'jable';
     if (ADAPTERS[sid]) { SRC = sid; A = ADAPTERS[sid]; SITE = A.site; NS = A.ns; TABS = A.tabs;
-      var _bf = primaryDefault(A.tabs[0]);
-      view.mode = 'tab'; view.tab = _bf.id; view.path = _bf.path; view.block = _bf.block; view.sort = _bf.sort; }
+      view.mode = 'tab'; view.tab = A.tabs[0].id; view.path = A.tabs[0].path; view.block = A.tabs[0].block; view.sort = A.tabs[0].sort; }
     updateBrand(); updateSwitcher(); initCats();
     await loadPrefs();
     await loadHist();
@@ -3806,5 +2990,6 @@ body.detail-active .switcher, body.set-open .switcher, body.searching .switcher{
   else boot();
 })();
 </script>
-</body>
-</html>
+
+
+</body></html>

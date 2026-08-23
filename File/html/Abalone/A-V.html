@@ -873,7 +873,7 @@ body.detail-active .switcher, body.set-open .switcher, body.searching .switcher{
   <button class="sseg" data-src="hanime" tabindex="0">Hanime1</button>
   <button class="sseg" data-src="av123" tabindex="0">123AV</button>
   <button class="sseg x3-seg" data-src="supjav" tabindex="0">SupJav</button>
-  <button class="sseg" data-src="xvideos" tabindex="0">Xvideos</button>
+  <button class="sseg" data-src="whos" tabindex="0">Whos</button>
 </div>
 <div class="tipbox" id="tipbox" aria-hidden="true">
   <span class="tip-glow"></span><span class="tip-ring"></span>
@@ -890,110 +890,285 @@ body.detail-active .switcher, body.set-open .switcher, body.searching .switcher{
   /* ---------- 常量 ---------- */
   // ===== 站点适配器：站点差异全部收敛在这里 =====
   var ADAPTERS = {
-    xvideos: {
-      id:'xvideos', label:'Xvideos', word:'Xvideos', site:'https://www.xvideos.com', ns:'xvideos',
-      siteName:'xvideos.com', refererDefault:true, proxyHosts:'xvideos.com / *.xvideos-cdn.com',
-      streamFormat:'hls',
-      markPath:'M14 16 L46 44 M46 16 L14 44',
-      tabs:[ {id:'best',  name:'\u6700\u4f73', path:'/best'},
-             {id:'home',  name:'\u9996\u9875', path:'/'},
-             {id:'asian', name:'\u4e9a\u6d32', path:'/c/Asian_Woman-32'},
-             {id:'amateur',name:'\u4e1a\u4f59', path:'/c/Amateur-65'},
-             {id:'creampie',name:'\u4e2d\u51fa', path:'/c/Creampie-40'},
-             {id:'milf',  name:'\u8fa3\u5988', path:'/c/Milf-19'},
-             {id:'teen',  name:'\u5c11\u5973', path:'/c/Teen-13'} ],
-      // 视频页地址：/video.xxxx/数字/0/slug 或旧版 /video数字/slug
-      isVideoUrl:function(href){
-        href=String(href).replace(/[?#].*$/,'');
-        return /\/video(?:\.[a-z0-9]+|\d+)(?:\/|$)/i.test(href);
-      },
-      // xvideos 没有「番号」，返回空即可（卡片不显示 code 小标）；vod_id 由通用层用 url 兜底
-      codeOf:function(){ return ''; },
-      listUrls:function(page){
-        if(view.mode==='search'){
-          var s=this.site+'/?k='+encodeURIComponent(view.kw);
-          if(page>1)s+='&p='+(page-1);              // 搜索页 0 基
-          return [s];
-        }
-        var p=view.path||'/new/0', pg=page-1;        // 页码 0 基
-        if(p==='/best'){
-          // 「最佳」翻页必须带当月路径 /best/YYYY-MM[/pg]，否则服务端会把 /best/1 当无效月份
-          // 重定向回第 1 页，导致「加载更多」出来的内容和首页一模一样
-          var d=new Date(), ym=d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2);
-          p='/best/'+ym+(pg>0?('/'+pg):'');
-          return [this.site+p];
-        }
-        var m=p.match(/^(.*?)\/(\d+)\/?$/);          // 路径已自带页码（如 /new/0）
-        if(m){ p=m[1]+'/'+pg; }                       // 直接替换末尾页码：/new/0 -> /new/1 ...
-        else if(pg>0){                                // 其余路径（/best、/c/...）翻页才追加
-          if(p==='/'||p==='')p='/new';
-          p=p.replace(/\/+$/,'')+'/'+pg;
-        }
-        return [this.site+p];
+    whos: {
+      id:'whos', label:'Whos', word:'Whos', site:'https://whos.tv', ns:'whos',
+      siteName:'whos.tv', refererDefault:true, proxyHosts:'whos.tv / *.imgcaches.cc',
+      markPath:'M12 16 L20 46 L30 22 L40 46 L48 16',
+      // 主题分类（/topics/category/xxx，共 5 组，用场景主题页快照核实过）：这 5 个本身就是
+      // 卡片列表页，点进某个主题卡片再动态翻下一层（parseCards 认得 /topics/details/ 链接，
+      // 交给 openListing 处理），不是固定二级菜单，能自动覆盖多少个主题就是多少个
+      tabs:[ {id:'views',name:'\u64ad\u653e\u6700\u591a',path:'/videos?sort=views'},
+             {id:'all',name:'\u5168\u90e8',path:'/videos'},
+             {id:'tp-personal',name:'\u4e2a\u4eba\u4e3b\u9898',path:'/topics/category/personal-topic'},
+             {id:'tp-uncensored',name:'\u65e0\u7801\u4e3b\u9898',path:'/topics/category/uncensored-topic'},
+             {id:'tp-clothes',name:'\u670d\u88c5\u4e3b\u9898',path:'/topics/category/clothes-topic'},
+             {id:'tp-scene',name:'\u573a\u666f\u4e3b\u9898',path:'/topics/category/scene-topic'},
+             {id:'tp-story',name:'\u5267\u60c5\u4e3b\u9898',path:'/topics/category/story-topic'},
+      // 帧画面分类（/frames/type-xxx，共 8 组，用服装分类页快照核实过）：卡片是截图，
+      // 不是视频页，parseCards 会按截图带出的番号去重、拼回 /videos/{番号} 当视频卡用。
+      // 服装、特写、道具三组二级标签已按快照整理为真实 label-ID；
+      // 其余 5 组官网自己也有二级标签，但没有对应快照，先保留一级入口——
+      // 要补全的话把 /frames/type-xxx 对应页面的快照发过来即可
+             {id:'ft-clothes',name:'\u670d\u88c5',subs:[
+               {id:'fl-49',name:'\u5168\u88f8',path:'/frames/type-clothes/label-49'},
+               {id:'fl-255',name:'\u88f8\u4f53',path:'/frames/type-clothes/label-255'},
+               {id:'fl-168',name:'\u767d\u8272\u886c\u886b',path:'/frames/type-clothes/label-168'},
+               {id:'fl-116',name:'\u767d\u886c\u886b',path:'/frames/type-clothes/label-116'},
+               {id:'fl-248',name:'\u767d\u8272\u4e0a\u8863',path:'/frames/type-clothes/label-248'},
+               {id:'fl-251',name:'\u804c\u4e1a\u88c5',path:'/frames/type-clothes/label-251'},
+               {id:'fl-98',name:'\u9ed1\u8272\u4e1d\u889c',path:'/frames/type-clothes/label-98'},
+               {id:'fl-568',name:'\u534a\u88f8',path:'/frames/type-clothes/label-568'},
+               {id:'fl-476',name:'\u5185\u8863',path:'/frames/type-clothes/label-476'},
+               {id:'fl-308',name:'\u886c\u886b',path:'/frames/type-clothes/label-308'},
+               {id:'fl-509',name:'JK\u5236\u670d',path:'/frames/type-clothes/label-509'},
+               {id:'fl-152',name:'\u9ed1\u8272\u77ed\u88d9',path:'/frames/type-clothes/label-152'},
+               {id:'fl-1110',name:'\u767d\u8272\u5185\u88e4',path:'/frames/type-clothes/label-1110'},
+               {id:'fl-243',name:'\u5b66\u751f\u5236\u670d',path:'/frames/type-clothes/label-243'},
+               {id:'fl-363',name:'\u5973\u4ec6\u88c5',path:'/frames/type-clothes/label-363'},
+               {id:'fl-547',name:'\u6c34\u624b\u670d',path:'/frames/type-clothes/label-547'},
+               {id:'fl-125',name:'\u77ed\u88d9',path:'/frames/type-clothes/label-125'},
+               {id:'fl-260',name:'\u767d\u8272\u80cc\u5fc3',path:'/frames/type-clothes/label-260'},
+               {id:'fl-910',name:'\u9ed1\u8272\u857e\u4e1d\u5185\u8863',path:'/frames/type-clothes/label-910'},
+               {id:'fl-862',name:'\u9ed1\u8272\u5185\u8863',path:'/frames/type-clothes/label-862'},
+               {id:'fl-970',name:'\u767d\u8272T\u6064',path:'/frames/type-clothes/label-970'},
+               {id:'fl-298',name:'\u5236\u670d',path:'/frames/type-clothes/label-298'},
+               {id:'fl-447',name:'\u9ad8\u8ddf\u978b',path:'/frames/type-clothes/label-447'},
+               {id:'fl-103',name:'\u857e\u4e1d\u5185\u8863',path:'/frames/type-clothes/label-103'},
+               {id:'fl-134',name:'\u4e1d\u889c',path:'/frames/type-clothes/label-134'} ]},
+             {id:'ft-location',name:'\u5730\u70b9',path:'/frames/type-location'},
+             {id:'ft-closeup',name:'\u7279\u5199',subs:[
+               {id:'fc-45',name:'脸部特写',path:'/frames/type-closeup/label-45'},
+               {id:'fc-196',name:'面部特写',path:'/frames/type-closeup/label-196'},
+               {id:'fc-51',name:'胸部特写',path:'/frames/type-closeup/label-51'},
+               {id:'fc-100',name:'中景',path:'/frames/type-closeup/label-100'},
+               {id:'fc-178',name:'臀部特写',path:'/frames/type-closeup/label-178'},
+               {id:'fc-473',name:'上半身特写',path:'/frames/type-closeup/label-473'},
+               {id:'fc-894',name:'阴部特写',path:'/frames/type-closeup/label-894'},
+               {id:'fc-1845',name:'乳房特写',path:'/frames/type-closeup/label-1845'},
+               {id:'fc-1132',name:'下体特写',path:'/frames/type-closeup/label-1132'},
+               {id:'fc-740',name:'头部特写',path:'/frames/type-closeup/label-740'},
+               {id:'fc-10',name:'全身',path:'/frames/type-closeup/label-10'},
+               {id:'fc-289',name:'口交特写',path:'/frames/type-closeup/label-289'},
+               {id:'fc-18',name:'胸部',path:'/frames/type-closeup/label-18'},
+               {id:'fc-108',name:'全景',path:'/frames/type-closeup/label-108'},
+               {id:'fc-3899',name:'背部特写',path:'/frames/type-closeup/label-3899'},
+               {id:'fc-190220',name:'女性面部特写',path:'/frames/type-closeup/label-190220'},
+               {id:'fc-187',name:'半身',path:'/frames/type-closeup/label-187'},
+               {id:'fc-118',name:'私处特写',path:'/frames/type-closeup/label-118'},
+               {id:'fc-20809',name:'面部表情特写',path:'/frames/type-closeup/label-20809'},
+               {id:'fc-127',name:'臀部',path:'/frames/type-closeup/label-127'},
+               {id:'fc-25',name:'面部',path:'/frames/type-closeup/label-25'},
+               {id:'fc-3053',name:'口部特写',path:'/frames/type-closeup/label-3053'},
+               {id:'fc-403',name:'上半身',path:'/frames/type-closeup/label-403'},
+               {id:'fc-2703',name:'手部特写',path:'/frames/type-closeup/label-2703'},
+               {id:'fc-33',name:'脸部',path:'/frames/type-closeup/label-33'} ]},
+             {id:'ft-pose',name:'\u59ff\u52bf',path:'/frames/type-pose'},
+             {id:'ft-action',name:'\u884c\u4e3a',path:'/frames/type-action'},
+             {id:'ft-expression',name:'\u8868\u60c5',path:'/frames/type-expression'},
+             {id:'ft-prop',name:'\u9053\u5177',subs:[
+               {id:'fp-145',name:'床',path:'/frames/type-prop/label-145'},
+               {id:'fp-131',name:'沙发',path:'/frames/type-prop/label-131'},
+               {id:'fp-146',name:'枕头',path:'/frames/type-prop/label-146'},
+               {id:'fp-37',name:'眼镜',path:'/frames/type-prop/label-37'},
+               {id:'fp-390',name:'手机',path:'/frames/type-prop/label-390'},
+               {id:'fp-159',name:'台灯',path:'/frames/type-prop/label-159'},
+               {id:'fp-1181',name:'震动棒',path:'/frames/type-prop/label-1181'},
+               {id:'fp-190247',name:'无',path:'/frames/type-prop/label-190247'},
+               {id:'fp-674',name:'按摩棒',path:'/frames/type-prop/label-674'},
+               {id:'fp-797',name:'项圈',path:'/frames/type-prop/label-797'},
+               {id:'fp-377',name:'阴茎',path:'/frames/type-prop/label-377'},
+               {id:'fp-190176',name:'项链',path:'/frames/type-prop/label-190176'},
+               {id:'fp-1063',name:'绳索',path:'/frames/type-prop/label-1063'},
+               {id:'fp-953',name:'口罩',path:'/frames/type-prop/label-953'},
+               {id:'fp-1585',name:'女仆头饰',path:'/frames/type-prop/label-1585'},
+               {id:'fp-301',name:'手铐',path:'/frames/type-prop/label-301'},
+               {id:'fp-322',name:'手提包',path:'/frames/type-prop/label-322'},
+               {id:'fp-562',name:'眼罩',path:'/frames/type-prop/label-562'},
+               {id:'fp-54',name:'床铺',path:'/frames/type-prop/label-54'},
+               {id:'fp-96',name:'办公桌',path:'/frames/type-prop/label-96'},
+               {id:'fp-191809',name:'护士帽',path:'/frames/type-prop/label-191809'},
+               {id:'fp-286',name:'酒杯',path:'/frames/type-prop/label-286'},
+               {id:'fp-132',name:'盆栽',path:'/frames/type-prop/label-132'},
+               {id:'fp-650',name:'床单',path:'/frames/type-prop/label-650'},
+               {id:'fp-190207',name:'高跟鞋',path:'/frames/type-prop/label-190207'} ]},
+             {id:'ft-other',name:'\u5176\u4ed6',path:'/frames/type-other'}
+      ],
+      isVideoUrl:function(href){ return /\/videos\/[a-z0-9][a-z0-9\-]*$/i.test(String(href).replace(/[?#].*$/,'')); },
+      codeOf:function(url){
+        var m=String(url).replace(/[?#].*$/,'').match(/\/videos\/([a-z0-9\-]+)/i);
+        return m ? m[1].toUpperCase() : '';
       },
       parseCards:function(html){
         var self=this,doc=parseDoc(html),out=[],seen={};
-        var blocks=doc.querySelectorAll('div.thumb-block');
-        if(!blocks.length)blocks=doc.querySelectorAll('.thumb-block, .mozaique .thumb');
-        Array.prototype.forEach.call(blocks,function(bl){
-          // 卡片里找出真正的视频链接
-          var link=null,as=bl.querySelectorAll('a[href]');
-          for(var i=0;i<as.length;i++){ if(self.isVideoUrl(as[i].getAttribute('href')||'')){ link=as[i]; break; } }
-          if(!link)return;
-          var href=(link.getAttribute('href')||'').replace(/[#].*$/,'');
+        function markCard(url, pic, code){
+          var pk = normPicKey(pic), ck = code ? ('code:' + String(code).toUpperCase().replace(/[-_\s]/g,'')) : '';
+          if ((url && seen[url]) || (pk && seen['pic:' + pk]) || (ck && seen[ck])) return false;
+          if (url) seen[url] = 1;
+          if (pk) seen['pic:' + pk] = 1;
+          if (ck) seen[ck] = 1;
+          return true;
+        }
+        var links=doc.querySelectorAll('a[href*="/videos/"]');
+        Array.prototype.forEach.call(links,function(a){
+          var href=(a.getAttribute('href')||'').replace(/[?#].*$/,'');
+          if(!self.isVideoUrl(href))return;
+          if(href.indexOf('http')!==0)href=self.site+(href.charAt(0)==='/'?'':'/')+href;
+          // 卡片容器判定，不强制要有 img（首屏之后是懒加载，img 还没生成）
+          if(!a.querySelector('.video-card-surface, h3, img'))return;
+          var img=a.querySelector('img');
+          var pic=img?pickImg(img):'';
+          var h3=a.querySelector('h3');
+          var title=txt(h3)||(img&&img.getAttribute('alt'))||'';
+          var code=self.codeOf(href), who='';
+          if(!markCard(href,pic,code))return;
+          // 番号那行右侧是演员名；跳过番号本身和纯数字（评分）
+          var spans=a.querySelectorAll('span');
+          for(var i=0;i<spans.length;i++){
+            var t=txt(spans[i]);
+            if(!t||/^\d+$/.test(t))continue;
+            if(t.toUpperCase().replace(/[-_\s]/g,'')===code.replace(/[-_\s]/g,''))continue;
+            if(t.length<=16){ who=t; break; }
+          }
+          out.push({url:href,pic:pic,preview:'',uuid:'',
+                    title:title||code, dur:'', hits:who});
+        });
+        // 主题分类页（/topics/category/xxx）：卡片链到 /topics/details/{id}，不是视频本身，
+        // 点进去要再翻一层列表，不能直接扔给播放器——标 kind:'topic'，card() 那边会走 openListing
+        var topicLinks=doc.querySelectorAll('a[href*="/topics/details/"]');
+        Array.prototype.forEach.call(topicLinks,function(a){
+          var href=(a.getAttribute('href')||'').replace(/[?#].*$/,'');
+          if(!/\/topics\/details\/\d+$/.test(href))return;
           if(href.indexOf('http')!==0)href=self.site+(href.charAt(0)==='/'?'':'/')+href;
           if(seen[href])return; seen[href]=1;
-          var img=bl.querySelector('img');
-          // 缩略图真地址直接在 src；个别布局在 data-src，占位/模糊图在 data-sfwthumb 兜底
-          var pic=img?(img.getAttribute('data-src')||img.getAttribute('src')||img.getAttribute('data-sfwthumb')||''):'';
-          var tEl=bl.querySelector('p.title a')||bl.querySelector('.title a')||link;
-          var title=(tEl&&(tEl.getAttribute('title')||txt(tEl)))||'';
-          title=title.replace(/\s*\d+\s*(?:\u5206\u949f|\u5206\u9418|min|sec)\b.*$/i,'').replace(/\s+/g,' ').replace(/^ | $/g,'');
-          var dur=txt(bl.querySelector('.duration'))||'';
-          // 上传者 / 频道 / 演员
-          var who='';
-          var up=bl.querySelector('.metadata a[href*="/channels/"], .metadata a[href*="/amateur-channels/"], .metadata a[href*="/pornstars/"], .metadata a[href*="/profiles/"], .uploader a, .metadata .name');
-          if(up)who=txt(up);
-          out.push({url:href,pic:pic,preview:'',uuid:'',title:title,dur:dur,hits:who});
+          var img=a.querySelector('img');
+          var pic=img?pickImg(img):'';
+          var title=txt(a.querySelector('h3'))||(img&&img.getAttribute('alt'))||'';
+          var spans=a.querySelectorAll('span');
+          var stat=Array.prototype.map.call(spans,txt).filter(function(t){return t;}).join(' \u00b7 ');
+          out.push({url:href,pic:pic,preview:'',uuid:'',title:title,dur:'',hits:stat,kind:'topic'});
+        });
+        // 帧画面分类页（/frames/type-xxx[/label-N]）：卡片是单帧截图，链到 /frames/{id}，不是视频页；
+        // 但截图卡自己会带出所属视频的番号，站内视频页地址就是 /videos/{番号小写}
+        // 按番号去重后当成视频卡使用，截图本身直接拿来当封面
+        var frameLinks=doc.querySelectorAll('a.frame-card[href*="/frames/"]');
+        Array.prototype.forEach.call(frameLinks,function(a){
+          var code='';
+          // 方式1：h3 .font-medium（服务器端渲染结构）
+          var codeEl=a.querySelector('h3 .font-medium');
+          if(codeEl) code=txt(codeEl);
+          // 方式2：从 data-frame-title 提取（格式 "mbdd-2046 女优[逢見リカ]在..."）
+          if(!code){
+            var btn=a.querySelector('button[data-frame-title]');
+            if(btn){
+              var ft=btn.getAttribute('data-frame-title')||'';
+              var m=ft.match(/^([a-z0-9][a-z0-9\-]*)/i);
+              if(m) code=m[1].toUpperCase();
+            }
+          }
+          // 方式3：从按钮 aria-label 提取（格式 "MBDD-2046 1:55:20 0.0"）
+          if(!code){
+            var btn2=a.querySelector('button[aria-label]');
+            if(btn2){
+              var al=btn2.getAttribute('aria-label')||'';
+              var m2=al.match(/^([a-z0-9][a-z0-9\-]*)/i);
+              if(m2) code=m2[1].toUpperCase();
+            }
+          }
+          if(!code) return;
+
+          var vurl=self.site+'/videos/'+code.toLowerCase();
+          var img=a.querySelector('img');
+          var pic=img?pickImg(img):'';
+          if(!markCard(vurl,pic,code)) return;
+
+          // 提取更友好的标题：番号 + 女优名 / 场景描述
+          var title=code;
+          var frameBtn=a.querySelector('button[data-frame-title]');
+          if(frameBtn){
+            var ft=frameBtn.getAttribute('data-frame-title')||'';
+            var actressMatch=ft.match(/女优\[([^\]]+)\]/);
+            if(actressMatch) title=code+' · '+actressMatch[1];
+          }
+          // 备用：img alt 增加场景描述
+          if(title===code && img){
+            var alt=img.getAttribute('alt')||'';
+            if(alt && alt.length>2 && alt.length<50) title=code+' · '+alt;
+          }
+
+          out.push({url:vurl,pic:pic,preview:'',uuid:'',title:title,dur:'',hits:''});
         });
         return out;
       },
       parseDetail:function(html){
         var self=this,doc=parseDoc(html);
         function ogc(p){ var m=doc.querySelector('meta[property="'+p+'"]'); return m?m.getAttribute('content'):''; }
-        var title=(ogc('og:title')||txt(doc.querySelector('h2.page-title'))||txt(doc.querySelector('h1'))||'')
-                  .replace(/\s*-\s*XVIDEOS.*$/i,'').replace(/\s+/g,' ').replace(/^ | $/g,'');
+        var title=txt(doc.querySelector('h1'))||(ogc('og:title')||'').replace(/\s*-\s*whos\.tv\s*$/i,'');
         var poster=ogc('og:image')||'';
-        var models=[],tags=[],seenM={},seenT={};
-        doc.querySelectorAll('a[href*="/pornstars/"], a[href*="/models/"], a[href*="/profiles/"], a[href*="/channels/"], a[href*="/amateur-channels/"]').forEach(function(a){
+        var models=[],tags=[],metaParts=[];
+        doc.querySelectorAll('a[href*="/actresses/"]').forEach(function(a){
           var href=a.getAttribute('href')||'', name=txt(a);
-          if(!name||name.length>24)return;
-          if(href.indexOf('http')!==0)href=self.site+(href.charAt(0)==='/'?'':'/')+href;
-          if(seenM[href])return; seenM[href]=1;
-          models.push({name:name,url:href});
-        });
-        doc.querySelectorAll('a.is-keyword, a[href*="/tags/"], a[href*="/c/"]').forEach(function(a){
-          var href=a.getAttribute('href')||'', name=txt(a).replace(/^#\s*/,'');
           if(!name||name.length>20)return;
-          if(href.indexOf('http')!==0)href=self.site+(href.charAt(0)==='/'?'':'/')+href;
-          if(seenT[href])return; seenT[href]=1;
-          tags.push({name:name,url:href});
+          if(href.indexOf('http')!==0)href=self.site+href;
+          if(!models.some(function(x){return x.url===href;}))models.push({name:name,url:href});
         });
+        doc.querySelectorAll('a[href*="/makers/"], a[href*="/tags/"], a[href*="/genres/"]').forEach(function(a){
+          var href=a.getAttribute('href')||'', name=txt(a);
+          if(!name||name.length>16)return;
+          if(href.indexOf('http')!==0)href=self.site+href;
+          if(!tags.some(function(x){return x.url===href;}))tags.push({name:name,url:href});
+        });
+        // 发行日期 / 时长
         var flat=String(html).replace(/<[^>]+>/g,' ').replace(/\s+/g,' ');
-        var meta=[];
-        var vm=flat.match(/([\d.,]+)\s*(?:views|\u6b21\u89c2\u770b|\u6b21\u89c0\u770b)/i); if(vm)meta.push(vm[1]+' views');
-        var related=self.parseCards(html).slice(0,24);
-        return {title:title,poster:poster,models:models.slice(0,8),tags:tags.slice(0,24),
-                meta:meta.join('  \u00b7  '),related:related};
+        var dm=flat.match(/(\d{4}-\d{2}-\d{2})/); if(dm)metaParts.push(dm[1]);
+        var lm=flat.match(/(\d+)\s*\u5206\u949f/); if(lm)metaParts.push(lm[1]+' \u5206\u949f');
+        var related=self.parseCards(html).filter(function(c){return c.title||c.pic;}).slice(0,12);
+        return {title:title,poster:poster,models:models.slice(0,8),tags:tags.slice(0,20),
+                meta:metaParts.slice(0,3).join('  \u00b7  '),related:related};
       },
-      // 取流：视频页内联 JS 里的 setVideoHLS(master.m3u8)；没有就交给 App 嗅探
-      extractStream:async function(raw){
+      // 播放器是自定义元素，地址由脚本动态取；这里尽力从页面/脚本里挖
+      extractStream:async function(raw,item){
         if(!raw)return '';
-        var t=String(raw);
-        var m=t.match(/setVideoHLS\(\s*['"]([^'"]+)['"]/i)||t.match(/https?:\/\/[^"'\s]+?\.m3u8[^"'\s]*/i);
-        return m?String(m[1]||m[0]).replace(/\\+\//g,'/'):'';
+        var un=String(raw).replace(/\\+\//g,'/');
+        var m=un.match(/https?:\/\/[^"'\s]+?\.m3u8[^"'\s]*/i)||un.match(/https?:\/\/[^"'\s]+?\.mp4[^"'\s]*/i);
+        if(m)return m[0];
+        var up=unpackEvals(un);
+        if(up){ up=up.replace(/\\+\//g,'/');
+          m=up.match(/https?:\/\/[^"'\s]+?\.m3u8[^"'\s]*/i)||up.match(/https?:\/\/[^"'\s]+?\.mp4[^"'\s]*/i);
+          if(m)return m[0]; }
+        // 页面引用的站内脚本里再找一遍
+        try{
+          var urls=[],mm,re2=/<script[^>]+(?:src|data-cf-src)=["']([^"']+)["']/ig;
+          while((mm=re2.exec(un))){
+            var u=mm[1];
+            if(u.indexOf('http')!==0)u=(u.charAt(0)==='/'?this.site:this.site+'/')+u.replace(/^\//,'');
+            if(/whos|badnews|imgcaches/i.test(u)&&/\.js/i.test(u))urls.push(u);
+          }
+          for(var i=0;i<urls.length&&i<4;i++){
+            var js='';
+            try{ js=String(await req(urls[i],{timeout:12})||''); }catch(e){ continue; }
+            js=js.replace(/\\+\//g,'/');
+            m=js.match(/https?:\/\/[^"'\s]+?\.m3u8[^"'\s]*/i);
+            if(m)return m[0];
+          }
+        }catch(e){}
+        return '';
       },
-      sniffUrl:function(raw,item){ return item?item.url:''; }
+      sniffUrl:function(raw,item){ return (item&&item.url)||''; },
+      listUrls:function(page){
+        var b;
+        if(view.mode==='search')b=this.site+'/videos?q='+encodeURIComponent(view.kw);
+        else b=this.site+view.path;
+        if(page>1){
+          if(view.mode==='search'){
+            b+=(b.indexOf('?')===-1?'?':'&')+'page='+page;
+          }else{
+            // whos 分类/标签页翻页格式是 /page-2，不是 ?page=2；否则会重复请求第一页
+            var parts=b.split('?'), base=parts[0].replace(/\/page-\d+$/,'').replace(/\/$/,'');
+            b=base+'/page-'+page+(parts[1]?('?'+parts[1]):'');
+          }
+        }
+        return [b];
+      }
     },
     jable: {
       id:'jable', label:'Jable', word:'Jable', site:'https://jable.tv', ns:'jable',
@@ -2304,12 +2479,29 @@ body.detail-active .switcher, body.set-open .switcher, body.searching .switcher{
 
   /* ---------- 懒加载图片 ---------- */
   var lazyList = [];
-  function lazyLoad(img){
-    if (img._done) return; img._done = true;
-    var u = img.getAttribute('data-src'); if (!u) return;
+  var coverCache = {};   // 列表页没有封面图时，去详情页顺带取 og:image；按地址缓存，避免同一个视频重复请求
+  var seenUrls = {};     // 跨页去重：已渲染的视频 URL
+  var seenPics = {};     // 跨页去重：已渲染的封面图（避免同一帧画面多次出现）
+  function showImg(img, u){
+    if (!u) { img.onerror && img.onerror(); return; }
     img.onload = function(){ img.className = 'in'; };
     img.onerror = function(){ img.onerror = null; img.style.opacity = '0'; };
     img.src = resUrl(u);
+  }
+  async function loadCoverFromDetail(img, pageUrl){
+    if (Object.prototype.hasOwnProperty.call(coverCache, pageUrl)) { showImg(img, coverCache[pageUrl]); return; }
+    var pic = '';
+    try { var body = await req(pageUrl, { timeout: 10 }); pic = (A.parseDetail(body).poster) || ''; }
+    catch (e) { /* 拿不到就算了，封面留空不影响播放 */ }
+    coverCache[pageUrl] = pic;
+    showImg(img, pic);
+  }
+  function lazyLoad(img){
+    if (img._done) return; img._done = true;
+    var u = img.getAttribute('data-src');
+    if (u) { showImg(img, u); return; }
+    var pageUrl = img.getAttribute('data-cover-src');
+    if (pageUrl) loadCoverFromDetail(img, pageUrl);
   }
   function lazyScan(){
     if (!lazyList.length) return;
@@ -2346,6 +2538,13 @@ body.detail-active .switcher, body.set-open .switcher, body.searching .switcher{
       if (v && v.indexOf('data:') !== 0) return v;
     }
     return '';
+  }
+  function normPicKey(u){
+    u = String(u || '').replace(/^https?:\/\//i, '').replace(/^f-proxy\./i, '').replace(/^p-proxy\./i, '');
+    u = u.replace(/[?#].*$/, '').replace(/\/+$/, '');
+    // whos 的帧图常见同一张图存在 s.webp / .webp 两种尺寸后缀，去重时按同一张处理
+    u = u.replace(/s\.(webp|jpg|jpeg|png)$/i, '.$1');
+    return u.toLowerCase();
   }
   function txt(el){ return el ? (el.textContent || '').replace(/\s+/g, ' ').replace(/^ | $/g, '') : ''; }
   function firstNum(s){
@@ -2611,27 +2810,51 @@ body.detail-active .switcher, body.set-open .switcher, body.searching .switcher{
   function card(item){
     var inner = document.createElement('div'); inner.className = 'card-inner';
     var th = document.createElement('div'); th.className = 'thumb';
-    var img = document.createElement('img'); img.setAttribute('data-src', item.pic || ''); img.alt = '';
+    var img = document.createElement('img'); img.alt = '';
+    if (item.pic) img.setAttribute('data-src', item.pic);
+    else img.setAttribute('data-cover-src', item.url);   // 列表没给封面：懒加载进入可视区域时去详情页取 og:image
     th.appendChild(img);
     if (item.dur) { var du = document.createElement('div'); du.className = 'dur'; du.textContent = item.dur; th.appendChild(du); }
     var me = document.createElement('div'); me.className = 'meta';
-    var tt = document.createElement('div'); tt.className = 'tt'; tt.textContent = item.title || codeOf(item.url);
+    var displayTitle = item.title || codeOf(item.url);
+    var tt = document.createElement('div'); tt.className = 'tt'; tt.textContent = displayTitle;
     me.appendChild(tt);
     var sub = document.createElement('div'); sub.className = 'sub';
     var code = codeOf(item.url);
-    if (code) { var w = document.createElement('span'); w.className = 'who'; w.textContent = code; sub.appendChild(w); }
-    if (item.hits) { var h = document.createElement('span'); h.className = 'hit'; h.textContent = '👁 ' + item.hits; sub.appendChild(h); }
+    // 标题已经是纯番号时，sub 行不再重复显示番号
+    var titleIsCode = code && (displayTitle).toUpperCase() === code;
+    if (code && !titleIsCode) { var w = document.createElement('span'); w.className = 'who'; w.textContent = code; sub.appendChild(w); }
+    if (item.hits) {
+      var h = document.createElement('span'); h.className = 'hit';
+      // 数字才是播放量，其余（如演员名）原样显示
+      h.textContent = /^[\d.,万kKmM\s]+$/.test(item.hits) ? ('👁 ' + item.hits) : item.hits;
+      sub.appendChild(h);
+    }
     me.appendChild(sub);
     inner.appendChild(th); inner.appendChild(me);
     var wrap = document.createElement('div'); wrap.className = 'card'; wrap.setAttribute('tabindex', '0');
     wrap.appendChild(inner);
-    wrap.addEventListener('click', function () { openDetail(item); });
+    wrap.addEventListener('click', function () {
+      if (item.kind === 'topic') openListing(pathOf(item.url), item.title);
+      else openDetail(item);
+    });
     lazyList.push(img);
     return wrap;
   }
   function renderInto(items){
-    var f = document.createDocumentFragment(), i;
-    for (i = 0; i < items.length; i++) f.appendChild(card(items[i]));
+    var f = document.createDocumentFragment(), i, item, url, pic;
+    for (i = 0; i < items.length; i++) {
+      item = items[i];
+      url = item.url || '';
+      pic = item.pic || '';
+      var pk = normPicKey(pic);
+      // 跨页去重：跳过已渲染的 URL 或封面（同一帧画面/视频翻页时常见重复）
+      if (url && seenUrls[url]) continue;
+      if (pk && seenPics[pk]) continue;
+      if (url) seenUrls[url] = 1;
+      if (pk) seenPics[pk] = 1;
+      f.appendChild(card(item));
+    }
     elList.appendChild(f);
   }
 
@@ -2751,12 +2974,15 @@ body.detail-active .switcher, body.set-open .switcher, body.searching .switcher{
   }
 
   /* ---------- 加载 ---------- */
+  var emptyPageStreak = 0;   // 连续空页计数（去重后 0 张新卡），防止无限循环
   async function load(reset){
     if (view.loading && !reset) return;   // 追加加载(reset=false)才去重；显式切换(reset=true)要能抢占，不能被卡住的旧请求锁死
     view.loading = true;
     var tk = ++view.token;
     if (reset) {
       view.page = 1; view.more = true; lazyList = [];
+      seenUrls = {}; seenPics = {};   // 切换分类/搜索时清空跨页去重集合
+      emptyPageStreak = 0;
       elList.className = 'grid skel'; elList.replaceChildren(skeleton(10));
       elMore.replaceChildren(); elState.textContent = '';
       resetChanRow();
@@ -2778,10 +3004,26 @@ body.detail-active .switcher, body.set-open .switcher, body.searching .switcher{
         if (reset) showEmpty();
         else elState.textContent = '没有更多了';
       } else {
+        var before = elList.children.length;
         renderInto(items);
+        var added = elList.children.length - before;
         view.more = items.length >= 8;
         renderMore();
         elState.textContent = '';
+        // 去重后本页 0 张新卡，但接口有数据 → 自动续载下一页（最多 5 次防止死循环，帧画面分类页常见大量重复番号）
+        if (added === 0 && view.more && emptyPageStreak < 5 && tk === view.token) {
+          emptyPageStreak++;
+          view.page++;
+          view.loading = false;
+          setTimeout(function () { if (tk === view.token) load(false); }, 0);
+          return;
+        }
+        if (added === 0 && emptyPageStreak >= 5) {
+          view.more = false;
+          elState.textContent = '没有更多可显示的内容';
+          renderMore();
+        }
+        if (added > 0) emptyPageStreak = 0;
       }
       lazyScan();
     } catch (e) {

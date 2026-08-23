@@ -8,7 +8,7 @@ class Spider(Spider):
     # ==========================================================================
     # 📂 扫描存储根目录下的这些文件夹，顺序决定了显示的优先级
     SCAN_DIR_LIST = [
-                "Film-TV/File/txt/Hunter"
+                "/storage/emulated/0/Film-TV/File/txt/Hunter"
                 #"bh"#, "tvbox",  "bhh",         #电视📺专用文件夹，把db文件放在这里# 👈 u盘也用这个文件夹                                          
                #"lz", "纯福利",  "江湖",           # 👈 前面加#关闭   这里可以修改任意大佬包名 
                #"VodPlus", "peekpili/php-scripts"                       #同上

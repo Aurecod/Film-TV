@@ -1512,16 +1512,16 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
     <div class="field">
       <label for="hlsmode">HLS 模式</label>
       <select id="hlsmode">
-        <option value="variant">直推变体（把该档 m3u8 原地址给播放器，最稳）</option>
+        <option value="master" selected>原始主清单（播放器自适应码率，网差自动降清）</option>
+        <option value="variant">直推变体（固定一档，最稳但不自适应）</option>
         <option value="pin">锁定画质（改写主清单 + data URI，播放器可能不吃）</option>
-        <option value="master">原始主清单（播放器自适应，会从低码率起步）</option>
       </select>
     </div>
     <div class="field">
       <label for="dashmode">DASH 模式</label>
       <select id="dashmode">
+        <option value="raw" selected>原始清单（播放器自适应码率）</option>
         <option value="pin">锁定画质（改写清单，播放器没得挑）</option>
-        <option value="raw">原始清单（播放器自适应，可能从低码率起步）</option>
       </select>
     </div>
     <div class="field">
@@ -1597,9 +1597,9 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
 
   var YT = 'https://www.youtube.com';
   var API = YT + '/youtubei/v1/';
-  var KEY = 'AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8';   // YouTube Web 端公开 key
-  var CVER = '2.20240401.00.00';
-  var DEF_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36';
+  var KEY = 'AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8';   // YouTube Web 端公开 key（fallback；优先用页面 ytcfg）
+  var CVER = '2.20260801.00.00';                     // WEB 客户端版本兜底；运行时优先 ytcfg.INNERTUBE_CLIENT_VERSION
+  var DEF_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36';
 
   var PROXY_SNIPPET = [
     '{',
@@ -1741,7 +1741,7 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
   }
 
   /* ---------- 状态 ---------- */
-  var prefs = { hl: 'zh-CN', gl: 'US', ua: DEF_UA, quality: 'best', vcodec: 'auto', wall: 'none', engine: 'hls', hlsmode: 'variant', seg: 'gw', client: 'auto', dashmode: 'pin', inv: '' };
+  var prefs = { hl: 'zh-CN', gl: 'US', ua: DEF_UA, quality: 'best', vcodec: 'auto', wall: 'none', engine: 'hls', hlsmode: 'master', seg: 'gw', client: 'auto', dashmode: 'raw', inv: '' };
   var view = { kind: 'browse', arg: 'FEwhat_to_watch', tab: 'rec', token: '', items: [], loading: false, seq: 0, ep: '' };
   var subStack = [];   // 二级页栈：支持频道→播放列表→再进频道这种连跳
   var chanSub = null;  // 当前频道页解析出的订阅按钮信息：{channelId, subscribed, subEndpoint, unsubEndpoint}
@@ -1940,6 +1940,7 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
       auth.name = li && nm ? nm[1] : '';
       auth.checked = Date.now();
       if (!li) return { ok: false, why: 'Cookie 无效或已过期（页面仍是未登录状态）' };
+      try { dropMemo(); } catch (eM) {}
       return { ok: true, name: auth.name };
     } catch (e) {
       auth.on = false;
@@ -1977,14 +1978,14 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
       var cfg = await ytcfg('');
       var body = {
         videoId: videoId,
-        context: { client: { clientName: 'WEB', clientVersion: CVER, hl: prefs.hl, gl: prefs.gl, userAgent: prefs.ua, visitorData: cfg.visitor || undefined } },
+        context: { client: { clientName: 'WEB', clientVersion: webCver(cfg), hl: prefs.hl, gl: prefs.gl, userAgent: prefs.ua, visitorData: cfg.visitor || undefined } },
         playbackContext: { contentPlaybackContext: { html5Preference: 'HTML5_PREF_WANTS' } },
         contentCheckOk: true, racyCheckOk: true
       };
       var headers = mergeAuth({
         'Content-Type': 'application/json', 'Accept-Language': prefs.hl,
         'Origin': YT, 'Referer': YT + '/watch?v=' + videoId,
-        'X-YouTube-Client-Name': '1', 'X-YouTube-Client-Version': CVER, 'User-Agent': prefs.ua
+        'X-YouTube-Client-Name': '1', 'X-YouTube-Client-Version': webCver(cfg), 'User-Agent': prefs.ua
       });
       if (cfg.visitor) headers['X-Goog-Visitor-Id'] = cfg.visitor;
       var pj = await req(API + 'player?key=' + (cfg.key || KEY) + '&prettyPrint=false', {
@@ -2103,9 +2104,10 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
     // 不报错、也没内容。搜索没这个限制，所以只有这两个 tab 会空。
     var cfg = await ytcfg('');
 
+    var ver = webCver(cfg);
     var client = {
       clientName: 'WEB',
-      clientVersion: CVER,
+      clientVersion: ver,
       hl: prefs.hl,
       gl: prefs.gl,
       userAgent: prefs.ua
@@ -2122,7 +2124,7 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
       'Origin': YT,
       'Referer': YT + '/',
       'X-YouTube-Client-Name': '1',
-      'X-YouTube-Client-Version': CVER,
+      'X-YouTube-Client-Version': ver,
       'User-Agent': prefs.ua
     };
     if (cfg.visitor) headers['X-Goog-Visitor-Id'] = cfg.visitor;
@@ -3255,12 +3257,19 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
   function pickCfg(html) {
     var k = html.match(/"INNERTUBE_API_KEY":"([^"]+)"/);
     var v = html.match(/"visitorData":"([^"]+)"/);
+    // WEB 客户端版本：优先 INNERTUBE_CLIENT_VERSION，其次 client.clientVersion
+    var cv = html.match(/"INNERTUBE_CLIENT_VERSION":"([^"]+)"/) ||
+             html.match(/"clientVersion":"(2\.\d{8}\.\d{2}\.\d{2})"/);
     if (!k && !v) return null;
     return {
       key: k ? k[1] : KEY,
       visitor: v ? decodeURIComponent(JSON.parse('"' + v[1] + '"')) : '',
+      cver: cv ? cv[1] : '',
       ts: Date.now()
     };
+  }
+  function webCver(cfg) {
+    return (cfg && cfg.cver) || CVER;
   }
 
   async function ytcfgFetch(videoId) {
@@ -3279,7 +3288,7 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
         if (got && got.visitor) return got;
       } catch (e) {}
     }
-    return { key: KEY, visitor: '', ts: Date.now() };
+    return { key: KEY, visitor: '', cver: '', ts: Date.now() };
   }
 
   async function ytcfg(videoId, force) {
@@ -3293,7 +3302,7 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
       return ytcfgCache;
     })['catch'](function () {
       if (ytcfgWait === p) ytcfgWait = null;
-      ytcfgCache = { key: KEY, visitor: '', ts: Date.now() };
+      ytcfgCache = { key: KEY, visitor: '', cver: '', ts: Date.now() };
       return ytcfgCache;
     });
     ytcfgWait = p;
@@ -3319,11 +3328,14 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
       'Content-Type': 'application/json',
       'User-Agent': c.ua,
       'Origin': YT,
-      'Referer': YT + '/',
+      'Referer': YT + '/watch?v=' + videoId,
       'X-YouTube-Client-Name': c.id,
       'X-YouTube-Client-Version': c.ver
     };
     if (cfg.visitor) headers['X-Goog-Visitor-Id'] = cfg.visitor;
+    // 移动端客户端（ANDROID_VR 等）必须匿名取流：WEB Cookie 绑上去会被风控「被拒」。
+    // 只有 useAuth 的 WEB 兜底客户端才带登录态。
+    if (c.useAuth) mergeAuth(headers);
 
     return req(API + 'player?key=' + cfg.key + '&prettyPrint=false', {
       method: 'POST',
@@ -3454,7 +3466,7 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
     var i, json, sd, status, master, levels, c;
     var adaptive = null, muxed = null, hlsFallback = null;
 
-    var list = PLAYER_CLIENTS;
+    var list = PLAYER_CLIENTS.slice();
     if (prefs.client && prefs.client !== 'auto') {
       var only = PLAYER_CLIENTS.filter(function (x) { return x.name === prefs.client; });
       // 锁定的客户端排前面，但后面仍跟上其余客户端兜底 ——
@@ -3469,6 +3481,17 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
     // 所以直接等 ytcfg，别浪费那次注定失败的裸打往返。
     // 现在 ytcfg 有本地持久缓存，绝大多数情况下这一步是零耗时。
     var cfg = await ytcfg(videoId);
+
+    // 已登录：队尾加 WEB+Cookie 兜底。ANDROID_VR 等保持匿名（不挑节点时最稳）；
+    // 匿名全员 LOGIN_REQUIRED 时，靠 WEB 登录态再捞一次。
+    if (auth.on && auth.ck) {
+      var verW = webCver(cfg);
+      list = list.concat([{
+        name: 'WEB', id: '1', ver: verW, useAuth: true,
+        ua: prefs.ua || DEF_UA,
+        client: { clientName: 'WEB', clientVersion: verW }
+      }]);
+    }
 
     var jobs = [], masterJobs = [];
 
@@ -3501,13 +3524,23 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
 
     fireAll(cfg);
 
-    // LOGIN_REQUIRED / 空响应 = visitorData 多半过期了。visitorData 一过期是所有
-    // 客户端一起挂，所以只看第一个（优先级最高的那个）就够判断，不必等齐全部再决定。
+    // LOGIN_REQUIRED / 空响应 = visitorData 多半过期。只看队首客户端即可判断。
+    // 强制重领 visitor 后整轮重打；已登录时 WEB 兜底客户端会一并重发。
     var head0 = await jobs[0];
     var st0 = get(head0, 'playabilityStatus.status');
     if (!head0 || !head0.streamingData || st0 === 'LOGIN_REQUIRED') {
       try {
         cfg = await ytcfg(videoId, true);
+        // 登录态下同步刷新 WEB 客户端版本号
+        if (auth.on && auth.ck) {
+          var verR = webCver(cfg);
+          for (var ri = 0; ri < list.length; ri++) {
+            if (list[ri].useAuth) {
+              list[ri].ver = verR;
+              list[ri].client.clientVersion = verR;
+            }
+          }
+        }
         fireAll(cfg);
       } catch (e2) {}
     }
@@ -4878,11 +4911,19 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
     await store.set('cksync', auth.sync ? 'on' : 'off');
     if (ckChanged) {
       ytcfgCache = { key: '', visitor: '', ts: 0 };     // 换账号了，visitorData 得重领
+      try { await store.set('ytcfg', ''); } catch (eY) {}
+      dropMemo();
       if (auth.ck) {
         var r = await checkAuth();
         paintAuthState(r.ok ? ('已登录' + (r.name ? '：' + r.name : '')) : ('登录无效 — ' + r.why));
+        if (r.ok) {
+          try { await ytcfg('', true); } catch (eY2) {}
+          dropMemo();
+        }
       } else { auth.on = false; auth.name = ''; paintAuthState('未登录'); }
       syncAuthTabs();
+    } else if (auth.ck) {
+      dropMemo();   // 保存时清解析缓存，避免继续吃失败结果
     }
     // gl 变了就把 visitorData 缓存清掉：这个 token 是进 App 时按当时地区/IP领的，
     // 缓存着 30 分钟不刷新的话，推荐/热门会一直沿用旧地区的会话身份。
@@ -5807,6 +5848,5 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
   });
 })();
 </script>
-<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"8566db5104f24cd4a4f2c67c605439a9","r":1}' crossorigin="anonymous"></script>
 </body>
 </html>

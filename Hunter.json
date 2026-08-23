@@ -1,437 +1,185 @@
 {
-    "name": "Hunter",
-    "notice": "",
-    "author": "TG:https://t.me/Eat_Abalone",
-    "spider": "",
-    "logo": "./logo/hunter.gif",
-    "wallpaper": "./imgs/V1.jpg",
-    "sites": [
-        {
-            "key": "智能聚合",
-            "name": "꒰ঌ智能聚合໒꒱",
-            "type": 3,
-            "api": "./Source/智能聚合².py",
-            "searchable": 1,
-            "quickSearch": 1,
-            "filterable": 1,
-            "order_num": 0,
-            "style": {
-                "type": "rect"
-            },
-            "ext": ""
-        },
-        {
-            "key": "哔哩哔哩",
-            "name": "꒰ঌ哔哩哔哩໒꒱",
-            "type": 3,
-            "api": "./File/py/Hunter/哔哩哔哩.py",
-            "searchable": 1,
-            "quickSearch": 1,
-            "filterable": 1,
-            "order_num": 0,
-            "style": {
-                "type": "rect"
-            },
-            "ext": ""
-        },
-        {
-            "key": "YouTube",
-            "name": "꒰ঌYouTube໒꒱",
-            "type": 3,
-            "api": "./File/py/Hunter/YouTube.py",
-            "searchable": 1,
-            "quickSearch": 1,
-            "filterable": 1,
-            "order_num": 0,
-            "style": {
-                "type": "rect"
-            },
-            "ext": ""
-        },
-        {
-            "key": "YouTube_live",
-            "name": "꒰ঌYouTube_livee໒꒱",
-            "type": 3,
-            "api": "./File/py/Hunter/YouTube_live.py",
-            "searchable": 1,
-            "quickSearch": 1,
-            "filterable": 1,
-            "order_num": 0,
-            "style": {
-                "type": "rect"
-            },
-            "ext": ""
-        },
-        {
-            "key": "枫叶影院",
-            "name": "꒰ঌ枫叶🍁影院໒꒱",
-            "type": 3,
-            "api": "./File/py/Hunter/枫叶影院.py",
-            "searchable": 1,
-            "quickSearch": 1,
-            "filterable": 1,
-            "order_num": 0,
-            "style": {
-                "type": "rect"
-            },
-            "ext": ""
-        },
-        {
-            "key": "永乐视频",
-            "name": "꒰ঌ永乐视频໒꒱",
-            "type": 3,
-            "api": "./File/py/Hunter/永乐视频.py",
-            "searchable": 1,
-            "quickSearch": 1,
-            "filterable": 1,
-            "order_num": 0,
-            "style": {
-                "type": "rect"
-            },
-            "ext": ""
-        },
-        {
-            "key": "哇哇",
-            "name": "꒰ঌ哇哇໒꒱",
-            "type": 3,
-            "api": "./File/py/Hunter/哇哇.py",
-            "searchable": 1,
-            "quickSearch": 1,
-            "filterable": 1,
-            "order_num": 0,
-            "style": {
-                "type": "rect"
-            },
-            "ext": ""
-        },
-        {
-            "key": "努努影院",
-            "name": "꒰ঌ努努影院໒꒱",
-            "type": 3,
-            "api": "./File/py/Hunter/努努影院.py",
-            "searchable": 1,
-            "quickSearch": 1,
-            "filterable": 1,
-            "order_num": 0,
-            "style": {
-                "type": "rect"
-            },
-            "ext": ""
-        },
-        {
-            "key": "饭团影视",
-            "name": "꒰ঌ饭团影视໒꒱",
-            "type": 3,
-            "api": "./File/py/Hunter/饭团影视.py",
-            "searchable": 1,
-            "quickSearch": 1,
-            "filterable": 1,
-            "order_num": 0,
-            "style": {
-                "type": "rect"
-            },
-            "ext": ""
-        },
-        {
-            "key": "斗鱼虎牙",
-            "name": "꒰ঌ斗鱼虎牙໒꒱",
-            "type": 3,
-            "api": "./File/py/Hunter/斗鱼虎牙.py",
-            "searchable": 1,
-            "quickSearch": 1,
-            "filterable": 1,
-            "order_num": 0,
-            "style": {
-                "type": "rect"
-            },
-            "ext": ""
-        },
-        {
-            "key": "爱瓜影视",
-            "name": "꒰ঌ爱瓜影视໒꒱",
-            "type": 3,
-            "api": "./File/py/Hunter/爱瓜影视.py",
-            "searchable": 1,
-            "quickSearch": 1,
-            "filterable": 1,
-            "order_num": 0,
-            "style": {
-                "type": "rect"
-            },
-            "ext": ""
-        },
-        {
-            "key": "4K影视",
-            "name": "꒰ঌ4K影视໒꒱",
-            "type": 3,
-            "api": "./File/py/Hunter/4K影视.py",
-            "searchable": 1,
-            "quickSearch": 1,
-            "filterable": 1,
-            "order_num": 0,
-            "style": {
-                "type": "rect"
-            },
-            "ext": ""
-        },
-        {
-            "key": "山楂影视",
-            "name": "꒰ঌ山楂影视໒꒱",
-            "type": 3,
-            "api": "./File/py/Hunter/山楂影视.py",
-            "searchable": 1,
-            "quickSearch": 1,
-            "filterable": 1,
-            "order_num": 0,
-            "style": {
-                "type": "rect"
-            },
-            "ext": ""
-        },
-        {
-            "key": "瓜子",
-            "name": "꒰ঌ瓜子໒꒱",
-            "type": 3,
-            "api": "./File/py/Hunter/瓜子.py",
-            "searchable": 1,
-            "quickSearch": 1,
-            "filterable": 1,
-            "order_num": 0,
-            "style": {
-                "type": "rect"
-            },
-            "ext": ""
-        },
-        {
-            "key": "小苹果",
-            "name": "꒰ঌ小苹果໒꒱",
-            "type": 3,
-            "api": "./File/py/Hunter/小苹果.py",
-            "searchable": 1,
-            "quickSearch": 1,
-            "filterable": 1,
-            "order_num": 0,
-            "style": {
-                "type": "rect"
-            },
-            "ext": ""
-        },
-        {
-            "key": "Uvod",
-            "name": "꒰ঌUvod໒꒱",
-            "type": 3,
-            "api": "./File/py/Hunter/Uvod.py",
-            "searchable": 1,
-            "quickSearch": 1,
-            "filterable": 1,
-            "order_num": 0,
-            "style": {
-                "type": "rect"
-            },
-            "ext": ""
-        },
-        {
-            "key": "Mang",
-            "name": "꒰ঌMang໒꒱",
-            "type": 3,
-            "api": "./File/py/Hunter/Mang.py",
-            "searchable": 1,
-            "quickSearch": 1,
-            "filterable": 1,
-            "order_num": 0,
-            "style": {
-                "type": "rect"
-            },
-            "ext": ""
-        },
-        {
-            "key": "js_en_gf",
-            "name": "꒰ঌ官方采集໒꒱",
-            "type": 3,
-            "api": "./File/js/Hunter/en_gf.js",
-            "searchable": 1,
-            "quickSearch": 0,
-            "filterable": 0,
-            "changeable": 0,
-            "style": {
-                "type": "rect"
-            }
-        },
-        {
-            "key": "t1_dian_ying_tian_tang",
-            "name": "꒰ঌ电影天堂໒꒱",
-            "type": 1,
-            "api": "http://caiji.dyttzyapi.com/api.php/provide/vod/from/dyttm3u8/at/json/?ac=list",
-            "searchable": 1,
-            "quickSearch": 0,
-            "filterable": 0,
-            "changeable": 0,
-            "style": {
-                "type": "rect"
-            },
-            "playUrl": "json:https://py.doube.eu.org/parse_dytt?url=",
-            "categories": [
-                "动作片",
-                "喜剧片",
-                "爱情片",
-                "科幻片",
-                "恐怖片",
-                "剧情片",
-                "战争片",
-                "国产剧",
-                "香港剧",
-                "韩国剧",
-                "欧美剧",
-                "记录片",
-                "台湾剧",
-                "日本剧",
-                "海外剧",
-                "泰国剧",
-                "大陆综艺",
-                "港台综艺",
-                "日韩综艺",
-                "欧美综艺",
-                "国产动漫",
-                "日韩动漫",
-                "欧美动漫",
-                "港台动漫",
-                "伦理片",
-                "短剧",
-                "动画片"
-            ]
-        },
-        {
-            "key": "电影猎手",
-            "name": "꒰ঌ电影猎手໒꒱",
-            "type": 3,
-            "api": "./File/py/Hunter/电影猎手.py",
-            "searchable": 1,
-            "quickSearch": 1,
-            "filterable": 1,
-            "order_num": 0,
-            "style": {
-                "type": "rect"
-            },
-            "ext": ""
-        },
-        {
-            "key": "奇优动漫",
-            "name": "꒰ঌ奇优动漫໒꒱",
-            "type": 3,
-            "api": "./File/py/Hunter/奇优动漫.py",
-            "searchable": 1,
-            "quickSearch": 1,
-            "filterable": 1,
-            "order_num": 0,
-            "style": {
-                "type": "rect"
-            },
-            "ext": ""
-        },
-        {
-            "key": "星芽短剧",
-            "name": "꒰ঌ星芽短剧໒꒱",
-            "type": 3,
-            "api": "./File/py/Hunter/星芽短剧.py",
-            "searchable": 1,
-            "quickSearch": 1,
-            "filterable": 1,
-            "order_num": 0,
-            "style": {
-                "type": "rect"
-            },
-            "ext": ""
-        },
-        {
-            "key": "央视直播",
-            "name": "央视直播(1080P)",
-            "api": "csp_WvSpider",
-            "jar": "./jar/WvSpider.jar",
-            "type": "3",
-            "ext": "./File/js/Hunter/央视直播(1080P).wv.js",
-            "searchable": 1,
-            "filterable": 0,
-            "switchable": 0
-        },
-        {
-            "key": "TxtLiveList",
-            "name": "虎牙合集",
-            "jar": "./jar/pro.jar",
-            "type": 3,
-            "api": "csp_ProxySpider",
-            "searchable": 0,
-            "quickSearch": 0,
-            "filterable": 0,
-            "ext": {
-                "class": "TxtLiveSpider",
-                "ext": "./File/lz/虎牙全集.txt"
-            }
-        },
-        {
-            "key": "采集全集",
-            "name": "采集全集",
-            "jar": "./jar/pro.jar",
-            "type": 3,
-            "api": "csp_ProxySpider",
-            "style": {
-                "type": "rect",
-                "ratio": 1.33
-            },
-            "changeable": 1,
-            "ext": {
-                "class": "CJJH",
-                "ext": "./File/lz/cj.json#0"
-            }
-        },
-        {
-            "key": "猎人·直播",
-            "name": "꒰ঌ猎人·直播໒꒱",
-            "jar": "./jar/pro.jar",
-            "type": 3,
-            "api": "csp_ProxySpider",
-            "style": {
-                "type": "rect",
-                "ratio": 1.33
-            },
-            "changeable": 1,
-            "ext": {
-                "class": "FileSpider",
-                "ext": "/storage/emulated/0/Film-TV/File/txt/Hunter/"
-            }
-        },
-        {
-            "key": "本地",
-            "name": "꒰ঌ本地视频໒꒱",
-            "jar": "./jar/GM.jar",
-            "type": 3,
-            "api": "csp_Local"
-        }
-    ],
-    "lives": [
-        {
-            "name": "꒰ঌ电影轮播໒꒱",
-            "url": "./File/txt/Hunter/虎牙轮播.txt",
-            "epg": "http://diyp5.112114.xyz/?ch={name}&date={date}",
-            "logo": "https://epg.112114.xyz/logo/{name}.png"
-        },
-        {
-            "name": "꒰ঌ组播໒꒱",
-            "url": "https://ghfast.top/https://raw.githubusercontent.com/AbaloneHunter/iptv-zb/refs/heads/main/zubo_all.txt",
-            "epg": "http://diyp5.112114.xyz/?ch={name}&date={date}",
-            "logo": "https://epg.112114.xyz/logo/{name}.png"
-        },
-        {
-            "name": "综合直播",
-            "type": 0,
-            "playerType": 2,
-            "url": "https://ghfast.top/https://raw.githubusercontent.com/develop202/migu_video/refs/heads/main/interface.txt",
-            "epg": "https://tv.mxdyeah.top/epgphp/t.xml"
-        },
-        {
-            "name": "IPTV直播源总部-世界杯",
-            "type": 0,
-            "playerType": 2,
-            "url": "http://82.156.243.185:33389/fwc.m3u"
-        }
-    ]
+  "name": "Hunter",
+  "notice": "",
+  "author": "https://t.me/Aure_cod",
+  "spider": "",
+  "logo": "./logo/hunter.gif",
+  "wallpaper": "./imgs/V1.jpg",
+  "sites": [
+    {
+      "key": "写入器",
+      "name": "꒰ঌ写入器໒꒱",
+      "type": 3,
+      "api": "./Source/写入器².py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1,
+      "order_num": 0,
+      "style": {
+        "type": "rect"
+      },
+      "ext": ""
+    },
+    {
+      "key": "智能聚合",
+      "name": "꒰ঌ智能聚合໒꒱",
+      "type": 3,
+      "api": "./Source/智能聚合².py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1,
+      "order_num": 0,
+      "style": {
+        "type": "rect"
+      },
+      "ext": ""
+    },
+    {
+      "key": "js_en_gf",
+      "name": "꒰ঌ官方采集໒꒱",
+      "type": 3,
+      "api": "./File/js/Hunter/en_gf.js",
+      "searchable": 1,
+      "quickSearch": 0,
+      "filterable": 0,
+      "changeable": 0,
+      "style": {
+        "type": "rect"
+      }
+    },
+    {
+      "key": "t1_dian_ying_tian_tang",
+      "name": "꒰ঌ电影天堂໒꒱",
+      "type": 1,
+      "api": "http://caiji.dyttzyapi.com/api.php/provide/vod/from/dyttm3u8/at/json/?ac=list",
+      "searchable": 1,
+      "quickSearch": 0,
+      "filterable": 0,
+      "changeable": 0,
+      "style": {
+        "type": "rect"
+      },
+      "playUrl": "json:https://py.doube.eu.org/parse_dytt?url=",
+      "categories": [
+        "动作片",
+        "喜剧片",
+        "爱情片",
+        "科幻片",
+        "恐怖片",
+        "剧情片",
+        "战争片",
+        "国产剧",
+        "香港剧",
+        "韩国剧",
+        "欧美剧",
+        "记录片",
+        "台湾剧",
+        "日本剧",
+        "海外剧",
+        "泰国剧",
+        "大陆综艺",
+        "港台综艺",
+        "日韩综艺",
+        "欧美综艺",
+        "国产动漫",
+        "日韩动漫",
+        "欧美动漫",
+        "港台动漫",
+        "伦理片",
+        "短剧",
+        "动画片"
+      ]
+    },
+    {
+      "key": "央视直播",
+      "name": "央视直播(1080P)",
+      "api": "csp_WvSpider",
+      "jar": "./jar/WvSpider.jar",
+      "type": "3",
+      "ext": "./File/js/Hunter/央视直播(1080P).wv.js",
+      "searchable": 1,
+      "filterable": 0,
+      "switchable": 0
+    },
+    {
+      "key": "TxtLiveList",
+      "name": "虎牙合集",
+      "jar": "./jar/pro.jar",
+      "type": 3,
+      "api": "csp_ProxySpider",
+      "searchable": 0,
+      "quickSearch": 0,
+      "filterable": 0,
+      "ext": {
+        "class": "TxtLiveSpider",
+        "ext": "./File/lz/虎牙全集.txt"
+      }
+    },
+    {
+      "key": "采集全集",
+      "name": "采集全集",
+      "jar": "./jar/pro.jar",
+      "type": 3,
+      "api": "csp_ProxySpider",
+      "style": {
+        "type": "rect",
+        "ratio": 1.33
+      },
+      "changeable": 1,
+      "ext": {
+        "class": "CJJH",
+        "ext": "./File/lz/cj.json#0"
+      }
+    },
+    {
+      "key": "猎人·直播",
+      "name": "꒰ঌ猎人·直播໒꒱",
+      "jar": "./jar/pro.jar",
+      "type": 3,
+      "api": "csp_ProxySpider",
+      "style": {
+        "type": "rect",
+        "ratio": 1.33
+      },
+      "changeable": 1,
+      "ext": {
+        "class": "FileSpider",
+        "ext": "/storage/emulated/0/Film-TV/File/txt/Hunter/"
+      }
+    },
+    {
+      "key": "本地",
+      "name": "꒰ঌ本地视频໒꒱",
+      "jar": "./jar/GM.jar",
+      "type": 3,
+      "api": "csp_Local"
+    }
+  ],
+  "lives": [
+    {
+      "name": "꒰ঌ电影轮播໒꒱",
+      "url": "./File/txt/Hunter/虎牙轮播.txt",
+      "epg": "http://diyp5.112114.xyz/?ch={name}&date={date}",
+      "logo": "https://epg.112114.xyz/logo/{name}.png"
+    },
+    {
+      "name": "꒰ঌ组播໒꒱",
+      "url": "https://ghfast.top/https://raw.githubusercontent.com/AbaloneHunter/iptv-zb/refs/heads/main/zubo_all.txt",
+      "epg": "http://diyp5.112114.xyz/?ch={name}&date={date}",
+      "logo": "https://epg.112114.xyz/logo/{name}.png"
+    },
+    {
+      "name": "综合直播",
+      "type": 0,
+      "playerType": 2,
+      "url": "https://ghfast.top/https://raw.githubusercontent.com/develop202/migu_video/refs/heads/main/interface.txt",
+      "epg": "https://tv.mxdyeah.top/epgphp/t.xml"
+    },
+    {
+      "name": "IPTV直播源总部-世界杯",
+      "type": 0,
+      "playerType": 2,
+      "url": "http://82.156.243.185:33389/fwc.m3u"
+    }
+  ]
 }
