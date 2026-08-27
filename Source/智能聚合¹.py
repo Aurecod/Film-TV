@@ -121,6 +121,22 @@ class Spider(Spider):
             return f"{base}{url}"
         return f"{base}/{url}"
 
+    def _looks_like_media_url(self, s):
+        s = (s or '').strip()
+        if not s:
+            return False
+        low = s.lower()
+        return (s.startswith(('http://', 'https://', '//', '/'))
+                or low.endswith(('.m3u8', '.mp4', '.flv', '.ts', '.mp3'))
+                or '.m3u8?' in low or '.mp4?' in low)
+
+    def _fix_play_id(self, pid, spider=None, py_path=None):
+        """只对真实 URL/路径做绝对化补全；纯集数 id（如 12345|1）原样保留，
+        避免被拼上子爬虫的 host 导致 playerContent 拿到污染 id。"""
+        if self._looks_like_media_url(pid):
+            return self._fix_url(pid, spider, py_path)
+        return (pid or '').strip()
+
     def _normalize_vod(self, v, py_path, spider=None):
         vid = v.get('vod_id') or v.get('id')
         if vid:
@@ -439,13 +455,13 @@ class Spider(Spider):
                 for part in line.split('#'):
                     if '$' in part:
                         title, pid = part.split('$', 1)
-                        pid_fixed = self._fix_url(pid, spider, py_path)
+                        pid_fixed = self._fix_play_id(pid, spider, py_path)
                         if not pid_fixed.startswith(f"{py_path}{self.ID_SEP}"):
                             play_parts.append(f"{title}${py_path}{self.ID_SEP}{pid_fixed}")
                         else:
                             play_parts.append(f"{title}${pid_fixed}")
                     else:
-                        part_fixed = self._fix_url(part, spider, py_path)
+                        part_fixed = self._fix_play_id(part, spider, py_path)
                         if not part_fixed.startswith(f"{py_path}{self.ID_SEP}"):
                             play_parts.append(f"{py_path}{self.ID_SEP}{part_fixed}")
                         else:

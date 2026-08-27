@@ -6,6 +6,7 @@ import re
 import json
 import html
 import time
+import logging
 import threading
 import collections
 from urllib.parse import quote, unquote, parse_qs, urlencode, urlparse, urlunparse, urljoin
@@ -13,6 +14,10 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 from base.spider import Spider
+
+# 日志配置（只输出警告及以上级别）
+logging.basicConfig(level=logging.WARNING, format='%(asctime)s [%(levelname)s] %(message)s')
+logger = logging.getLogger('YouTubeSpider')
 
 class Const:
     PROXY_BASE = 'http://127.0.0.1:9978/proxy'
@@ -214,7 +219,7 @@ class BaseExtractor:
                 return r
             except requests.RequestException as e:
                 if attempt == max_retries:
-                    
+                    logger.warning("GET 请求最终失败 [%s]: %s", url, e)
                     raise
                 time.sleep(backoff * (2 ** attempt))
         raise RuntimeError("无法完成 GET 请求")
@@ -233,6 +238,7 @@ class BaseExtractor:
                 return r.json()
             except requests.RequestException as e:
                 if attempt == max_retries:
+                    logger.warning("POST 请求最终失败 [%s]: %s", url, e)
                     raise
                 time.sleep(backoff * (2 ** attempt))
         raise RuntimeError("无法完成 POST 请求")
@@ -251,6 +257,7 @@ class BaseExtractor:
         try:
             code = self._get(player_url, timeout=90).text
         except Exception as e:
+            logger.warning("获取 Player JS 失败: %s", e)
             code = ''
         with self._lock:
             self.player_cache[player_url] = code
@@ -262,6 +269,7 @@ class BaseExtractor:
             sts = self._search(r'(?:signatureTimestamp|sts)\s*:\s*(\d{5})', code)
             return int(sts) if sts else None
         except Exception as e:
+            logger.warning("提取 signatureTimestamp 失败: %s", e)
             return None
 
     def _extract_initial_player_response(self, text):
@@ -376,6 +384,7 @@ class BaseExtractor:
                         return urlunparse(parsed._replace(query=new_query))
             return media_url
         except Exception as e:
+            logger.debug("n-sig 解密异常: %s", e)
             return media_url
 
     def _get_n_function(self, player_url):
@@ -513,6 +522,7 @@ class BaseExtractor:
                 elif fallback is None:
                     fallback = data
             except Exception as e:
+                logger.warning("客户端 %s 请求失败: %s", client_name, e)
                 continue
         return results or ([fallback] if fallback else [])
 
@@ -649,7 +659,7 @@ class YouTubeLite(BaseExtractor):
             'fps': fmt.get('fps') or 0,
             'bitrate': fmt.get('bitrate') or fmt.get('averageBitrate') or 0,
             'contentLength': fmt.get('contentLength'),
-            'initRange': fmt.get('initializationRange') or fmt.get('initRange') or {},
+            'initRange': fmt.get('initRange') or {},
             'indexRange': fmt.get('indexRange') or {},
             'codecs': codecs,
             'quality': fmt.get('qualityLabel') or fmt.get('quality'),
@@ -776,6 +786,7 @@ class YouTubeLiveLite(BaseExtractor):
                     data['_client_name'] = client_name
                     return data
             except Exception as e:
+                logger.warning("直播客户端 %s 请求失败: %s", client_name, e)
                 continue
         return None
 
@@ -922,6 +933,7 @@ class Spider(Spider):
                  ((data.get('client') or {}).get('visitorData'))
         if vd and not self.extendDict.get('visitor_data'):
             self.extendDict['visitor_data'] = vd
+            logger.debug("自动提取并缓存 visitorData")
 
     # ---------- 首页 ----------
     def homeContent(self, filter):
@@ -997,6 +1009,7 @@ class Spider(Spider):
                 high_res = [x for x in all_videos if int(x.get('height') or 0) >= 720]
                 has_super = len(high_res) > 0
         except Exception as e:
+            logger.warning("提取视频详情失败 [%s]: %s", video_id, e)
             is_live = False
             title = self._get_video_title(video_id) or video_id
             status = '视频'
@@ -1007,8 +1020,8 @@ class Spider(Spider):
             related = self._extract_videos_fixed(r.text, 20)
             ytcfg = self.yt_video._extract_ytcfg(r.text) or {}
             self._auto_save_visitor_data(ytcfg)
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning("获取相关推荐失败 [%s]: %s", video_id, e)
 
         safe_title = self._safe_title(title)
 
@@ -1201,6 +1214,7 @@ class Spider(Spider):
             self._auto_save_visitor_data(None, data)
             return data
         except Exception as e:
+            logger.warning("搜索续页请求失败: %s", e)
             return {}
 
     # ---------- 提取视频列表 ----------
@@ -1301,6 +1315,7 @@ class Spider(Spider):
                 'vod_remarks': remarks
             }
         except Exception as e:
+            logger.warning("解析 renderer 失败: %s", e)
             return None
 
     def _extract_videos_fixed(self, html_str, limit=30):
@@ -1427,6 +1442,7 @@ class Spider(Spider):
                 'format': 'application/dash+xml'
             }
         except Exception as e:
+            logger.warning("播放视频失败 [%s@%s]: %s", video_id, quality, e)
             return {
                 'parse': 1,
                 'url': f'https://www.youtube.com/embed/{video_id}?autoplay=1',
@@ -1533,15 +1549,7 @@ class Spider(Spider):
 
         headers = self.header.copy()
         headers.update(media_item.get('headers') or {})
-        # 兼容 FongMi 可能传的各种 Range 参数名
-        range_header = (params.get('range') or params.get('Range') or params.get('range_header')
-                        or params.get('http_range') or params.get('RangeHeader'))
-        # 有些版本可能分拆传 start/end
-        if not range_header:
-            start = params.get('start') or params.get('range_start')
-            end = params.get('end') or params.get('range_end')
-            if start is not None:
-                range_header = f'bytes={start}-' + (str(end) if end is not None else '')
+        range_header = params.get('range') or params.get('Range')
         if range_header:
             headers['Range'] = range_header
 
@@ -1565,44 +1573,11 @@ class Spider(Spider):
                             data['all_by_itag'] = all_by_itag
                             self.setCache(f'yt_{vid}_{quality}', data, ttl=Const.MPD_CACHE_TTL)
                             continue
-                    except Exception:
-                        time.sleep(1)
-                        continue
+                    except Exception as e:
+                        logger.warning("刷新流地址失败 [%s itag=%s]: %s", vid, itag, e)
+                    time.sleep(1)
+                    continue
                 content_type = r.headers.get('content-type', 'application/octet-stream')
-                # 解析请求的 Range
-                req_start = 0
-                req_end = None
-                if range_header and range_header.startswith('bytes='):
-                    range_spec = range_header[6:]
-                    if '-' in range_spec:
-                        start_str, end_str = range_spec.split('-', 1)
-                        if start_str:
-                            req_start = int(start_str)
-                        if end_str:
-                            req_end = int(end_str)
-
-                # 分块读取
-                chunks = []
-                for chunk in r.iter_content(chunk_size=65536):
-                    chunks.append(chunk)
-                content = b''.join(chunks)
-
-                # 若上游返回全量(200)但我们请求了Range，按Range切片
-                if range_header and r.status_code == 200 and (req_start > 0 or req_end is not None):
-                    full_len = len(content)
-                    end_pos = req_end + 1 if req_end is not None else full_len
-                    if req_start < full_len:
-                        content = content[req_start:min(end_pos, full_len)]
-                        # 修正响应头：Content-Range 的 total 必须是原始全量长度
-                        resp_headers = {
-                            'Content-Type': content_type,
-                            'Accept-Ranges': 'bytes',
-                            'Cache-Control': 'no-cache',
-                            'Content-Range': f'bytes {req_start}-{req_start + len(content) - 1}/{full_len}',
-                            'Content-Length': str(len(content)),
-                        }
-                        return [206, content_type, content, resp_headers]
-
                 resp_headers = {
                     'Content-Type': content_type,
                     'Accept-Ranges': 'bytes',
@@ -1612,9 +1587,15 @@ class Spider(Spider):
                     resp_headers['Content-Range'] = r.headers.get('content-range')
                 if r.headers.get('content-length'):
                     resp_headers['Content-Length'] = r.headers.get('content-length')
+                # 分块读取
+                chunks = []
+                for chunk in r.iter_content(chunk_size=65536):
+                    chunks.append(chunk)
+                content = b''.join(chunks)
                 return [r.status_code, content_type, content, resp_headers]
             except Exception as e:
                 if attempt == max_retries:
+                    logger.error("代理媒体失败 [%s itag=%s]: %s", vid, itag, e)
                     return [500, 'text/plain', f'代理媒体失败: {str(e)}']
                 time.sleep(1)
         return [500, 'text/plain', '代理媒体失败']
@@ -1628,14 +1609,7 @@ class Spider(Spider):
         if not target_url:
             return [404, 'text/plain', '播放地址不存在']
         headers = (data.get('headers') or self.header).copy()
-        # 兼容 FongMi 可能传的各种 Range 参数名
-        range_header = (params.get('range') or params.get('Range') or params.get('range_header')
-                        or params.get('http_range') or params.get('RangeHeader'))
-        if not range_header:
-            start = params.get('start') or params.get('range_start')
-            end = params.get('end') or params.get('range_end')
-            if start is not None:
-                range_header = f'bytes={start}-' + (str(end) if end is not None else '')
+        range_header = params.get('range') or params.get('Range')
         if range_header:
             headers['Range'] = range_header
         try:
@@ -1650,41 +1624,13 @@ class Spider(Spider):
                 resp_headers['Content-Range'] = r.headers.get('content-range')
             if r.headers.get('content-length'):
                 resp_headers['Content-Length'] = r.headers.get('content-length')
-            # 解析请求的 Range
-            req_start = 0
-            req_end = None
-            if range_header and range_header.startswith('bytes='):
-                range_spec = range_header[6:]
-                if '-' in range_spec:
-                    start_str, end_str = range_spec.split('-', 1)
-                    if start_str:
-                        req_start = int(start_str)
-                    if end_str:
-                        req_end = int(end_str)
-
-            # 分块读取
             chunks = []
             for chunk in r.iter_content(chunk_size=65536):
                 chunks.append(chunk)
             content = b''.join(chunks)
-
-            # 若上游返回全量(200)但我们请求了Range，按Range切片
-            if range_header and r.status_code == 200 and (req_start > 0 or req_end is not None):
-                full_len = len(content)
-                end_pos = req_end + 1 if req_end is not None else full_len
-                if req_start < full_len:
-                    content = content[req_start:min(end_pos, full_len)]
-                    resp_headers = {
-                        'Content-Type': content_type,
-                        'Accept-Ranges': 'bytes',
-                        'Cache-Control': 'no-cache',
-                        'Content-Range': f'bytes {req_start}-{req_start + len(content) - 1}/{full_len}',
-                        'Content-Length': str(len(content)),
-                    }
-                    return [206, content_type, content, resp_headers]
-
             return [r.status_code, content_type, content, resp_headers]
         except Exception as e:
+            logger.error("代理播放失败 [%s]: %s", vid, e)
             return [500, 'text/plain', '代理播放失败']
 
     # ---------- 直播 ----------
@@ -1707,6 +1653,7 @@ class Spider(Spider):
                 'format': 'application/x-mpegURL'
             }
         except Exception as e:
+            logger.warning("直播播放失败 [%s]: %s", video_id, e)
             return {'parse': 1, 'jx': 1, 'url': f'https://www.youtube.com/embed/{video_id}?autoplay=1'}
 
     def _probe_hls(self, video_id, hls_url):
@@ -1716,8 +1663,8 @@ class Spider(Spider):
             variant_url = self._pick_variant_playlist(hls_url, full_text)
             if variant_url:
                 self.session.get(variant_url, headers=self.header, timeout=120)
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning("HLS 探测失败 [%s]: %s", video_id, e)
 
     def _pick_variant_playlist(self, base_url, text):
         lines = [line.strip() for line in (text or '').splitlines()]
@@ -1844,10 +1791,11 @@ class Spider(Spider):
                                         item['url'] = new_hls
                                     target_url = new_hls
                                     continue
-                            except Exception:
-                                time.sleep(1)
-                                continue
-                        content_type = response.headers.get('content-type') or ''
+                            except Exception as e:
+                                logger.warning("刷新 HLS 地址失败 [%s]: %s", video_id, e)
+                        time.sleep(1)
+                        continue
+                    content_type = response.headers.get('content-type') or ''
                     is_m3u8 = item.get('kind') in ('master', 'playlist') or 'mpegurl' in content_type.lower() or target_url.split('?')[0].endswith('.m3u8')
                     if is_m3u8:
                         text = response.text
@@ -1866,6 +1814,7 @@ class Spider(Spider):
                         raise
                     time.sleep(1)
         except Exception as e:
+            logger.error("HLS 代理失败 [%s]: %s", video_id or key, e)
             return [500, 'text/plain', f'HLS 代理失败: {str(e)}']
         return [500, 'text/plain', 'HLS 代理失败']
 
@@ -1900,10 +1849,11 @@ class Spider(Spider):
             else:
                 return [404, 'text/plain', f'图片不存在 ({r.status_code})']
         except Exception as e:
+            logger.warning("代理图片失败 [%s]: %s", vid, e)
             return [500, 'text/plain', '代理图片失败']
 
     def destroy(self):
         try:
             self.session.close()
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning("Session 关闭异常: %s", e)

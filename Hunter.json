@@ -35,62 +35,6 @@
       "ext": ""
     },
     {
-      "key": "js_en_gf",
-      "name": "꒰ঌ官方采集໒꒱",
-      "type": 3,
-      "api": "./File/js/Hunter/en_gf.js",
-      "searchable": 1,
-      "quickSearch": 0,
-      "filterable": 0,
-      "changeable": 0,
-      "style": {
-        "type": "rect"
-      }
-    },
-    {
-      "key": "t1_dian_ying_tian_tang",
-      "name": "꒰ঌ电影天堂໒꒱",
-      "type": 1,
-      "api": "http://caiji.dyttzyapi.com/api.php/provide/vod/from/dyttm3u8/at/json/?ac=list",
-      "searchable": 1,
-      "quickSearch": 0,
-      "filterable": 0,
-      "changeable": 0,
-      "style": {
-        "type": "rect"
-      },
-      "playUrl": "json:https://py.doube.eu.org/parse_dytt?url=",
-      "categories": [
-        "动作片",
-        "喜剧片",
-        "爱情片",
-        "科幻片",
-        "恐怖片",
-        "剧情片",
-        "战争片",
-        "国产剧",
-        "香港剧",
-        "韩国剧",
-        "欧美剧",
-        "记录片",
-        "台湾剧",
-        "日本剧",
-        "海外剧",
-        "泰国剧",
-        "大陆综艺",
-        "港台综艺",
-        "日韩综艺",
-        "欧美综艺",
-        "国产动漫",
-        "日韩动漫",
-        "欧美动漫",
-        "港台动漫",
-        "伦理片",
-        "短剧",
-        "动画片"
-      ]
-    },
-    {
       "key": "央视直播",
       "name": "央视直播(1080P)",
       "api": "csp_WvSpider",
@@ -113,22 +57,6 @@
       "ext": {
         "class": "TxtLiveSpider",
         "ext": "./File/lz/虎牙全集.txt"
-      }
-    },
-    {
-      "key": "采集全集",
-      "name": "采集全集",
-      "jar": "./jar/pro.jar",
-      "type": 3,
-      "api": "csp_ProxySpider",
-      "style": {
-        "type": "rect",
-        "ratio": 1.33
-      },
-      "changeable": 1,
-      "ext": {
-        "class": "CJJH",
-        "ext": "./File/lz/cj.json#0"
       }
     },
     {
@@ -167,19 +95,6 @@
       "url": "https://ghfast.top/https://raw.githubusercontent.com/AbaloneHunter/iptv-zb/refs/heads/main/zubo_all.txt",
       "epg": "http://diyp5.112114.xyz/?ch={name}&date={date}",
       "logo": "https://epg.112114.xyz/logo/{name}.png"
-    },
-    {
-      "name": "综合直播",
-      "type": 0,
-      "playerType": 2,
-      "url": "https://ghfast.top/https://raw.githubusercontent.com/develop202/migu_video/refs/heads/main/interface.txt",
-      "epg": "https://tv.mxdyeah.top/epgphp/t.xml"
-    },
-    {
-      "name": "IPTV直播源总部-世界杯",
-      "type": 0,
-      "playerType": 2,
-      "url": "http://82.156.243.185:33389/fwc.m3u"
     }
   ]
 }

@@ -157,7 +157,6 @@
             "*.png",
             "*.jpg",
             "*.vtt",
-            "*.css*",
             "https://*.googleapis.com/*",
             "https://*.googletagmanager.com/*",
             "https://*.recombee.com/*",
@@ -166,23 +165,25 @@
           ]
         },
         "playUrlMatch": [
-          "https://*/v.m3u8"
+          "https://*/v.m3u8",
+          "https://*v.m3u8*",
+          "https://*.m3u8*"
         ],
         "spider": {
           "homeContent": {
-            "loadUrl": "https://123av.com/zh/dm9"
+            "loadUrl": "https://123av.com/en"
           },
           "categoryContent": {
-            "loadUrl": "https://123av.com/zh/${tid}?page=${pg:-1}${filter:-}${sort:-}"
+            "loadUrl": "https://123av.com/en/${tid}"
           },
           "detailContent": {
-            "loadUrl": "https://123av.com/zh/${id}"
+            "loadUrl": "https://123av.com/en/v/${id}"
           },
           "playerContent": {
-            "loadUrl": "https://123av.com/zh/${vod_id}"
+            "loadUrl": "https://123av.com/en/v/${vod_id}"
           },
           "searchContent": {
-            "loadUrl": "https://123av.com/zh/search?keyword=${key}&page=${pg:-1}"
+            "loadUrl": "https://123av.com/en/search?keyword=${key}&page=${pg:-1}"
           }
         }
       }
@@ -490,12 +491,6 @@
       "name": "番号",
       "type": 1,
       "api": "http://fhapi9.com/api.php/provide/vod/"
-    },
-    {
-      "key": "jkun",
-      "name": "jkun",
-      "type": 1,
-      "api": "https://jkunzyapi.com/api.php/seaxml/vod/"
     },
     {
       "key": "2",
