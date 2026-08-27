@@ -9,42 +9,99 @@ import urllib.parse
 from base.spider import Spider
 
 class Spider(Spider):
-    PY_PATH_1 = "/storage/emulated/0/Film-TV/File/py/Hunter"
-    PY_PATH_2 = "F:\\模拟共享\\Film-TV\\File\\py\\Hunter"
-    HTML_PATH_1 = "/storage/emulated/0/Film-TV/File/html/Hunter"
-    HTML_PATH_2 = "F:\\模拟共享\\Film-TV\\File\\html\\Hunter"
-
-    REGISTRY_PATH = "/storage/emulated/0/Film-TV/Hunter.json"
+    # 跨平台统一锚点目录名
+    ROOT_MARKER = "Film-TV"
+    # 相对锚点的子路径
+    PY_SUBPATH = "File/py/Hunter"
+    HTML_SUBPATH = "File/html/Hunter"
+    REGISTRY_NAME = "Hunter.json"
     GENERATED_PREFIX = "local_"
+
+    # 搜索锚点的常见根目录（按优先级）
+    SEARCH_ROOTS = [
+        "/storage/emulated/0",           # Android 共享存储
+        "/mnt/media_rw",                 # Android 挂载存储
+        "/sdcard",                       # Android 软链接
+        "D:\\", "F:\\", "E:\\", "G:\\",        # Windows 盘符
+        os.path.expanduser("~"),         # 通用 home
+        "/",                             # 兜底全盘（慢，最后才用）
+    ]
 
     ICON_SCAN = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2NCIgaGVpZ2h0PSI2NCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM0Q0FGNTAiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48Y2lyY2xlIGN4PSIxMSIgY3k9IjExIiByPSI4Ii8+PGxpbmUgeDE9IjIxIiB5MT0iMjEiIHgyPSIxNi42NSIgeTI9IjE2LjY1Ii8+PC9zdmc+"
     ICON_CLEAR = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2NCIgaGVpZ2h0PSI2NCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiNFNTM3MzciIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cG9seWxpbmUgcG9pbnRzPSIzIDYgNSA2IDIxIDYiLz48cGF0aCBkPSJNMTkgNnYxNGEyIDIgMCAwIDEtMiAySDdhMiAyIDAgMCAxLTItMlY2bDMgMEg0Ii8+PHBhdGggZD0iTTEwIDExdjYiLz48cGF0aCBkPSJNMTQgMTF2NiIvPjwvc3ZnPg=="
 
+    def _find_filmtv_root(self) -> str | None:
+        """从 SEARCH_ROOTS 向下查找 Film-TV 目录，返回其绝对路径"""
+        for root in self.SEARCH_ROOTS:
+            if not root or not os.path.exists(root):
+                continue
+            candidate = os.path.join(root, self.ROOT_MARKER)
+            if os.path.isdir(candidate):
+                return candidate
+            # 部分平台 Film-TV 可能在根目录下一层子目录里（如 /storage/emulated/0/xxx/Film-TV）
+            # 只再深一层，避免全盘遍历太慢
+            try:
+                for sub in os.listdir(root):
+                    sub_path = os.path.join(root, sub)
+                    if os.path.isdir(sub_path):
+                        candidate2 = os.path.join(sub_path, self.ROOT_MARKER)
+                        if os.path.isdir(candidate2):
+                            return candidate2
+            except:
+                pass
+        return None
+
     def init(self, extend=""):
-        self.py_paths = []
-        if os.path.exists(self.PY_PATH_1):
-            self.py_paths.append(self.PY_PATH_1)
-        if os.path.exists(self.PY_PATH_2) and self.PY_PATH_2 not in self.py_paths:
-            self.py_paths.append(self.PY_PATH_2)
+        # 1. 优先：extend 显式指定
+        ext = extend or ""
+        if "extend=" in ext and ("?" in ext or "&" in ext):
+            import urllib.parse as _up
+            try:
+                if "?" in ext:
+                    _qs = _up.parse_qs(_up.urlparse(ext).query)
+                else:
+                    _qs = _up.parse_qs(ext)
+                if "extend" in _qs:
+                    ext = _qs["extend"][0]
+            except:
+                pass
+        ext = ext.strip().strip('"').strip("'")
+        if ext.startswith("file://"):
+            ext = ext[7:]
 
-        self.html_paths = []
-        if os.path.exists(self.HTML_PATH_1):
-            self.html_paths.append(self.HTML_PATH_1)
-        if os.path.exists(self.HTML_PATH_2) and self.HTML_PATH_2 not in self.html_paths:
-            self.html_paths.append(self.HTML_PATH_2)
+        # 2. 找 Film-TV 锚点
+        filmtv_root = self._find_filmtv_root()
 
-        # ===== 新增：从 extend 读取目标 JSON 路径 =====
-        self.target_path = self.REGISTRY_PATH
-        if extend:
-            ext = extend.strip().strip('"').strip("'").replace("file://", "")
-            if ext.lower() == "auto":
-                detected = self._detect_active_json()
-                if detected:
-                    self.target_path = detected
-            elif ext:
-                self.target_path = ext
+        if ext and ext.lower() != "auto":
+            # 显式指定路径（非 auto）
+            self.target_path = ext
+        elif filmtv_root:
+            # 用锚点拼出标准路径
+            self.target_path = os.path.join(filmtv_root, self.REGISTRY_NAME)
+        else:
+            # 实在找不到锚点，最后尝试 auto 检测
+            detected = self._detect_active_json()
+            if detected:
+                self.target_path = detected
+            else:
+                # 终极兜底：硬编码 Android 路径
+                self.target_path = "/storage/emulated/0/Film-TV/Hunter.json"
 
-        # 确保目录存在
+        # 3. 基于 target_path 所在目录 或 Film-TV 锚点 解析 py/html 路径
+        if filmtv_root:
+            # 有锚点 → 直接用锚点拼（最稳）
+            py_candidate = os.path.join(filmtv_root, self.PY_SUBPATH)
+            html_candidate = os.path.join(filmtv_root, self.HTML_SUBPATH)
+        else:
+            # 无锚点 → 相对 target_path 目录拼
+            target_dir = os.path.dirname(os.path.abspath(self.target_path)) or os.getcwd()
+            py_candidate = os.path.join(target_dir, "File/py/Hunter")
+            html_candidate = os.path.join(target_dir, "File/html/Hunter")
+
+        self.py_paths = [py_candidate] if os.path.exists(py_candidate) else []
+        self.html_paths = [html_candidate] if os.path.exists(html_candidate) else []
+
+        # 确保目标目录存在
         d = os.path.dirname(self.target_path)
         if d and not os.path.exists(d):
             try:
@@ -170,21 +227,16 @@ class Spider(Spider):
         return None
 
     def _build_site(self, file_path, ext):
-        full_name = os.path.basename(file_path)          # 含扩展名
-        base_name = os.path.splitext(full_name)[0]       # 不含扩展名
-        key = self.GENERATED_PREFIX + base_name          # "local_文件名"
-        
-        # ---- 改为相对路径 ----
-        # 获取配置文件所在目录的绝对路径
+        full_name = os.path.basename(file_path)
+        base_name = os.path.splitext(full_name)[0]
+        key = self.GENERATED_PREFIX + base_name
+
+        # 相对目标 JSON 所在目录的相对路径
         target_dir = os.path.dirname(os.path.abspath(self.target_path))
-        # 计算相对路径
         rel_path = os.path.relpath(file_path, target_dir)
-        # 统一为 Unix 风格斜杠，并添加 "./"
         file_url = "./" + rel_path.replace(os.sep, "/")
-        # 如果相对路径为空（即文件就在配置目录下），则直接 "./文件名"
         if rel_path == ".":
             file_url = "./" + full_name
-        # ---------------------
 
         if ext == '.py':
             display_name = full_name[:-3] + "ᵖʸ" if full_name.endswith(".py") else full_name + "ᵖʸ"
