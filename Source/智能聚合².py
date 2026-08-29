@@ -11,7 +11,7 @@ import time
 from copy import deepcopy
 from concurrent.futures import ThreadPoolExecutor, as_completed, TimeoutError
 from collections import OrderedDict
-from urllib.parse import urlparse, parse_qs, quote
+from urllib.parse import urlparse, parse_qs, urlencode
 import requests
 from base.spider import Spider
 
@@ -24,6 +24,7 @@ class Spider(Spider):
     MAX_CACHE_SIZE = 30
     FAST_PLACEHOLDER = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
     ID_SEP = "|||"
+    AGG_KEY = "aggpy"
 
     def __init__(self):
         super().__init__()
@@ -38,7 +39,9 @@ class Spider(Spider):
         self.SELF_NAME = None
         self.extend_config = {}
         self._initialized = False
+        self._proxy_base_cache = None
         self.list_timeout = 2.0
+        self.cat_timeout = 8.0
         self.detail_timeout = 5.0
         self.play_timeout = 12.0
         self.class_timeout = 2.0
@@ -57,6 +60,8 @@ class Spider(Spider):
         cfg.setdefault('hls_proxy', False)
         self.extend_config = cfg
         self.list_timeout = cfg.get('list_timeout', 2.0)
+
+        self.cat_timeout = cfg.get('cat_timeout', max(8.0, self.list_timeout))
         self.detail_timeout = cfg.get('detail_timeout', 5.0)
         self.play_timeout = cfg.get('play_timeout', 12.0)
         self.class_timeout = cfg.get('class_timeout', 2.0)
@@ -121,6 +126,56 @@ class Spider(Spider):
             return f"{base}{url}"
         return f"{base}/{url}"
 
+    def _is_proxy_url(self, url):
+        try:
+            p = urlparse(url)
+        except Exception:
+            return False
+        return bool(p.scheme in ('http', 'https') and p.path.rstrip('/').endswith('/proxy'))
+
+    def _proxy_base(self):
+        if getattr(self, '_proxy_base_cache', None) is None:
+            base = ""
+            try:
+                u = self.getProxyUrl()
+                p = urlparse(u)
+                if p.netloc:
+                    base = f"{p.scheme}://{p.netloc}{p.path}"
+            except Exception:
+                base = ""
+            self._proxy_base_cache = base
+        return self._proxy_base_cache
+
+    def _wrap_proxy_url(self, url, py_path):
+        try:
+            parsed = urlparse(url)
+            params = {k: v[0] for k, v in parse_qs(parsed.query, keep_blank_values=True).items()}
+        except Exception:
+            return url
+        target = self._proxy_base() or f"{parsed.scheme}://{parsed.netloc}{parsed.path}"
+        params[self.AGG_KEY] = os.path.basename(py_path)
+        params.setdefault('do', 'py')
+        my_key = getattr(self, 'siteKey', '') or ''
+        if my_key:
+            params['siteKey'] = my_key
+        else:
+            params.pop('siteKey', None)
+        return f"{target}?{urlencode(params)}"
+
+    def _looks_like_media_url(self, s):
+        s = (s or '').strip()
+        if not s:
+            return False
+        low = s.lower()
+        return (s.startswith(('http://', 'https://', '//', '/'))
+                or low.endswith(('.m3u8', '.mp4', '.flv', '.ts', '.mp3'))
+                or '.m3u8?' in low or '.mp4?' in low)
+
+    def _fix_play_id(self, pid, spider=None, py_path=None):
+        if self._looks_like_media_url(pid):
+            return self._fix_url(pid, spider, py_path)
+        return (pid or '').strip()
+
     def _normalize_vod(self, v, py_path, spider=None):
         vid = v.get('vod_id') or v.get('id')
         if vid:
@@ -143,19 +198,8 @@ class Spider(Spider):
             pic = v.get('pic')
         if pic:
             pic = self._fix_url(pic, spider, py_path)
-            if isinstance(pic, str) and '127.0.0.1:9978/proxy' in pic:
-                try:
-                    parsed = urlparse(pic)
-                    qs = parse_qs(parsed.query)
-                    real_url = qs.get('url', [''])[0]
-                    if real_url:
-                        py_name = os.path.basename(py_path)
-                        pic = (
-                            f"http://127.0.0.1:9978/proxy?do=py&action=pic"
-                            f"&py={quote(py_name, safe='')}&url={quote(real_url, safe='')}"
-                        )
-                except Exception:
-                    pass
+            if self._is_proxy_url(pic):
+                pic = self._wrap_proxy_url(pic, py_path)
             v['vod_pic'] = pic
         else:
             v['vod_pic'] = self.FAST_PLACEHOLDER
@@ -345,19 +389,15 @@ class Spider(Spider):
 
         spider, status = self._load_spider_instance(py_path)
         if spider is None:
-            default = [{'type_id': 'auto', 'type_name': '默认'}]
-            with self.global_lock:
-                try:
-                    self.class_cache[py_path] = (os.path.getmtime(py_path), default)
-                except Exception:
-                    self.class_cache[py_path] = (0, default)
-            return default
+            return [{'type_id': 'auto', 'type_name': '默认'}]
 
         res = self._safe_call(spider, 'homeContent', self.class_timeout, 1, {})
-        if res and 'class' in res:
+        if res and 'class' in res and res['class']:
             classes = res['class']
         else:
-            classes = [{'type_id': 'auto', 'type_name': '默认'}]
+
+
+            return [{'type_id': 'auto', 'type_name': '默认'}]
 
         with self.global_lock:
             try:
@@ -406,7 +446,7 @@ class Spider(Spider):
             sub_tid = extend['sub']
 
         ext_copy = deepcopy(extend) if extend else {}
-        res = self._safe_call(spider, 'categoryContent', self.list_timeout, self.retry_times,
+        res = self._safe_call(spider, 'categoryContent', self.cat_timeout, self.retry_times,
                               sub_tid, pg, filter, ext_copy)
         if res is None or 'list' not in res:
             return {"list": []}
@@ -439,13 +479,13 @@ class Spider(Spider):
                 for part in line.split('#'):
                     if '$' in part:
                         title, pid = part.split('$', 1)
-                        pid_fixed = self._fix_url(pid, spider, py_path)
+                        pid_fixed = self._fix_play_id(pid, spider, py_path)
                         if not pid_fixed.startswith(f"{py_path}{self.ID_SEP}"):
                             play_parts.append(f"{title}${py_path}{self.ID_SEP}{pid_fixed}")
                         else:
                             play_parts.append(f"{title}${pid_fixed}")
                     else:
-                        part_fixed = self._fix_url(part, spider, py_path)
+                        part_fixed = self._fix_play_id(part, spider, py_path)
                         if not part_fixed.startswith(f"{py_path}{self.ID_SEP}"):
                             play_parts.append(f"{py_path}{self.ID_SEP}{part_fixed}")
                         else:
@@ -492,6 +532,13 @@ class Spider(Spider):
 
         if res is None:
             return {"parse": 0, "url": ""}
+
+        try:
+            u = res.get('url')
+            if isinstance(u, str) and self._is_proxy_url(u):
+                res['url'] = self._wrap_proxy_url(u, py_path)
+        except Exception:
+            pass
         return res
 
     def _safe_search(self, py_path, key, quick, pg):
@@ -555,45 +602,59 @@ class Spider(Spider):
                 unique.append(v)
         return {"list": unique[:100]}
 
-    def localProxy(self, params):
-        if params.get('do') != 'py':
+    def _find_py_path(self, py_name):
+        if not py_name:
             return None
+        for path in list(self.spider_cache.keys()):
+            if os.path.basename(path) == py_name:
+                return path
+        for path in self.scan_paths:
+            if not os.path.exists(path):
+                continue
+            candidate = os.path.join(path, py_name)
+            if os.path.exists(candidate):
+                return candidate
+        return None
 
-        action = params.get('action', '')
-        py_name = params.get('py', '')
+    @staticmethod
+    def _ok_proxy_result(res):
+        if not isinstance(res, (list, tuple)) or len(res) < 3:
+            return False
+        try:
+            code = int(res[0])
+        except Exception:
+            return False
+        if not (200 <= code < 400):
+            return False
+        body = res[2]
+        return bool(body) or code >= 300
 
-        if action == 'pic' and py_name:
-            target_path = None
-            for path in list(self.spider_cache.keys()):
-                if os.path.basename(path) == py_name:
-                    target_path = path
-                    break
-            if target_path is None:
-                for path in self.scan_paths:
-                    if not os.path.exists(path):
-                        continue
-                    candidate = os.path.join(path, py_name)
-                    if os.path.exists(candidate):
-                        target_path = candidate
-                        break
+    def localProxy(self, params):
+        params = dict(params or {})
 
-            if target_path:
-                spider, status = self._load_spider_instance(target_path)
-                if spider and hasattr(spider, 'localProxy'):
-                    try:
-                        result = self._call_with_timeout(
-                            spider.localProxy, self.proxy_timeout, 0, params
-                        )
-                        if result is not None:
-                            return result
-                    except Exception:
-                        pass
+        py_name = params.pop(self.AGG_KEY, '')
+        params.pop('siteKey', None)
+
+        target_path = self._find_py_path(py_name)
+        if target_path:
+            spider, status = self._load_spider_instance(target_path)
+            if spider and hasattr(spider, 'localProxy'):
+                try:
+                    result = self._call_with_timeout(
+                        spider.localProxy, self.proxy_timeout, 0, params
+                    )
+                    if self._ok_proxy_result(result):
+                        return result
+                except Exception:
+                    pass
+                return [404, "text/plain", ""]
+
 
         with self.global_lock:
             items = list(self.spider_cache.items())
 
         if not items:
-            return None
+            return [404, "text/plain", ""]
 
         futures = {}
         for py_path, (spider, _) in items:
@@ -602,7 +663,7 @@ class Spider(Spider):
                 futures[future] = py_path
 
         if not futures:
-            return None
+            return [404, "text/plain", ""]
 
         deadline = time.time() + self.proxy_timeout
         for future in as_completed(futures):
@@ -611,7 +672,7 @@ class Spider(Spider):
                 break
             try:
                 result = future.result(timeout=max(0.1, remaining))
-                if result is not None:
+                if self._ok_proxy_result(result):
                     for f in futures:
                         if not f.done():
                             f.cancel()
@@ -622,7 +683,9 @@ class Spider(Spider):
         for future in futures:
             if not future.done():
                 future.cancel()
-        return None
+
+
+        return [404, "text/plain", ""]
 
     def destroy(self):
         try:

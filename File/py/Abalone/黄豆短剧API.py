@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import gzip
 import hashlib
 import hmac
@@ -50,7 +49,7 @@ class _AESCBC:
 
 class Spider(BaseSpider):
     def __init__(self):
-        # API 域名池(同内容库多线路, 2026-08-25 全部验活通过; 失效自动轮换)
+
         self.hosts = [
             "https://xqjurgek.top",
             "https://psfxhhox.top",
@@ -61,7 +60,7 @@ class Spider(BaseSpider):
         self.host = self.hosts[0]
         self.api = self.host + "/api"
         self.name = "黄豆短剧"
-        # platform_key 多版本兜底: 解密时逐个试(当前线上只用第1个)
+
         self.platform_keys = [
             "7961beb44246e3012ce228d6b5ced05a",
             "6be13f303785864aac6a6cc2cb3c9dc6",
@@ -85,7 +84,7 @@ class Spider(BaseSpider):
                 cfg = json.loads(extend)
                 site = (cfg.get("site") or cfg.get("base_url") or cfg.get("url") or "").strip().rstrip("/")
                 if site:
-                    # 用户指定域名优先, 域名池其余保留为备用线路
+
                     self.hosts = [site] + [h for h in self.hosts if h != site]
                     self.host = self.hosts[0]
                 self.api = self.host + "/api"
@@ -159,7 +158,6 @@ class Spider(BaseSpider):
         return {"parse": 0, "playUrl": "", "url": url, "jx": 0, "header": {"User-Agent": self.headers["User-Agent"], "Referer": self.host + "/home", "Origin": self.host}}
 
     def _api(self, path, data=None, silent=False):
-        """域名池轮换 + 多key兜底: 上次成功组合优先, 失败自动换线路/key"""
         path = "/" + path.lstrip("/")
         hosts = list(self.hosts)
         keys = list(self.platform_keys)
@@ -175,7 +173,7 @@ class Spider(BaseSpider):
         for host in hosts:
             for pk in keys:
                 tried += 1
-                if tried > 10:  # 全挂时防止干转太久
+                if tried > 10:
                     break
                 obj = self._post(host, path, data or {}, pk)
                 if obj is None:
@@ -183,7 +181,7 @@ class Spider(BaseSpider):
                 self._good = (host, pk)
                 self.platform_key = pk
                 if host != self.host:
-                    self.host = host  # 记住可用线路, 播放兜底URL跟随
+                    self.host = host
                     self.api = host + "/api"
                 return obj
         return {}
@@ -217,7 +215,7 @@ class Spider(BaseSpider):
                 return json.loads(blob.decode("utf-8"))
             except Exception:
                 return {}
-        # 指定key优先, 失败则遍历全部key(服务端换版本时自动适配)
+
         keys = ([pk_str] if pk_str else []) + [k for k in self.platform_keys if k != pk_str]
         last = None
         for ks in keys:
