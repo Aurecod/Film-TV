@@ -523,7 +523,7 @@ body.searching .search .go{ color:var(--signal); }
 .sub-meta{
   display:inline-block; vertical-align:middle;
   margin-left:10px;
-  max-width:calc(100% - 210px);
+  max-width:calc(100% - 168px);   /* 给右侧「订阅+推送」留位，小屏也不挤没 */
   overflow:hidden;
 }
 .sub-name{
@@ -538,25 +538,31 @@ body.searching .search .go{ color:var(--signal); }
 .sub-actions{
   position:absolute;
   right:0; top:1px;
-  z-index:3;
+  z-index:5;
   display:flex;
   align-items:center;
   gap:6px;
+  max-width:70%;
+  flex-wrap:nowrap;
 }
 .sub-follow{
-  padding:9px 13px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:8px 12px;
   border-radius:999px;
-  background:transparent;
-  border:1px solid var(--line);
-  color:var(--text);
-  font-size:12px; font-weight:600;
+  background:rgba(255,255,255,0.06);
+  border:1px solid rgba(240,69,58,0.55);
+  color:var(--signal);
+  font-size:12px; font-weight:700;
   white-space:nowrap;
+  flex:0 0 auto;
 }
-.sub-follow.on{ background:var(--panel-2); border-color:var(--line); color:var(--muted); }
-.sub-follow.unknown{ border-style:dashed; color:var(--muted); }
+.sub-follow.on{ background:var(--panel-2); border-color:var(--line); color:var(--muted); font-weight:600; }
+.sub-follow.unknown{ border-style:dashed; color:var(--muted); border-color:var(--line); background:transparent; font-weight:600; }
 .sub-follow:active{ transform:scale(0.95); }
 .sub-follow.busy{ opacity:.6; }
-.sub-follow.hide{ display:none; }
+.sub-follow.hide{ display:none !important; }
 .sub-play{
   padding:9px 15px;
   border-radius:999px;
@@ -1372,6 +1378,7 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
       <div class="sub-desc" id="subDesc"></div>
     </div>
     <div class="sub-actions" id="subActions">
+      <button class="sub-follow hide" id="subFollow">订阅</button>
       <button class="sub-play" id="subPlay">播放全部</button>
     </div>
   </div>
@@ -1486,20 +1493,19 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
     <div class="field">
       <label for="engine">播放引擎</label>
       <select id="engine">
-        <option value="hls">HLS（YouTube 官方清单，推荐）</option>
-        <option value="dash">DASH（Invidious 清单，实例常被墙）</option>
-        <option value="newpipe">App 内置 NewPipe</option>
+        <option value="newpipe">App 内置解析（推荐，稳定不掐断）</option>
+        <option value="hls">网页自解析 HLS / adaptive</option>
+        <option value="dash">DASH（Invidious，实例常被墙）</option>
       </select>
     </div>
     <div class="field">
-      <label for="client">取流客户端（播一会就 403 时，逐个换着试）</label>
+      <label for="client">取流客户端</label>
       <select id="client">
-        <option value="auto">自动（VR → IOS → ANDROID → MWEB → TV）</option>
-        <option value="ANDROID_VR">ANDROID_VR（Quest 3，通常不吃 PoToken）</option>
-        <option value="IOS">IOS</option>
-        <option value="ANDROID">ANDROID</option>
+        <option value="auto">自动（VR → 嵌入 → TV → Safari HLS）</option>
+        <option value="ANDROID_VR">ANDROID_VR（推荐）</option>
+        <option value="WEB_EMBEDDED">WEB_EMBEDDED</option>
         <option value="TVHTML5">TVHTML5</option>
-        <option value="MWEB">MWEB</option>
+        <option value="WEB_SAFARI">WEB_SAFARI（HLS）</option>
       </select>
     </div>
     <div class="field">
@@ -1701,6 +1707,7 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
         { name: 'vlog',     arg: '美女 vlog' },
         { name: '健身',     arg: '美女 健身' }
       ] },
+    { id: 'subs',  name: '订阅',  type: 'subfeed', arg: '' },
     { id: 'recent',name: '最近',  type: 'recent', arg: '' }
   ];
 
@@ -1741,7 +1748,7 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
   }
 
   /* ---------- 状态 ---------- */
-  var prefs = { hl: 'zh-CN', gl: 'US', ua: DEF_UA, quality: 'best', vcodec: 'auto', wall: 'none', engine: 'hls', hlsmode: 'master', seg: 'gw', client: 'auto', dashmode: 'raw', inv: '' };
+  var prefs = { hl: 'zh-CN', gl: 'US', ua: DEF_UA, quality: 'best', vcodec: 'auto', wall: 'none', engine: 'newpipe', hlsmode: 'master', seg: 'gw', client: 'auto', dashmode: 'raw', inv: '' };
   var view = { kind: 'browse', arg: 'FEwhat_to_watch', tab: 'rec', token: '', items: [], loading: false, seq: 0, ep: '' };
   var subStack = [];   // 二级页栈：支持频道→播放列表→再进频道这种连跳
   var chanSub = null;  // 当前频道页解析出的订阅按钮信息：{channelId, subscribed, subEndpoint, unsubEndpoint}
@@ -1952,15 +1959,24 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
     var el = document.getElementById('ckState');
     if (el) el.textContent = txt;
   }
-  /* 「订阅」分类 tab 已移除；这里只保留 auth 类 tab 的清理逻辑，
-     不再往 TABS 里 splice 进订阅 tab。
-     TABS 被滑动切页的下标算法直接引用，所以只能原地 splice，不能整个换掉数组。 */
+  /* 订阅 tab 已固定在 TABS 里（不依赖登录动态插入，避免丢 tab）。
+     这里只处理带 auth:true 的其它登录态 tab（若有）；并保证「订阅」始终存在。 */
+  function ensureSubsTab() {
+    var i, has = false, insertAt = TABS.length;
+    for (i = 0; i < TABS.length; i++) {
+      if (TABS[i].id === 'subs') has = true;
+      if (TABS[i].id === 'recent') insertAt = i;
+    }
+    if (!has) {
+      TABS.splice(insertAt, 0, { id: 'subs', name: '订阅', type: 'subfeed', arg: '' });
+    }
+  }
   function syncAuthTabs() {
     var i;
-    for (i = TABS.length - 1; i >= 0; i--) if (TABS[i].auth) TABS.splice(i, 1);
-    if (!auth.on && view && view.tab === 'subs') {
-      view.tab = TABS[0].id;                      // 退出登录时人还停在这个 tab 上
+    for (i = TABS.length - 1; i >= 0; i--) {
+      if (TABS[i].auth && TABS[i].id !== 'subs') TABS.splice(i, 1);
     }
+    ensureSubsTab();
     try { renderTabs(); } catch (e) {}
   }
   /* 回写观看记录：YouTube 认的是播放上报，不是"我打开过这个页面"。
@@ -2876,14 +2892,24 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
       if (kind === 'channel' && reset) {
         chanSub = extractSubButton(json);   // 分页续拉的 continuation 响应里没有这个节点，只在首次进频道时取
         chanPic = channelAvatarOf(json);
-        renderSubFollow();
         if (chanSub) {
           var curEntry = subStack[subStack.length - 1];
-          // unverified（新结构猜不出真实订阅状态）时不要往本地"已订阅"列表里写，
-          // 免得把没订阅的频道误标成已订阅——之前就是这里出的问题。
-          if (!chanSub.unverified) {
-            syncLocalSubChannel(chanSub.channelId, chanSub.subscribed, curEntry ? curEntry.name : '', chanPic);
-          }
+          // 进频道绝不自动写入本地订阅列表（以前服务端状态误判成「已订阅」时，
+          // 一进来就 syncLocalSubChannel(true)，看起来像「点进就订阅」）。
+          // 按钮文案优先跟本地列表；只有本地没有时才参考服务端只读状态。
+          isLocalSubscribed(chanSub.channelId).then(function (localOn) {
+            if (!chanSub || !chanSub.channelId) return;
+            if (localOn) {
+              chanSub.subscribed = true;
+            } else if (!chanSub.unverified) {
+              // 本地没有、服务端可信且说已订阅：只改按钮文案，仍不自动写入本地
+              // （避免误判；真要进「订阅」tab 需用户再点一次确认）
+              chanSub.subscribed = !!chanSub.subscribed;
+            } else {
+              chanSub.subscribed = false;
+            }
+            renderSubFollow();
+          });
         } else {
           // 老结构的 subscribeButtonRenderer 没找到——大概率是页头换了新的 ViewModel
           // 结构。别猜着乱接订阅接口，先把响应里跟"订阅"沾边的字段名报出来，
@@ -2891,7 +2917,28 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
           var subHints = findKeysContaining(json, 'subscri', 0, []);
           lastSubDiag = subHints.length ? ('没识别到订阅按钮，相关字段：' + subHints.join('、')) : '这次响应里没找到跟订阅相关的字段';
           toast(lastSubDiag);
+          // 即便没解析出按钮结构，若本地已订阅也显示已订阅（可点取消仅清本地）
+          var curEntry2 = subStack[subStack.length - 1];
+          var guessId = (curEntry2 && curEntry2.arg) || '';
+          if (guessId && guessId.indexOf('UC') === 0) {
+            isLocalSubscribed(guessId).then(function (localOn) {
+              if (!chanSub && localOn) {
+                chanSub = {
+                  channelId: guessId,
+                  subscribed: true,
+                  unverified: true,
+                  localOnly: true,
+                  subEndpoint: { channelIds: [guessId], params: '' },
+                  unsubEndpoint: { channelIds: [guessId], params: '' },
+                  subParamsOk: false,
+                  unsubParamsOk: false
+                };
+                renderSubFollow();
+              }
+            });
+          }
         }
+        renderSubFollow();
       }
 
       if (reset) elList.replaceChildren();
@@ -3042,9 +3089,40 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
   async function syncLocalSubChannel(id, subscribed, title, pic) {
     if (!id) return;
     var list = await loadSubChannels();
+    var prev = null, i;
+    for (i = 0; i < list.length; i++) if (list[i].id === id) { prev = list[i]; break; }
     list = list.filter(function (c) { return c.id !== id; });
-    if (subscribed) list.unshift({ id: id, title: title || '', pic: pic || '' });
+    if (subscribed) {
+      list.unshift({
+        id: id,
+        title: title || (prev && prev.title) || '',
+        pic: pic || (prev && prev.pic) || ''
+      });
+    }
     await saveSubChannels(list);
+  }
+
+  async function isLocalSubscribed(id) {
+    if (!id) return false;
+    var list = await loadSubChannels();
+    var i;
+    for (i = 0; i < list.length; i++) if (list[i].id === id) return true;
+    return false;
+  }
+
+  /* 解析 subscription/subscribe|unsubscribe 的响应：InnerTube 常 200 但 body 里带 error / alert */
+  function subActionOk(resp) {
+    if (!resp || typeof resp !== 'object') return { ok: true, soft: true }; // 空 body 当不确定
+    if (resp.error) return { ok: false, why: (resp.error.message || resp.error.status || 'error') };
+    var alerts = collect(resp, ['alertRenderer', 'alertWithButtonRenderer', 'notificationActionRenderer'], [], 0);
+    var i, t;
+    for (i = 0; i < alerts.length; i++) {
+      t = text(alerts[i].text) || text(alerts[i].title) || '';
+      if (/error|失败|無法|无法|未能|something went wrong/i.test(t)) return { ok: false, why: t || 'alert' };
+    }
+    // 有 frameworkUpdates / actions 多半是真改了状态
+    if (resp.frameworkUpdates || resp.actions || resp.successStatus) return { ok: true, soft: false };
+    return { ok: true, soft: true };
   }
 
   /* 频道头像：新旧两版频道页头部结构都试一遍 */
@@ -3173,8 +3251,9 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
   /* ---------- 画质解析 ----------
      真相：YouTube 的 progressive 单流最高只有 720p，1080p 以上一律是
      video/audio 分离的自适应流。要让 App 播放器真的拿到 1080p+，唯一
-     稳的路子是 HLS：用 IOS 客户端问 player 接口要 hlsManifestUrl，
-     再把主清单拆成一档一档的变体 m3u8。
+     稳的路子：优先 ANDROID_VR 的 adaptive 直链（不需 PoToken，可整片播）；
+     HLS 兜底用 WEB_SAFARI 主清单（目前 GVS 不强制 PoToken），避开 IOS 那条
+     「播约一分钟就被 CDN 403」的死路。
 
      然后用 fm.vodInline 把每一档画质注册成"一集"，播放页的集数列表
      就是画质切换器，mark 决定默认选中哪一档。
@@ -3184,9 +3263,9 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
      ------------------------------------------------------------------ */
   var PLAYER_CLIENTS = [
     {
-      // Quest 3。目前少数不需要 PoToken 的客户端，取到的流不会播几十秒就被切断。
-      // youtube.py 把它排第一位，就是这个原因。
-      name: 'ANDROID_VR', id: '28', ver: '1.65.10',
+      // 唯一长期可整片播放的匿名客户端：不需要 PoToken，返回 googlevideo 直链。
+      // 版本必须钉 1.65.10，更高会掉进 SABR 实验只剩低清。
+      name: 'ANDROID_VR', id: '28', ver: '1.65.10', prefer: 'adaptive',
       ua: 'com.google.android.apps.youtube.vr.oculus/1.65.10 (Linux; U; Android 12L; eureka-user Build/SQ3A.220605.009.A1) gzip',
       client: {
         clientName: 'ANDROID_VR', clientVersion: '1.65.10',
@@ -3195,34 +3274,33 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
       }
     },
     {
-      // IOS 常常给 HLS，但没有 PoToken 时流会在几十秒后 403
-      name: 'IOS', id: '5', ver: '21.02.3',
-      ua: 'com.google.ios.youtube/21.02.3 (iPhone16,2; U; CPU iOS 18_3_2 like Mac OS X;)',
+      // 嵌入播放器：不需 PoToken（仅限允许嵌入的视频）
+      name: 'WEB_EMBEDDED', id: '56', ver: '1.20240310.01.00', prefer: 'adaptive',
+      ua: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
       client: {
-        clientName: 'IOS', clientVersion: '21.02.3',
-        deviceMake: 'Apple', deviceModel: 'iPhone16,2',
-        osName: 'iPhone', osVersion: '18.3.2.22D82'
-      }
-    },
-    {
-      name: 'ANDROID', id: '3', ver: '21.02.35',
-      ua: 'com.google.android.youtube/21.02.35 (Linux; U; Android 11) gzip',
-      client: {
-        clientName: 'ANDROID', clientVersion: '21.02.35',
-        androidSdkVersion: 30, osName: 'Android', osVersion: '11'
-      }
-    },
-    {
-      name: 'MWEB', id: '2', ver: '2.20260115.01.00',
-      ua: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
-      client: { clientName: 'MWEB', clientVersion: '2.20260115.01.00' }
-    },
-    {
-      name: 'TVHTML5', id: '85', ver: '2.0',
-      ua: 'Mozilla/5.0 (PlayStation; PlayStation 4/12.00) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Safari/605.1.15',
-      client: { clientName: 'TVHTML5_SIMPLY_EMBEDDED_PLAYER', clientVersion: '2.0' },
+        clientName: 'WEB_EMBEDDED_PLAYER', clientVersion: '1.20240310.01.00',
+        clientScreen: 'EMBED'
+      },
       embed: true
+    },
+    {
+      // TV 嵌入：不需 PoToken
+      name: 'TVHTML5', id: '85', ver: '2.0', prefer: 'adaptive',
+      ua: 'Mozilla/5.0 (ChromiumStylePlatform) Cobalt/Version',
+      client: {
+        clientName: 'TVHTML5_SIMPLY_EMBEDDED_PLAYER', clientVersion: '2.0'
+      },
+      embed: true
+    },
+    {
+      // Safari WEB：下发 HLS 且 GVS 暂不强制 PoToken，可作 HLS 兜底
+      name: 'WEB_SAFARI', id: '1', ver: '2.20240101.00.00', prefer: 'hls',
+      ua: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15',
+      client: {
+        clientName: 'WEB', clientVersion: '2.20240101.00.00'
+      }
     }
+    // 刻意删除 IOS / ANDROID / MWEB：无 PoToken 时约 1 分钟必 403，是「播一会就断」的主因
   ];
 
   /* 硬编码 key 已经会被风控挡掉：先抓页面取真实 INNERTUBE_API_KEY 和 visitorData。
@@ -3320,9 +3398,22 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
       videoId: videoId,
       context: { client: client },
       contentCheckOk: true,
-      racyCheckOk: true
+      racyCheckOk: true,
+      playbackContext: {
+        contentPlaybackContext: {
+          html5Preference: 'HTML5_PREF_WANTS',
+          // 不传 signatureTimestamp：部分客户端会因此只回 SABR
+        }
+      }
     };
-    if (c.embed) body.context.thirdParty = { embedUrl: YT };
+    if (c.embed) {
+      body.context.thirdParty = { embedUrl: YT + '/' };
+      // WEB_EMBEDDED 需要挂上视频页作为 referrer 语境
+      try {
+        if (!client.mainAppWebInfo) client.mainAppWebInfo = {};
+        client.mainAppWebInfo.graftUrl = YT + '/embed/' + videoId;
+      } catch (eE) {}
+    }
 
     var headers = {
       'Content-Type': 'application/json',
@@ -3445,18 +3536,29 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
        muxed     单流 mp4，有音轨但上限 720P，且常常只剩 360P 以下 */
   function pickAdaptive(sd, json) {
     var af = sd.adaptiveFormats || [];
-    var hasV = false, hasA = false, j, f, mime;
+    var usable = [], j, f, mime, hasV = false, hasA = false;
     for (j = 0; j < af.length; j++) {
       f = af[j];
-      if (!f.url || !f.indexRange || !f.initRange) continue;   // 带 signatureCipher 的解不了
+      if (!f) continue;
+      if (!f.url || f.signatureCipher || f.cipher) continue;
+      if (!f.indexRange || !f.initRange) continue;
+      if (typeof f.indexRange === 'string') {
+        var ir = f.indexRange.split('-');
+        f.indexRange = { start: ir[0], end: ir[1] };
+      }
+      if (typeof f.initRange === 'string') {
+        var ir2 = f.initRange.split('-');
+        f.initRange = { start: ir2[0], end: ir2[1] };
+      }
       mime = f.mimeType || '';
-      if (mime.indexOf('video') === 0 && f.height) hasV = true;
+      if (mime.indexOf('video') === 0 && (f.height || f.qualityLabel)) hasV = true;
       if (mime.indexOf('audio') === 0) hasA = true;
+      usable.push(f);
     }
-    if (!hasV || !hasA) return null;
+    if (!hasV || !hasA || !usable.length) return null;
     return {
       kind: 'adaptive',
-      formats: af,
+      formats: usable,
       duration: parseInt(get(json, 'videoDetails.lengthSeconds') || 0, 10) || 0
     };
   }
@@ -3545,13 +3647,11 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
       } catch (e2) {}
     }
 
-    // 按优先级逐个取用。之前是 Promise.all 等齐 5 个客户端才开始判断，
-    // 哪怕排第一的 ANDROID_VR 300ms 就给了可用分离流，也要陪着最慢的那个一起等。
-    // 现在 await 的是单个客户端，第一个能用的直接 return，后面的自然作废。
+    // 按优先级逐个取用：第一个可用的无风险流立刻返回
     for (i = 0; i < list.length; i++) {
       c = list[i];
-      var usable = adaptive || hlsFallback || muxed;
-      json = await (usable ? waitCap(jobs[i], 3500) : jobs[i]);
+      var usable0 = adaptive || hlsFallback || muxed;
+      json = await (usable0 ? waitCap(jobs[i], 3500) : jobs[i]);
       status = get(json, 'playabilityStatus.status');
       sd = json ? json.streamingData : null;
       if (!sd) {
@@ -3559,12 +3659,15 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
         continue;
       }
 
-      if (c.name === 'ANDROID_VR') {
-        var vr = pickAdaptive(sd, json);
-        if (vr) { vr.ua = c.ua; vr.client = c.name; return vr; }
-        lastWhy.push('ANDROID_VR：没有可用分离流');
+      // 1) adaptive 直链（可整片）—— 最高优先
+      var ad = pickAdaptive(sd, json);
+      if (ad) {
+        ad.ua = c.ua;
+        ad.client = c.name;
+        return ad;
       }
 
+      // 2) HLS 主清单（WEB_SAFARI 等）—— 仅非 IOS 风险客户端
       if (sd.hlsManifestUrl) {
         try {
           master = masterJobs[i] ? await masterJobs[i] : null;
@@ -3572,14 +3675,17 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
             levels = parseHls(master);
             if (levels.length) {
               var mtxt = String(master);
-              var splitAudio = mtxt.indexOf('#EXT-X-MEDIA:TYPE=AUDIO') !== -1;
-              var got = { kind: 'hls', levels: levels, ua: c.ua, client: c.name, master: mtxt, masterUrl: sd.hlsManifestUrl };
-              // 真高画质（独立音轨，不受 720P 单流上限）：直接用，别再往下试了。
-              // 之前这里不论 splitAudio 与否一律立即 return —— 排第二位的 IOS 十有八九先给一份
-              // 音视频合一、上限 720P 的 HLS，一命中就直接返回，ANDROID/MWEB/TVHTML5 这些
-              // 真正能给 1080P/4K 分离流的客户端根本轮不到，这就是"画质总是最低档"的根因之一。
-              if (splitAudio) return got;
-              if (!hlsFallback) hlsFallback = got;   // 音视频合一、上限 720P：先存着当候补，继续试下一个客户端
+              var got = {
+                kind: 'hls',
+                levels: levels,
+                ua: c.ua,
+                client: c.name,
+                master: mtxt,
+                masterUrl: sd.hlsManifestUrl
+              };
+              // 有独立音轨的 HLS 可直接用
+              if (mtxt.indexOf('#EXT-X-MEDIA:TYPE=AUDIO') !== -1) return got;
+              if (!hlsFallback) hlsFallback = got;
             }
           } else {
             lastWhy.push(c.name + '：主清单拉不动');
@@ -3587,24 +3693,18 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
         } catch (e3) { lastWhy.push(c.name + '：主清单拉不动'); }
       }
 
-      if (!adaptive) {
-        adaptive = pickAdaptive(sd, json);
-        if (adaptive) { adaptive.ua = c.ua; adaptive.client = c.name; }
-      }
+      // 3) 单流 mp4 兜底
       if (!muxed) {
         levels = parseMuxed(sd);
         if (levels.length) muxed = { kind: 'muxed', levels: levels, ua: c.ua, client: c.name };
       }
-      if (!sd.hlsManifestUrl) lastWhy.push(c.name + '：没有 HLS');
-
-      // 已经拿到分离流(能拼高画质)就别再往下试了，直接用
-      if (adaptive) return adaptive;
+      if (!sd.hlsManifestUrl && !ad) lastWhy.push(c.name + '：没有可用流');
     }
 
-    // 所有客户端都试完了：分离流最优先；其次是合一 HLS（比 muxed mp4 更稳，切片、能拖动）；
-    // 单流 mp4 兜底。三者都拿不到才让上层去走 App 内置解析。
-    return adaptive || hlsFallback || muxed;
+    // 优先 HLS 主清单（比单流 mp4 更能完整播），最后才是 muxed
+    return hlsFallback || muxed;
   }
+
 
   /* ---------- 解析结果复用 + 预解析 ----------
      同一条视频短时间内重复点开（退出播放页再进、切画质重推）不用重新解析一遍；
@@ -3612,7 +3712,7 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
      play() 时，往往解析已经完成，感觉就是"秒开"。
      TTL 取 4 分钟——googlevideo 直链和 HLS 清单在这个窗口内都还有效。 */
   var resolveMemo = {};
-  var RESOLVE_TTL = 240000;
+  var RESOLVE_TTL = 180000; // 3 分钟内复用；更长容易踩上 googlevideo expire / 风控窗口
 
   function memoKey(videoId) { return videoId + '|' + (prefs.client || 'auto'); }
 
@@ -4004,6 +4104,8 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
 
   async function warmup(vid, epName) {
     if (!vid || !epName || warming[epName]) return 0;
+    // App 内置解析：不预取网页直链，避免推送全部/切集又走易断旧方式
+    if (prefs.engine === 'newpipe') return 0;
     if (inlineMap[epName] && !lowQ[epName]) return 2;   // 已经是高画质了
     warming[epName] = 1;
 
@@ -4092,6 +4194,8 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
 
   function idleWarm() {
     clearTimeout(idleTimer);
+    // App 内置解析模式下不预热网页直链，避免推送全部时仍走易断流的旧取流
+    if (prefs.engine === 'newpipe') return;
     var gen = ++warmGen;
 
     idleTimer = setTimeout(async function () {
@@ -4162,7 +4266,7 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
       vod_name: vodChanName(item),
       vod_pic: item.pic,
       wallPic: wallOf(item),
-      vod_play_from: name,
+      vod_play_from: '最高画质',
       mark: epName,
       episodes: [{ name: epName, url: url, resolve: true, pageUrl: item.url }]
     });
@@ -4228,13 +4332,9 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
 
     var t = (v.title || '');
     t = stripDelim(t);
-    if (t.length > 42) {
-      var cut = 42;
-      // 截断点如果正好落在一个 emoji 代理对中间（比如🔥这种占两个 UTF-16
-      // 码元的字符），切完前一半会变成一个孤立代理项——不是合法字符，
-      // 传到原生那边有的解析器直接就地报错，后面的集数全断，
-      // 表现跟 # / $ 截断一模一样，但更隐蔽，肉眼看标题根本看不出来。
-      // 往前退一位躲开代理对，宁可少一个字也不留半个乱码字符。
+    // 选集优先展示完整标题；过长再截断（多集时序号保证唯一）
+    if (t.length > 56) {
+      var cut = 56;
       if (t.charCodeAt(cut - 1) >= 0xD800 && t.charCodeAt(cut - 1) <= 0xDBFF) cut -= 1;
       t = t.slice(0, cut) + '…';
     }
@@ -4301,24 +4401,27 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
       return { name: epName, url: v.url, resolve: true, pageUrl: v.url };
     });
 
-    if (markName && ready) inlineMap[markName] = ready;   // 当前这集：已解析好，直接进缓存
     if (!markName) { markName = eps[0].name; markIdx = 0; }
 
     var gen = ++warmGen;
+    var useApp = (prefs.engine === 'newpipe');
 
-    /* 进频道时已经在后台预热了，这里大概率直接命中缓存，不用干等。
-       只补选中那一集往后还没热的少数几集 —— resolver 是同步的，
-       缓存没热就只能给 watch 链接，那就掉到 App 内置解析了。 */
-    var PREWARM = 8;
-    var order = [], i;
-
-    for (i = markIdx; i < eps.length && order.length < PREWARM; i++) if (!inlineMap[eps[i].name]) order.push(i);
-    for (i = 0; i < markIdx && order.length < PREWARM; i++) if (!inlineMap[eps[i].name]) order.push(i);
-
-    if (order.length) {
-      await warmupMany(eps, order, gen, null);
+    if (useApp) {
+      // 与单条默认一致：不灌网页直链，全部交给 App 解析；线路=最高画质，选集=标题
+      inlineMap = {};
+      // ready 若是易断的直链也丢掉，避免推送全部又走旧方式
+    } else {
+      if (markName && ready) inlineMap[markName] = ready;
+      /* 网页自解析模式：预热少量集，命中缓存起播更快 */
+      var PREWARM = 8;
+      var order = [], i;
+      for (i = markIdx; i < eps.length && order.length < PREWARM; i++) if (!inlineMap[eps[i].name]) order.push(i);
+      for (i = 0; i < markIdx && order.length < PREWARM; i++) if (!inlineMap[eps[i].name]) order.push(i);
+      if (order.length) {
+        await warmupMany(eps, order, gen, null);
+      }
+      if (gen !== warmGen) return;
     }
-    if (gen !== warmGen) return;   // 中途又推了一次，这批作废
 
     var head = current || vids[0];
 
@@ -4332,7 +4435,8 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
       episodes: eps
     });
 
-    // 后台：先把没热的补齐，再回头把只拿到 720P 的升级成分离流
+    // 后台预热：仅网页自解析模式；App 内置模式保持 watch 链接，不走旧直链
+    if (useApp) return;
     var rest = [];
     for (i = 0; i < eps.length; i++) if (!inlineMap[eps[i].name]) rest.push(i);
     (async function () {
@@ -4366,6 +4470,8 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
     // 不会走到这里；这里只处理单条视频（搜索结果、首页、推荐等场景）的推送。
 
     var name, url, fmt, mode = prefs.hlsmode;
+    // HLS 一律优先主清单：变体直链更容易中途失效
+    if (r.kind === 'hls' && mode === 'variant') mode = 'master';
 
     // ---- 分离流：自己拼 MPD，data URI 交付 ----
     if (r.kind === 'adaptive') {
@@ -4391,16 +4497,17 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
         time: new Date().toLocaleTimeString()
       };
 
+      var lineAd = (name && name !== '自适应') ? name : '最高画质';
       await fm.vodInline({
         vod_id: 'yt_' + item.id,
         vod_name: vodChanName(item),
         vod_pic: item.pic,
         wallPic: wallOf(item),
-        vod_play_from: name,
+        vod_play_from: lineAd,
         mark: epName,
         episodes: [{ name: epName, url: url, resolve: true, pageUrl: item.url }]
       });
-      toast(r.client + ' · ' + name);
+      toast(r.client + ' · ' + lineAd);
       if (fm.ext && fm.ext.log) fm.ext.log('yt dash', lastPlay)['catch'](function () {});
       return;
     }
@@ -4427,7 +4534,7 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
           vod_name: vodChanName(item),
           vod_pic: item.pic,
           wallPic: wallOf(item),
-          vod_play_from: name,
+          vod_play_from: '最高画质',
           mark: epName2,
           episodes: [{ name: epName2, url: lv.url, resolve: true, pageUrl: item.url }]
         });
@@ -4475,16 +4582,19 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
       var epName3 = item.title || 'YouTube';
       // variant 模式的设计初衷是"不带 headers、原样直推最稳"，这里保留这个特性，
       // 只是把交付方式从裸 fm.play 换成 vodInline —— 拿到正常标题的同时不改变原有稳定性。
-      inlineMap[epName3] = (mode === 'variant')
-        ? { url: url, format: fmt }
-        : { url: url, format: fmt, headers: { 'User-Agent': r.ua } };
+      // 所有 HLS 交付都带上取流客户端 UA + Referer，否则分片请求容易中途 403
+      inlineMap[epName3] = {
+        url: url,
+        format: fmt,
+        headers: { 'User-Agent': r.ua, 'Referer': YT + '/', 'Origin': YT }
+      };
       lastPlay.via = 'fm.vodInline + resolver';
       await fm.vodInline({
         vod_id: 'yt_' + item.id,
         vod_name: vodChanName(item),
         vod_pic: item.pic,
         wallPic: wallOf(item),
-        vod_play_from: name,
+        vod_play_from: '最高画质',
         mark: epName3,
         episodes: [{ name: epName3, url: url, resolve: true, pageUrl: item.url }]
       });
@@ -4496,6 +4606,40 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
 
     toast(r.client + ' · ' + name + ' · ' + lastPlay.via);
     if (fm.ext && fm.ext.log) fm.ext.log('yt hls', lastPlay)['catch'](function () {});
+  }
+
+
+  /* 单条视频推到播放页：线路「最高画质」，选集=视频标题，顶栏标题=频道名（图2形态）。
+     预填 resolver 缓存为 watch 链接，一次到位，避免先出视频详情（图1）再跳回频道名（图2）。 */
+  async function playViaAppInline(item) {
+    if (!fm.vodInline) {
+      await fm.play(item.url, item.title || 'YouTube', { pic: item.pic, wallPic: wallOf(item) });
+      return;
+    }
+    var title = stripDelim(item.title) || 'YouTube';
+    var channel = stripDelim(item.author || '') || '';
+    var head = channel || title;
+    var epName = '01 ' + title;
+    if (epName.length > 48) epName = epName.slice(0, 47) + '…';
+    var vid = item.id || vidOf(item.url);
+    var watch = vid ? (YT + '/watch?v=' + vid) : (item.url || '');
+
+    lazyEps = {};
+    inlineMap = {};
+    if (vid) lazyEps[epName] = vid;
+    // 同步命中，App 不再走「先 detail 再改写」的两段式刷新
+    inlineMap[epName] = { url: watch };
+
+    await fm.vodInline({
+      vod_id: 'yt_' + (vid || Date.now()),
+      vod_name: head,
+      vod_pic: item.pic || '',
+      wallPic: wallOf(item),
+      vod_play_from: '最高画质',
+      mark: epName,
+      // 不传 pageUrl，降低被当成「重新打开详情」而刷成图1 的概率
+      episodes: [{ name: epName, url: watch, resolve: true }]
+    });
   }
 
   async function play(item) {
@@ -4520,8 +4664,13 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
       }
       if (fm.preloadArtwork) { try { await fm.preloadArtwork(item.pic, wallOf(item)); } catch (e) {} }
 
-      if (item.kind === 'list' || prefs.engine === 'newpipe') {
+      if (item.kind === 'list') {
         await fm.play(item.url, item.title || 'YouTube', { pic: item.pic, wallPic: wallOf(item) });
+        playing = false;
+        return;
+      }
+      if (prefs.engine === 'newpipe') {
+        await playViaAppInline(item);
         playing = false;
         return;
       }
@@ -4540,14 +4689,19 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
         await playHls(item);
       } catch (e) {
         lastPlay = {
-          engine: '退回 NewPipe', mode: '-', client: '-',
+          engine: '退回 App 解析', mode: '-', client: '-',
           want: prefs.quality, got: '-',
           scheme: '-', head: '解析/交付出错：' + e.message,
           via: 'fm.play(watch url)', why: lastWhy.join('；'),
           time: new Date().toLocaleTimeString()
         };
-        toast('解析失败：' + e.message + '，退回 App 内置解析');
-        await fm.play(item.url, item.title || 'YouTube', { pic: item.pic, wallPic: wallOf(item) });
+        // 自建取流拿不到稳定源时，把 watch 页交给 App 内置解析器（NewPipe/配置源）
+        // 这条路不经过网页端的 googlevideo 直链，不会出现「播约一分钟 403」
+        try {
+          await playViaAppInline(item);
+        } catch (e3) {
+          toast('起播失败：' + (e3 && e3.message ? e3.message : e.message));
+        }
       }
     } catch (e2) {
       toast('起播失败：' + e2.message);
@@ -4853,6 +5007,8 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
         if (p.vcodec) prefs.vcodec = p.vcodec;
         if (p.wall) prefs.wall = p.wall;
         if (p.engine) prefs.engine = p.engine;
+        // 旧默认 hls 易 1 分钟断流，自动迁到 App 内置解析
+        if (prefs.engine === 'hls' || prefs.engine === 'dash') prefs.engine = 'newpipe';
         if (p.inv) prefs.inv = p.inv;
         if (p.dashmode) prefs.dashmode = p.dashmode;
         if (p.hlsmode) prefs.hlsmode = p.hlsmode;
@@ -4879,7 +5035,15 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
     setVal('ck', auth.ck);
     setVal('ckSync', auth.sync ? 'on' : 'off');
     paintAuthState(auth.ck ? '已保存 Cookie，未检测' : '未登录');
-    if (auth.ck) { checkAuth().then(function (r) { paintAuthState(r.ok ? ('已登录' + (r.name ? '：' + r.name : '')) : ('登录无效 — ' + r.why)); syncAuthTabs(); }); }
+    try { ensureSubsTab(); } catch (eE) {}
+    if (auth.ck) {
+      checkAuth().then(function (r) {
+        paintAuthState(r.ok ? ('已登录' + (r.name ? '：' + r.name : '')) : ('登录无效 — ' + r.why));
+        syncAuthTabs();
+      });
+    } else {
+      syncAuthTabs();
+    }
     buildPickers();
     syncPickers();
     updateFlagBtn();
@@ -4893,14 +5057,15 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
     prefs.quality = getVal('quality') || 'best';
     prefs.vcodec = getVal('vcodec') || 'auto';
     prefs.wall = getVal('wall') || 'none';
-    prefs.engine = getVal('engine') || 'dash';
-    prefs.hlsmode = getVal('hlsmode') || 'variant';
+    prefs.engine = getVal('engine') || 'newpipe';
+    prefs.hlsmode = getVal('hlsmode') || 'master';
     prefs.seg = getVal('seg') || 'gw';
     prefs.client = getVal('client') || 'auto';
     prefs.dashmode = getVal('dashmode') || 'pin';
     prefs.inv = getVal('inv').trim().replace(/\/+$/, '');
     dropMemo();          // 客户端/引擎改了，之前缓存的解析结果作废
     invOk = '';          // 实例设置改了也重新挑
+    prefs.enginePinned = (prefs.engine && prefs.engine !== 'newpipe');
     await store.set('prefs', JSON.stringify(prefs));
     // 登录态：Cookie 改了就重新验一次，顺便决定要不要挂出「订阅 / 历史」两个 tab
     var ckNew = getVal('ck').trim();
@@ -5032,15 +5197,34 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
     if (!cur) {
       $('subbar').className = 'subbar';
       elTabs.className = 'tabs';
+      if (elChips) elChips.className = (elChips.className || '').indexOf('off') !== -1 ? elChips.className : elChips.className;
+      try { renderChips(); } catch (eC) {}
       renderSubFollow();
       return;
     }
     $('subbar').className = 'subbar on';
     elTabs.className = 'tabs off';
+    // 二级页时芯片条会挡布局，强制收起
+    if (elChips) elChips.className = 'chips off';
     $('subName').textContent = cur.name || '';
     $('subDesc').textContent = cur.desc || '';
-    $('subPlay').className = 'sub-play';
-    $('subPlay').textContent = '推送全部';
+    var playBtn = $('subPlay');
+    if (playBtn) {
+      playBtn.className = 'sub-play';
+      playBtn.textContent = '推送全部';
+    }
+    // 进频道页立刻露出订阅按钮，不等列表加载完（加载完再刷新文案）
+    var fol = $('subFollow');
+    if (fol) {
+      if (cur.kind === 'channel') {
+        fol.className = 'sub-follow';
+        fol.textContent = auth.on ? '订阅' : '订阅';
+        fol.disabled = false;
+        fol.style.display = '';
+      } else {
+        fol.className = 'sub-follow hide';
+      }
+    }
     renderSubFollow();
   }
 
@@ -5109,30 +5293,98 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
     return a.length ? a[0] : null;
   }
 
+  /* 从任意节点里抠可见文案（title / accessibilityText / label 等），用于判断
+     当前展示的是「订阅」还是「已订阅」。 */
+  function harvestButtonText(node, depth, out) {
+    if (!node || depth > 12 || typeof node !== 'object' || (out && out.length >= 12)) return out || [];
+    out = out || [];
+    var i, k, v;
+    if (Object.prototype.toString.call(node) === '[object Array]') {
+      for (i = 0; i < node.length && out.length < 12; i++) harvestButtonText(node[i], depth + 1, out);
+      return out;
+    }
+    for (k in node) {
+      if (!Object.prototype.hasOwnProperty.call(node, k)) continue;
+      if (out.length >= 12) break;
+      v = node[k];
+      if (typeof v === 'string' && v.length && v.length < 40) {
+        if (/title|label|text|accessibility|content/i.test(k) || k === 'simpleText') {
+          if (out.indexOf(v) === -1) out.push(v);
+        }
+      } else if (v && typeof v === 'object') {
+        harvestButtonText(v, depth + 1, out);
+      }
+    }
+    return out;
+  }
+
+  function textLooksSubscribed(texts) {
+    var i, t;
+    for (i = 0; i < texts.length; i++) {
+      t = String(texts[i]).toLowerCase();
+      // 已订阅 / Subscribed / 購読中 / 구독중 …
+      if (/已订阅|已訂閱|subscribed|unsubscribe|取消订阅|取消訂閱|購読中|登録済み|구독 중|구독중/.test(t)) return true;
+    }
+    return false;
+  }
+
+  function textLooksUnsubscribed(texts) {
+    var i, t;
+    for (i = 0; i < texts.length; i++) {
+      t = String(texts[i]).toLowerCase();
+      // 纯「订阅」且不是「已订阅 / 取消订阅」
+      if (/^(订阅|訂閱|subscribe|登録|구독)$/.test(t.trim())) return true;
+      if (/\bsubscribe\b/.test(t) && !/subscribed|unsubscribe/.test(t)) return true;
+    }
+    return false;
+  }
+
   function extractSubButtonVM(json) {
     if (!json) return null;
     var nodes = collect(json, ['subscribeButtonViewModel'], [], 0);
     var vm = null, i;
     for (i = 0; i < nodes.length; i++) {
-      if (nodes[i] && nodes[i].channelId && nodes[i].subscribeButtonContent) { vm = nodes[i]; break; }
+      if (nodes[i] && nodes[i].channelId && (nodes[i].subscribeButtonContent || nodes[i].unsubscribeButtonContent)) {
+        vm = nodes[i];
+        break;
+      }
     }
     if (!vm) return null;
     var channelId = vm.channelId;
     var subContent = vm.subscribeButtonContent || {};
     var unsubContent = vm.unsubscribeButtonContent || {};
-    var subEp = firstIn(subContent.onTapCommand, 'subscribeEndpoint');
-    var unsubEp = firstIn(unsubContent.onTapCommand, 'unsubscribeEndpoint');
+    var subEp = firstIn(subContent.onTapCommand, 'subscribeEndpoint') || firstIn(subContent, 'subscribeEndpoint');
+    var unsubEp = firstIn(unsubContent.onTapCommand, 'unsubscribeEndpoint') || firstIn(unsubContent, 'unsubscribeEndpoint');
+    // 有的版本 endpoint 挂在 vm 顶层
+    if (!subEp) subEp = firstIn(vm, 'subscribeEndpoint');
+    if (!unsubEp) unsubEp = firstIn(vm, 'unsubscribeEndpoint');
     if (!subEp && !unsubEp) return null;
-    // 踩过一次坑：subscribeButtonContent / unsubscribeButtonContent 两边都各自带一个
-    // subscribeState.subscribed 字段，实测这俩看着更像是"点了这个按钮之后会进入的
-    // 目标状态"这种固定说明文字，不是"当前到底有没有订阅"，任何频道基本都能读到同一个
-    // 值——之前拿它来判断当前订阅状态，导致长按进哪个频道都被判成"已订阅"。
-    // 这个新结构目前找不到能确认"当前是否已订阅"的可靠字段，所以老实标成
-    // unverified，不再猜；界面按未订阅处理，本地"我的订阅"列表也不会被这次猜测污染。
+
+    // ViewModel 里 subscribeButtonContent / unsubscribeButtonContent 两套文案通常同时存在，
+    // 不能因为 unsub 侧写了「已订阅」就断定当前已订阅——那是另一套按钮的文案。
+    // 默认 unverified，避免误判导致「进频道 = 自动订阅」。
+    var subscribed = false;
+    var verified = false;
+    // 仅当某一侧被明确标记为当前展示（isHidden / hidden / selected 等）时才采信
+    function sideVisible(node) {
+      if (!node || typeof node !== 'object') return null;
+      if (node.isHidden === true || node.hidden === true) return false;
+      if (node.isHidden === false || node.hidden === false) return true;
+      if (typeof node.selected === 'boolean') return node.selected;
+      if (typeof node.isSelected === 'boolean') return node.isSelected;
+      return null;
+    }
+    var subVis = sideVisible(subContent);
+    var unsubVis = sideVisible(unsubContent);
+    if (subVis === true && unsubVis === false) { subscribed = false; verified = true; }
+    else if (unsubVis === true && subVis === false) { subscribed = true; verified = true; }
+    // 老字段：仅当整棵 vm 上所有 subscribed 布尔值一致且只有一个时仍不采信（容易是目标态）
+    // 这里彻底不靠布尔文案猜，宁可不验证。
+
     return {
       channelId: channelId,
-      subscribed: false,
-      unverified: true,
+      subscribed: subscribed,
+      unverified: !verified,
       subEndpoint: { channelIds: (subEp && subEp.channelIds) || [channelId], params: (subEp && subEp.params) || '' },
       unsubEndpoint: { channelIds: (unsubEp && unsubEp.channelIds) || [channelId], params: (unsubEp && unsubEp.params) || '' },
       subParamsOk: !!(subEp && subEp.params),
@@ -5144,77 +5396,145 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
 
   function renderSubFollow() {
     var btn = $('subFollow');
-    if (!btn) return;
+    if (!btn) {
+      // DOM 丢了就现场补一个，避免再出现「怎么都没有按钮」
+      var box = $('subActions');
+      if (!box) return;
+      btn = document.createElement('button');
+      btn.type = 'button';
+      btn.id = 'subFollow';
+      btn.className = 'sub-follow';
+      btn.textContent = '订阅';
+      box.insertBefore(btn, box.firstChild);
+      btn.addEventListener('click', function () { toggleSubscribe(); });
+    }
     var cur = subStack[subStack.length - 1];
-    if (!cur || cur.kind !== 'channel' || !auth.on) {
+    // 只在频道二级页显示
+    if (!cur || cur.kind !== 'channel') {
       btn.className = 'sub-follow hide';
+      btn.style.display = 'none';
+      return;
+    }
+    btn.style.display = '';
+    btn.disabled = false;
+    if (!auth.on) {
+      btn.className = 'sub-follow';
+      btn.textContent = '订阅';
       return;
     }
     if (!chanSub) {
-      // 没隐藏，常驻显示一个能点的"未识别"状态——之前直接隐藏，
-      // 失败提示只靠一闪而过的 toast，很容易错过，进页面时机不巧根本看不见。
-      btn.className = 'sub-follow unknown';
-      btn.textContent = '订阅信息未识别';
-      btn.disabled = false;
+      // 列表还在加载 / 结构未识别：仍显示可点的「订阅」，点下去再处理
+      btn.className = 'sub-follow';
+      btn.textContent = '订阅';
       return;
     }
     btn.className = 'sub-follow' + (chanSub.subscribed ? ' on' : '');
     btn.textContent = chanSub.subscribed ? '已订阅' : '订阅';
-    btn.disabled = false;
   }
 
   async function toggleSubscribe() {
     var btn = $('subFollow');
     if (!btn || btn.className.indexOf('busy') !== -1) return;
-    if (!chanSub) {
-      toast(lastSubDiag || '没识别到这个频道页的订阅按钮结构');
-      return;
-    }
     if (!auth.on) { toast('请先在设置里登录后再订阅'); openSheet('settings'); return; }
-    var wasSubscribed = chanSub.subscribed;
+    // 没解析出结构时，用二级页的 browseId 兜底，至少能写入本地订阅列表
+    if (!chanSub) {
+      var cur0 = subStack[subStack.length - 1];
+      var id0 = cur0 && cur0.arg ? String(cur0.arg) : '';
+      if (cur0 && cur0.kind === 'channel' && id0.indexOf('UC') === 0) {
+        chanSub = {
+          channelId: id0,
+          subscribed: false,
+          unverified: true,
+          localOnly: true,
+          subEndpoint: { channelIds: [id0], params: '' },
+          unsubEndpoint: { channelIds: [id0], params: '' },
+          subParamsOk: false,
+          unsubParamsOk: false
+        };
+        try {
+          var localOn = await isLocalSubscribed(id0);
+          chanSub.subscribed = localOn;
+        } catch (eL) {}
+      } else {
+        toast(lastSubDiag || '没识别到这个频道页的订阅按钮结构');
+        return;
+      }
+    }
+    var wasSubscribed = !!chanSub.subscribed;
+    var wantSub = !wasSubscribed;
     var ep = wasSubscribed ? 'subscription/unsubscribe' : 'subscription/subscribe';
     var payload = wasSubscribed ? chanSub.unsubEndpoint : chanSub.subEndpoint;
     var paramsOk = wasSubscribed ? chanSub.unsubParamsOk : chanSub.subParamsOk;
     var channelId = chanSub.channelId;
-    btn.className = 'sub-follow busy' + (wasSubscribed ? ' on' : '');
-    btn.disabled = true;
-    if (!paramsOk) {
-      // 没拿到 YouTube 页面自带的 params，这一单大概率发出去也是白发——照样试一次，
-      // 但先给个心理预期，免得等下"看起来成功"其实是假的。
-      toast('没解析到订阅参数，尝试直接发送…');
-    }
-    try {
-      await innertube(ep, { channelIds: payload.channelIds, params: payload.params });
-    } catch (e) {
-      toast((wasSubscribed ? '取消订阅' : '订阅') + '请求失败：' + (e.message || '未知错误'));
-      btn.disabled = false;
-      renderSubFollow();
-      return;
-    }
-    // 接口哪怕返回 200 也不代表真的生效（服务端软失败很常见）：
-    // 重新拉一次频道页，用服务端返回的真实 subscribed 状态覆盖本地乐观翻转的那个值。
-    var fresh = null;
-    try {
-      var cj = await innertube('browse', { browseId: channelId });
-      fresh = extractSubButton(cj);
-    } catch (ve) {}
     var curEntry = subStack[subStack.length - 1];
     var curName = curEntry ? curEntry.name : '';
-    if (fresh && !fresh.unverified) {
-      chanSub = fresh;
-      if (chanSub.subscribed === !wasSubscribed) {
-        toast(chanSub.subscribed ? '已订阅' : '已取消订阅');
-      } else {
-        toast((wasSubscribed ? '取消订阅' : '订阅') + '没生效：服务端账号状态没变化' + (paramsOk ? '' : '（很可能是没解析到 params 导致的）'));
+    btn.className = 'sub-follow busy' + (wasSubscribed ? ' on' : '');
+    btn.disabled = true;
+
+    // 1) 先改本地列表——「订阅」tab 只认这份列表，保证本页一定生效
+    await syncLocalSubChannel(channelId, wantSub, curName, chanPic);
+    chanSub.subscribed = wantSub;
+
+    // 2) 再尽量同步到 YouTube 账号（有 params 成功率高；没有也试 channelIds）
+    var ytOk = false;
+    var ytWhy = '';
+    if (!chanSub.localOnly) {
+      try {
+        var body = { channelIds: (payload && payload.channelIds) || [channelId] };
+        if (payload && payload.params) body.params = payload.params;
+        var resp = await innertube(ep, body);
+        var chk = subActionOk(resp);
+        if (!chk.ok) {
+          ytWhy = chk.why || '服务端拒绝';
+        } else {
+          // 回拉频道页核对（老结构能读出真实状态；新结构可能仍 unverified）
+          var fresh = null;
+          try {
+            var cj = await innertube('browse', { browseId: channelId });
+            fresh = extractSubButton(cj);
+          } catch (ve) {}
+          if (fresh && !fresh.unverified) {
+            // 保留最新 endpoint，状态以服务端为准
+            fresh.subscribed = fresh.subscribed;
+            chanSub = fresh;
+            if (chanSub.subscribed === wantSub) {
+              ytOk = true;
+            } else {
+              ytWhy = '账号状态未变化' + (paramsOk ? '' : '（缺 params）');
+              // 服务端没改成功：本地也回滚，避免假订阅
+              await syncLocalSubChannel(channelId, chanSub.subscribed, curName, chanPic);
+            }
+          } else {
+            // 无法从页面验证：若请求没报错，保留本地订阅，并提示可能未同步账号
+            if (fresh) {
+              // 合并新 params，状态仍用本地意图
+              chanSub.subEndpoint = fresh.subEndpoint || chanSub.subEndpoint;
+              chanSub.unsubEndpoint = fresh.unsubEndpoint || chanSub.unsubEndpoint;
+              chanSub.subParamsOk = fresh.subParamsOk;
+              chanSub.unsubParamsOk = fresh.unsubParamsOk;
+              chanSub.unverified = true;
+            }
+            chanSub.subscribed = wantSub;
+            ytOk = !!paramsOk && chk.ok; // 有 params 且无报错 → 倾向于成功
+            if (!paramsOk) ytWhy = ytWhy || '未解析到订阅参数，仅写入本页订阅列表';
+            else if (chk.soft) ytWhy = ytWhy || '无法从频道页确认账号状态';
+          }
+        }
+      } catch (e) {
+        ytWhy = e.message || '请求失败';
       }
-      syncLocalSubChannel(chanSub.channelId, chanSub.subscribed, curName, chanPic);
     } else {
-      // fresh 为空，或者是新结构（unverified，读不出服务端真实状态）——
-      // 都没法二次确认，只能先按乐观状态显示，并保留新拉到的 endpoint/params。
-      if (fresh) chanSub = fresh;
-      chanSub.subscribed = !wasSubscribed;
-      toast(chanSub.subscribed ? '已订阅' : '已取消订阅');
-      syncLocalSubChannel(chanSub.channelId, chanSub.subscribed, curName, chanPic);
+      ytWhy = '未识别到订阅接口，仅写入本页订阅列表';
+    }
+
+    if (ytOk && !ytWhy) {
+      toast(wantSub ? '已订阅' : '已取消订阅');
+    } else if (chanSub.subscribed === wantSub && ytOk) {
+      toast(wantSub ? '已订阅' : '已取消订阅');
+    } else if (chanSub.subscribed === wantSub) {
+      toast((wantSub ? '已加入本页订阅' : '已从本页订阅移除') + (ytWhy ? '（' + ytWhy + '）' : ''));
+    } else {
+      toast((wantSub ? '订阅' : '取消订阅') + '未生效' + (ytWhy ? '：' + ytWhy : ''));
     }
     btn.disabled = false;
     renderSubFollow();
@@ -5754,7 +6074,7 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
     });
     on('resetBtn', 'click', function () {
       setVal('hl', 'zh-CN'); setVal('gl', 'US'); setVal('ua', DEF_UA);
-      setVal('quality', 'best'); setVal('vcodec', 'auto'); setVal('wall', 'none'); setVal('engine', 'hls'); setVal('hlsmode', 'variant'); setVal('seg', 'gw'); setVal('client', 'auto');
+      setVal('quality', 'best'); setVal('vcodec', 'auto'); setVal('wall', 'none'); setVal('engine', 'newpipe'); setVal('hlsmode', 'master'); setVal('seg', 'gw'); setVal('client', 'auto');
       setVal('dashmode', 'pin'); setVal('inv', '');
       syncPickers();
     });
@@ -5800,6 +6120,7 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
     try { await loadPrefs(); } catch (e) {}
     try { await loadHistory(); } catch (e) {}
     try { bind(); } catch (e) {}
+    try { ensureSubsTab(); } catch (e) {}
     try { renderTabs(); } catch (e) {}
     try { autoPage(); } catch (e) {}
     try { initGestures(); } catch (e) {}

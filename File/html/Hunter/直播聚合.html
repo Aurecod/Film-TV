@@ -827,6 +827,11 @@ body.locked{ overflow:hidden; }
   margin-bottom:8px;
 }
 .field select{ display:none; }
+.field textarea{
+  width:100%; min-height:72px; padding:10px 12px; border-radius:12px;
+  border:1px solid var(--line); background:var(--solid-2); color:var(--text);
+  resize:vertical; line-height:1.45; font-size:13px;
+}
 .field input, .field select{
   width:100%; box-sizing:border-box;
   height:46px; padding:0 14px;
@@ -1086,13 +1091,18 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
         <option value="none">App 默认壁纸</option>
       </select>
     </div>
+    <div class="field">
+      <label for="biliCk">B站 Cookie（登录态）</label>
+      <textarea id="biliCk" placeholder="SESSDATA=xxxx; bili_jct=xxxx; DedeUserID=xxxx&#10;从浏览器登录 bilibili.com 后复制 Cookie，至少要有 SESSDATA。填了才能稳定原画/蓝光。"></textarea>
+      <div class="row" style="margin-top:10px;gap:8px">
+        <button type="button" class="btn primary" id="biliCkCheck">检测登录</button>
+        <button type="button" class="btn" id="biliCkClear">清除</button>
+      </div>
+      <div class="note" id="biliCkStatus" style="padding:6px 0 0">未配置 · 未登录时多为高清/720p 档</div>
+    </div>
     <div class="row">
       <button class="btn primary" id="saveBtn">保存</button>
       <button class="btn" id="resetBtn">恢复默认</button>
-    </div>
-    <div class="note">
-      <b>关于取流。</b>虎牙 H5；斗鱼 getH5PlayV1；抖音 feed/reflow；B站 playUrl；快手 hot/list + playUrls。
-      若个别房间起播慢，可把「清晰度」调成高清/超清再保存，码率更低通常更快出画。
     </div>
   </div>
 </section>
@@ -1144,7 +1154,7 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
 
   function $(id){ return document.getElementById(id); }
   function isNative(){ return !!(window.fm && window.fm.req); }
-  var prefs = { rate:'0', ua:MOBILE_UA, wall:'pic' };
+  var prefs = { rate:'0', ua:MOBILE_UA, wall:'pic', biliCk:'' };
 
   var md5 = (function () {
     function rl(n, c) { return (n << c) | (n >>> (32 - c)); }
@@ -1233,7 +1243,9 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
   }
   function hot(n){ if(typeof n==='string'&&/万|\./.test(n))return n; n=+n||0; return n>=10000?(n/10000).toFixed(1)+'万':String(n); }
 
-  /* ========== 虎牙 ========== */
+  /* ========== 虎牙（接口对齐纯粹直播 pure_live） ========== */
+  // pure_live play_config / HuyaRequestParams.hysdkUa
+  var HUYA_SDK_UA = 'HYSDK(Windows,30000002)_APP(pc_exe&7090000&official)_SDK(trans&2.35.0.5996)';
   var HUYA_CATE = [
     { g:'',      name:'推荐' },
     { g:'1663',  name:'星秀' },
@@ -1302,20 +1314,127 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
   function b64decode(str){
     try{ return decodeURIComponent(escape(atob(str))); }catch(e){ try{ return atob(str); }catch(e2){ return ''; } }
   }
-  function buildHuyaUrl(baseUrl, streamName, anticode, ext){
+  /* 虎牙匿名 uid 缓存，避免每次取流都请求；游客随机 uid 会被 CDN 约 2 分钟断流 */
+  var _huyaAnonUid = '';
+  var _huyaAnonUidTs = 0;
+  async function getHuyaAnonUid(){
+    var now = Date.now();
+    if(_huyaAnonUid && (now - _huyaAnonUidTs) < 25*60*1000) return _huyaAnonUid;
+    try{
+      var j = await req('https://udblgn.huya.com/web/anonymousLogin', {
+        method:'POST',
+        headers:{
+          'Content-Type':'application/json',
+          'User-Agent': PC_UA,
+          'Origin':'https://www.huya.com',
+          'Referer':'https://www.huya.com/'
+        },
+        body: JSON.stringify({ appId:5002, byPass:3, context:'', version:'2.4', data:{} }),
+        responseType:'json',
+        pc:true,
+        timeout:12
+      });
+      var uid = j && j.data && j.data.uid;
+      if(uid){
+        _huyaAnonUid = String(uid);
+        _huyaAnonUidTs = now;
+        return _huyaAnonUid;
+      }
+    }catch(e){}
+    // 兜底：用相对稳定的大整数，比纯随机略好，但仍可能被限时
+    _huyaAnonUid = String(1200000000000 + Math.floor(Math.random()*80000000000));
+    _huyaAnonUidTs = now;
+    return _huyaAnonUid;
+  }
+  function huyaUuid(){
+    // 官方算法近似：(Date.now() % 1e10 * 1e3 + random) % 0xffffffff
+    var now = Date.now();
+    return String(Math.floor(((now % 10000000000) * 1000 + (Math.random()*1000|0)) % 4294967295));
+  }
+  // pure_live processAnticode：uid 需做 32 位旋转后再参与签名，否则 CDN 约几十秒断流
+  function huyaConvertUid(uid){
+    var n = Number(uid) || 0;
+    // JS 位运算是 32 位有符号，用 >>>0 转无符号
+    return (((n << 8) | (n >>> 24)) >>> 0);
+  }
+  function huyaPickRatio(){
+    // prefs.rate: 0原画 1流畅 2高清 3超清 4蓝光 — 对应 ratio 码率
+    var rate = String(prefs.rate || '0');
+    if(rate === '1') return 500;   // 流畅
+    if(rate === '2') return 2000;  // 高清
+    if(rate === '3') return 4000;  // 超清
+    if(rate === '4') return 8000;  // 蓝光近似
+    return 0; // 原画：不带 ratio 或 ratio=0
+  }
+  async function buildHuyaUrl(baseUrl, streamName, anticode, ext){
     ext = ext || 'flv';
     var q = {};
-    (anticode||'').split('&').forEach(function(kv){ var i=kv.indexOf('='); if(i>0) q[kv.slice(0,i)]=decodeURIComponent(kv.slice(i+1)); });
-    var uid = Math.floor(Math.random()*(9999999999-1000000000))+1000000000;
-    var wsTime = q.wsTime || (Math.floor(Date.now()/1000)+3600).toString(16);
-    var seqid = uid + Date.now();
-    var ct = q.ctype || 'huya_live';
-    var fm0 = q.fm ? b64decode(q.fm) : '';
-    var wsSecretPrefix = fm0.split('_')[0] || '';
-    var ss = md5(seqid + '|' + ct + '|' + (q.t||'100'));
-    var wsSecret = wsSecretPrefix ? md5(wsSecretPrefix + '_' + uid + '_' + streamName + '_' + ss + '_' + wsTime) : (q.wsSecret||'');
-    return baseUrl + '/' + streamName + '.' + ext + '?wsSecret=' + wsSecret + '&wsTime=' + wsTime +
-      '&seqid=' + seqid + '&ctype=' + ct + '&ver=1&fs=' + (q.fs||'') + '&uid=' + uid + '&t=' + (q.t||'100') + '&sv=2110211124';
+    (anticode||'').split('&').forEach(function(kv){
+      var i = kv.indexOf('=');
+      if(i > 0){
+        var k = kv.slice(0,i), v = kv.slice(i+1);
+        try{ q[k] = decodeURIComponent(v); }catch(e){ q[k] = v; }
+      }
+    });
+    var rawUid = await getHuyaAnonUid();
+    var uidNum = Number(rawUid) || 0;
+    var convertUid = huyaConvertUid(uidNum);
+    var wsTime = q.wsTime || (Math.floor(Date.now()/1000) + 21600).toString(16);
+    // pure_live: seqId = Date.now() + uid
+    var seqid = String(Date.now() + uidNum);
+    var ct = 'huya_live'; // pure_live 强制 huya_live
+    var tVal = '100';
+    var fmRaw = q.fm || '';
+    var fm0 = '';
+    try{ fm0 = b64decode(fmRaw); }catch(e){ fm0 = ''; }
+    if(!fm0 && fmRaw){
+      try{ fm0 = b64decode(decodeURIComponent(fmRaw)); }catch(e){}
+    }
+    var wsSecretPrefix = (fm0.split('_')[0]) || '';
+    var ss = md5(seqid + '|' + ct + '|' + tVal);
+    // 关键：签名里用 convertUid，不是原始 uid
+    var wsSecret = wsSecretPrefix
+      ? md5(wsSecretPrefix + '_' + convertUid + '_' + streamName + '_' + ss + '_' + wsTime)
+      : (q.wsSecret || '');
+    // uuid 算法对齐 pure_live
+    var ctMs = (parseInt(wsTime, 16) + Math.random()) * 1000;
+    var uuid = String(Math.floor(((ctMs % 1e10) + Math.random()) * 1e3) & 0xFFFFFFFF);
+    var now = new Date();
+    var pad = function(n){ return n < 10 ? '0'+n : ''+n; };
+    var sv = '' + now.getFullYear() + pad(now.getMonth()+1) + pad(now.getDate()) + pad(now.getHours());
+    var timeStamp = now.getFullYear()+'-'+pad(now.getMonth()+1)+'-'+pad(now.getDate())
+      +'_'+pad(now.getHours())+':'+pad(now.getMinutes())+':'+pad(now.getSeconds())+'.'
+      + String(now.getMilliseconds()).padStart(3,'0');
+
+    var params = [
+      'wsSecret=' + wsSecret,
+      'wsTime=' + wsTime,
+      'seqid=' + seqid,
+      'ctype=' + ct,
+      'ver=1',
+      'fs=' + encodeURIComponent(q.fs || ''),
+      't=' + tVal,
+      'u=' + convertUid,
+      'uuid=' + uuid,
+      'sdk_sid=' + Date.now(),
+      'codec=264',
+      'sv=' + sv,
+      'dMod=mseh-0',
+      'sdkPcdn=1_1',
+      'a_block=0',
+      'timeStamp=' + encodeURIComponent(timeStamp)
+    ];
+    // 画质：设置里的清晰度 → ratio
+    var ratio = huyaPickRatio();
+    if(ratio > 0) params.push('ratio=' + ratio);
+    else if(q.ratio !== undefined && q.ratio !== '' && Number(q.ratio) > 0) params.push('ratio=' + q.ratio);
+
+    // 统一 https
+    var base = String(baseUrl || '');
+    if(base.indexOf('//') === 0) base = 'https:' + base;
+    if(base.indexOf('http://') === 0) base = 'https://' + base.slice(7);
+    base = base.replace(/\/$/, '');
+    return base + '/' + streamName + '.' + ext + '?' + params.join('&');
   }
   function digStreams(obj, d){
     d = d||0; if(!obj || d>12 || typeof obj!=='object') return null;
@@ -1327,21 +1446,27 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
     for(var k in obj){ if(obj.hasOwnProperty(k)){ var r2=digStreams(obj[k],d+1); if(r2)return r2; } }
     return null;
   }
-  async function huyaStream(rid){
-    var html = await req('https://m.huya.com/' + rid, { referer:'https://m.huya.com/' });
+  async function huyaParseStreamsFromHtml(html){
     var streams = null;
     var m1 = html.match(/"stream":\s*"([A-Za-z0-9+/=]{50,})"/);
     if(m1){ try{ var o=JSON.parse(b64decode(m1[1])); streams = digStreams(o); }catch(e){} }
     if(!streams){
       var m2 = html.match(/window\.HNF_GLOBAL_INIT\s*=\s*(\{[\s\S]*?\})\s*<\/script>/);
-      if(m2){ try{ var g=JSON.parse(m2[1]); streams=digStreams(g); }catch(e){} }
+      if(m2){
+        try{
+          var raw = m2[1];
+          // HNF_GLOBAL_INIT 有时是 {...} 无外层，正则已含括号则直接 parse
+          var g = JSON.parse(raw.charAt(0)==='{' ? raw : ('{'+raw+'}'));
+          streams = digStreams(g);
+        }catch(e){}
+      }
     }
     if(!streams){
       var m3 = html.match(/hyPlayerConfig\s*=\s*(\{[\s\S]*?\});/);
-      if(m3){ try{ var p=JSON.parse(m3[1]); streams=digStreams(p); }catch(e){} }
+      if(m3){ try{ streams=digStreams(JSON.parse(m3[1])); }catch(e){} }
     }
     if(!streams){
-      var m4 = html.match(/"gameStreamInfoList":\s*(\[[\s\S]*?\])\s*,\s*"/);
+      var m4 = html.match(/"gameStreamInfoList"\s*:\s*(\[[\s\S]*?\])/);
       if(m4){ try{ streams=JSON.parse(m4[1]); }catch(e){} }
     }
     if(!streams || !streams.length){
@@ -1352,22 +1477,79 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
       var hlsAnti = unicode(pick(/"sHlsAntiCode":\s*"([^"]*)"/));
       var flvUrl  = unicode(pick(/"sFlvUrl":\s*"([^"]+)"/));
       var flvAnti = unicode(pick(/"sFlvAntiCode":\s*"([^"]*)"/));
-      if(name && hlsUrl){
+      if(name && (flvUrl || hlsUrl)){
         streams = [{ sHlsUrl:hlsUrl, sStreamName:name, sHlsAntiCode:hlsAnti, sFlvUrl:flvUrl, sFlvAntiCode:flvAnti }];
       }
     }
+    return streams;
+  }
+  async function huyaStream(rid){
+    rid = String(rid);
+    var streams = null;
+    // 1) 移动页
+    try{
+      var html = await req('https://m.huya.com/' + rid, {
+        referer: 'https://m.huya.com/',
+        headers: { 'User-Agent': HUYA_SDK_UA || PC_UA, 'Referer': 'https://m.huya.com/' }
+      });
+      streams = await huyaParseStreamsFromHtml(html);
+    }catch(e){}
+    // 2) PC 页兜底
+    if(!streams || !streams.length){
+      try{
+        var html2 = await req('https://www.huya.com/' + rid, {
+          referer: 'https://www.huya.com/',
+          headers: { 'User-Agent': PC_UA, 'Referer': 'https://www.huya.com/' },
+          pc: true
+        });
+        streams = await huyaParseStreamsFromHtml(html2);
+      }catch(e){}
+    }
+    // 3) profileRoom 接口
+    if(!streams || !streams.length){
+      try{
+        var j = await req('https://mp.huya.com/cache.php?m=Live&do=profileRoom&roomid=' + encodeURIComponent(rid), {
+          responseType:'json', pc:true, referer:'https://www.huya.com/',
+          headers: { 'User-Agent': PC_UA, 'Referer': 'https://www.huya.com/' }
+        });
+        var data = j && (j.data || j);
+        streams = digStreams(data);
+      }catch(e){}
+    }
     if(!streams || !streams.length) throw new Error('无流');
-    var s0 = streams[0];
-    function fixProto(u){ if(!u)return u; if(u.indexOf('//')===0) return 'https:'+u; return u; }
-    if(s0.sHlsUrl && s0.sStreamName){
-      return { url: buildHuyaUrl(fixProto(s0.sHlsUrl), s0.sStreamName, s0.sHlsAntiCode || '', 'm3u8'), format:'application/x-mpegURL' };
+
+    function fixProto(u){
+      if(!u) return u;
+      u = String(u);
+      if(u.indexOf('//')===0) return 'https:'+u;
+      if(u.indexOf('http://')===0) return 'https:'+u.slice(5);
+      return u;
     }
-    if(s0.sFlvUrl && s0.sStreamName){
-      return { url: buildHuyaUrl(fixProto(s0.sFlvUrl), s0.sStreamName, s0.sFlvAntiCode || '', 'flv') };
+    // 优先有 FLV 的线路，多线路取第一条有效
+    var candidates = [];
+    for(var i=0;i<streams.length;i++){
+      var s = streams[i];
+      if(s.sFlvUrl && s.sStreamName) candidates.push({ base:s.sFlvUrl, name:s.sStreamName, anti:s.sFlvAntiCode||'', ext:'flv' });
     }
-    throw new Error('流地址字段缺失');
+    for(var j=0;j<streams.length;j++){
+      var s2 = streams[j];
+      if(s2.sHlsUrl && s2.sStreamName) candidates.push({ base:s2.sHlsUrl, name:s2.sStreamName, anti:s2.sHlsAntiCode||'', ext:'m3u8' });
+    }
+    if(!candidates.length) throw new Error('流地址字段缺失');
+
+    var lastErr = null;
+    for(var c=0;c<candidates.length;c++){
+      try{
+        var item = candidates[c];
+        var url = await buildHuyaUrl(fixProto(item.base), item.name, item.anti, item.ext);
+        if(item.ext === 'm3u8') return { url:url, format:'application/x-mpegURL' };
+        return { url:url };
+      }catch(e){ lastErr = e; }
+    }
+    throw lastErr || new Error('取流失败');
   }
 
+  /* huya 取流优先用 pure_live 的 HYSDK UA（在 huyaStream 内部 headers 覆盖） */
   /* ========== 斗鱼 ========== */
   /* 列表: https://www.douyu.com/gapi/rkc/directory/mixList/{type}_{cid2}/{page}
      type=0 全部推荐; type=2 + cid2=分区
@@ -1548,12 +1730,15 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
     var preferCdns = ['hw-h5', 'ws-h5', 'tct-h5', 'ali-h5', 'hs-h5', ''];
 
     async function playOnce(cdn){
+      // pure_live getH5PlayV1：rate 0=原画，其余为平台 multirates 码率档
+      var rateNum = String(rate || '0');
+      if(rateNum === '4') rateNum = '0'; // 蓝光按原画请求
       var body = 'enc_data=' + encodeURIComponent(encData)
         + '&tt=' + tt
         + '&did=' + encodeURIComponent(did)
         + '&auth=' + encodeURIComponent(auth)
         + '&cdn=' + encodeURIComponent(cdn || '')
-        + '&rate=' + encodeURIComponent(rate)
+        + '&rate=' + encodeURIComponent(rateNum)
         + '&hevc=0&fa=0&ive=0';
       var j = await req('https://www.douyu.com/lapi/live/getH5PlayV1/' + realRid, {
         method:'POST',
@@ -1836,8 +2021,41 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
 
   async function douyinLive(gid, page){
     var cate = gid || 'rec';
-    if(cate === 'rec') return douyinLiveFeed(cate, page);
-    // 数字分区 id → category 页
+    if(cate === 'rec' || cate === '') return douyinLiveFeed('rec', page);
+    // pure_live 格式: partitionId,partitionType
+    if(String(cate).indexOf(',') > 0){
+      var parts = String(cate).split(',');
+      var pid = parts[0];
+      var ptype = parts[1] || '1';
+      try {
+        var j = await req(
+          'https://live.douyin.com/webcast/web/partition/detail/room/v2/?aid=6383&app_name=douyin_web&live_id=1&device_platform=web&language=zh-CN&enter_from=link_share&cookie_enabled=true&count=20&offset=' + ((page-1)*20) + '&partition=' + encodeURIComponent(pid) + '&partition_type=' + encodeURIComponent(ptype) + '&req_from=2',
+          { responseType:'json', pc:true, referer:'https://live.douyin.com/', headers:{ 'User-Agent':PC_UA, 'Referer':'https://live.douyin.com/' } }
+        );
+        var list = (j && j.data && (j.data.data || j.data.list || j.data.rooms)) || [];
+        if(!list.length && j && j.data && Array.isArray(j.data)) list = j.data;
+        var arr = [];
+        for(var i=0;i<list.length;i++){
+          var it = list[i].room || list[i];
+          if(!it) continue;
+          var rid = it.id_str || it.id || it.web_rid || '';
+          if(!rid) continue;
+          arr.push({
+            kind:'live', rid:String(rid),
+            title: it.title || it.owner && it.owner.nickname || '(抖音直播)',
+            author: (it.owner && (it.owner.nickname || it.owner.display_id)) || '',
+            pic: (it.cover && (it.cover.url_list && it.cover.url_list[0])) || it.cover || '',
+            views: hot((it.stats && (it.stats.total_user || it.stats.total_user_str)) || it.user_count || 0),
+            cate: it.category_name || '',
+            live: true,
+            webRid: it.web_rid || rid
+          });
+        }
+        if(arr.length) return { items:arr, more:arr.length >= 15 };
+      } catch(e) {}
+      // 回退 category 页
+      return douyinLiveByCategory(pid, page);
+    }
     if(/^\d+$/.test(String(cate))) return douyinLiveByCategory(String(cate), page);
     return douyinLiveFeed('rec', page);
   }
@@ -1881,33 +2099,94 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
     return url;
   }
 
+  function dyExtractFromStreamUrl(su){
+    if(!su || typeof su !== 'object') return null;
+    // flv_pull_url map
+    var url = dyPickQuality(su.flv_pull_url || {});
+    if(url) return { url: dyFixUrl(url) };
+    // hls map
+    if(su.hls_pull_url_map){
+      var h = dyPickQuality(su.hls_pull_url_map);
+      if(h) return { url: dyFixUrl(h), format:'application/x-mpegURL' };
+    }
+    if(su.hls_pull_url) return { url: dyFixUrl(su.hls_pull_url), format:'application/x-mpegURL' };
+    // pure_live: stream_data JSON → data[sdk_key].main.flv/hls
+    try{
+      var raw = su.live_core_sdk_data && su.live_core_sdk_data.pull_data && su.live_core_sdk_data.pull_data.stream_data;
+      if(!raw && su.stream_data) raw = su.stream_data;
+      if(typeof raw === 'string' && raw.charAt(0) === '{'){
+        var sd = JSON.parse(raw);
+        var data = (sd && sd.data) || sd;
+        var rate = String(prefs.rate || '0');
+        var keys = rate === '1' ? ['sd','ld','hd','origin','orignal']
+                 : rate === '2' ? ['hd','sd','origin','orignal','ld']
+                 : rate === '3' ? ['hd','origin','orignal','sd','ld']
+                 : ['origin','orignal','hd','sd','ld'];
+        // 也尝试 qualities 里的 sdk_key
+        var extraKeys = Object.keys(data || {});
+        keys = keys.concat(extraKeys);
+        for(var i=0;i<keys.length;i++){
+          var node = data[keys[i]];
+          if(!node || !node.main) continue;
+          if(node.main.flv) return { url: dyFixUrl(node.main.flv) };
+          if(node.main.hls) return { url: dyFixUrl(node.main.hls), format:'application/x-mpegURL' };
+        }
+      }
+    }catch(e){}
+    return null;
+  }
   async function douyinStream(rid){
     var realRid = String(rid);
-    var urls = [
+    // pure_live 路径：web/enter → reflow/info → 页面 HTML
+    var tries = [
+      'https://live.douyin.com/webcast/room/web/enter/?aid=6383&app_name=douyin_web&live_id=1&device_platform=web&language=zh-CN&enter_from=web_live&cookie_enabled=true&screen_width=1920&screen_height=1080&browser_language=zh-CN&browser_platform=Win32&browser_name=Chrome&browser_version=122.0.0.0&web_rid=' + encodeURIComponent(realRid),
       'https://live.douyin.com/webcast/room/reflow/info/?type_id=0&live_id=1&room_id=' + encodeURIComponent(realRid) + '&app_id=1128',
       'https://webcast.amemv.com/webcast/room/reflow/info/?type_id=0&live_id=1&room_id=' + encodeURIComponent(realRid) + '&app_id=1128'
     ];
-    var j = null, lastErr = null, i;
-    for(i=0;i<urls.length;i++){
+    var lastErr = null, i, j;
+    for(i=0;i<tries.length;i++){
       try {
-        j = await req(urls[i], { responseType:'json', headers: dyHdr(), timeout: 25 });
-        if(j) break;
-      } catch(e){ lastErr = e; }
+        j = await req(tries[i], { responseType:'json', headers: dyHdr(), timeout: 25, referer:'https://live.douyin.com/' });
+        var room = null;
+        if(j && j.data){
+          room = j.data.room || (j.data.data && (j.data.data.room || j.data.data[0])) || null;
+          if(!room && j.data.data && j.data.data.enter_room_id){
+            // enter 接口结构
+            var rooms = (j.data.data && j.data.data.data) || [];
+            if(rooms[0] && rooms[0].room) room = rooms[0].room;
+          }
+        }
+        if(room){
+          if(+room.status === 4) throw new Error('房间未开播');
+          var su = room.stream_url || {};
+          var got = dyExtractFromStreamUrl(su);
+          if(got) return got;
+        }
+      } catch(e){
+        lastErr = e;
+        if(e && /未开播/.test(e.message||'')) throw e;
+      }
     }
-    if(!j){
-      var msg = lastErr && lastErr.message ? String(lastErr.message) : '无响应';
-      if(/代理|proxy|非JSON/i.test(msg)) throw new Error('抖音取流被拦截或需代理');
-      throw new Error('抖音取流失败：' + msg.slice(0,50));
-    }
-    var room = (j.data && j.data.room) || null;
-    if(!room && j.data && j.data.data && j.data.data[0]) room = j.data.data[0];
-    if(!room) throw new Error('抖音房间数据为空');
-    if(+room.status === 4) throw new Error('房间未开播');
-    var su = room.stream_url || {};
-    var url = dyPickQuality(su.flv_pull_url || {});
-    if(url) return { url: dyFixUrl(url) };
-    if(su.hls_pull_url) return { url: dyFixUrl(su.hls_pull_url), format:'application/x-mpegURL' };
-    throw new Error('抖音无流地址');
+    // HTML 页兜底：直接抠 flv/m3u8
+    try{
+      var page = await req('https://live.douyin.com/' + encodeURIComponent(realRid), {
+        headers: dyHdr(), referer:'https://live.douyin.com/', timeout: 25
+      });
+      var pageStr = String(page);
+      var flv = pageStr.match(/https?:\/\/[^\s"'\\]+\.flv[^\s"'\\]*/i);
+      if(flv){
+        var u = flv[0].replace(/\\u002F/g,'/').replace(/\\u0026/g,'&').replace(/&amp;/g,'&');
+        return { url: dyFixUrl(u) };
+      }
+      var m3u = pageStr.match(/https?:\/\/[^\s"'\\]+\.m3u8[^\s"'\\]*/i);
+      if(m3u){
+        var u2 = m3u[0].replace(/\\u002F/g,'/').replace(/\\u0026/g,'&');
+        return { url: dyFixUrl(u2), format:'application/x-mpegURL' };
+      }
+    }catch(e){ lastErr = e; }
+    var msg = lastErr && lastErr.message ? String(lastErr.message) : '无流地址';
+    if(/代理|proxy|非JSON/i.test(msg)) throw new Error('抖音取流被拦截或需代理');
+    throw new Error('抖音取流失败：' + msg.slice(0,60));
   }
 
 
@@ -1989,18 +2268,44 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
     return o;
   }
 
+  function biliCookie(){
+    var ck = String(prefs.biliCk || '').trim();
+    if(!ck) return '';
+    // 允许用户只贴 SESSDATA=xxx
+    if(ck.indexOf('=') < 0) ck = 'SESSDATA=' + ck;
+    return ck;
+  }
   function biliHdr(){
-    return {
+    var h = {
       'User-Agent': PC_UA,
       'Referer': 'https://live.bilibili.com/',
-      'Origin': 'https://live.bilibili.com'
+      'Origin': 'https://live.bilibili.com',
+      'Accept': 'application/json, text/plain, */*'
+    };
+    var ck = biliCookie();
+    if(ck) h['Cookie'] = ck;
+    return h;
+  }
+  async function biliCheckLogin(){
+    var j = await req('https://api.bilibili.com/x/web-interface/nav', {
+      responseType:'json', headers: biliHdr(), pc:true, referer:'https://www.bilibili.com/'
+    });
+    if(!j) return { ok:false, msg:'无响应' };
+    if(j.code !== 0) return { ok:false, msg: j.message || ('code '+j.code) };
+    var d = j.data || {};
+    if(!d.isLogin) return { ok:false, msg:'Cookie 无效或已过期' };
+    return {
+      ok:true,
+      msg: (d.uname || d.mid || '已登录') + (d.vipStatus ? ' · 大会员' : ''),
+      uname: d.uname,
+      mid: d.mid
     };
   }
 
   async function biliLive(gid, page){
     var cate = gid || 'rec';
-    // 推荐：首页聚合
-    if(cate === 'rec'){
+    // 推荐：首页聚合（兼容 rec / 0-0 / 空）
+    if(cate === 'rec' || cate === '0-0' || cate === '' || cate === '0'){
       try {
         var j = await req('https://api.live.bilibili.com/xlive/web-interface/v1/index/getList?platform=web', {
           responseType:'json', headers: biliHdr(), pc:true
@@ -2094,7 +2399,7 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
 
   async function biliStream(rid){
     var realRid = String(rid);
-    // 短号转长号
+    // 短号转长号（pure_live 同逻辑）
     try {
       var init = await req('https://api.live.bilibili.com/room/v1/Room/room_init?id=' + encodeURIComponent(realRid), {
         responseType:'json', headers: biliHdr(), pc:true
@@ -2108,47 +2413,68 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
     }
 
     var qn = biliQn();
-    var j = await req(
-      'https://api.live.bilibili.com/room/v1/Room/playUrl?cid=' + encodeURIComponent(realRid) + '&qn=' + qn + '&platform=web',
-      { responseType:'json', headers: biliHdr(), pc:true }
-    );
-    if(!j || j.code !== 0){
-      // 新接口兜底
-      try {
-        var j2 = await req(
-          'https://api.live.bilibili.com/xlive/web-room/v2/index/getRoomPlayInfo?room_id=' + encodeURIComponent(realRid)
-            + '&protocol=0,1&format=0,1,2&codec=0,1&qn=' + qn + '&platform=web&ptype=8',
-          { responseType:'json', headers: biliHdr(), pc:true }
-        );
-        if(j2 && j2.code === 0 && j2.data){
-          var streams = (((j2.data.playurl_info || {}).playurl || {}).stream) || [];
-          for(var si=0; si<streams.length; si++){
-            var formats = streams[si].format || [];
-            for(var fi=0; fi<formats.length; fi++){
-              var codecs = formats[fi].codec || [];
-              for(var ci=0; ci<codecs.length; ci++){
-                var c = codecs[ci];
-                var base = c.base_url || '';
-                var infos = c.url_info || [];
-                if(base && infos.length){
-                  var url = infos[0].host + base + (infos[0].extra || '');
-                  if(url.indexOf('http') === 0){
-                    var isHls = /\.m3u8/.test(url) || formats[fi].format_name === 'ts' || formats[fi].format_name === 'fmp4';
-                    return isHls ? { url:url, format:'application/x-mpegURL' } : { url:url };
-                  }
+    // pure_live 主路径：getRoomPlayInfo，protocol/format/codec 全开，platform=html5
+    function pickFromPlayInfo(j2){
+      if(!j2 || j2.code !== 0 || !j2.data) return null;
+      var streams = (((j2.data.playurl_info || {}).playurl || {}).stream) || [];
+      var urls = [];
+      for(var si=0; si<streams.length; si++){
+        var formats = streams[si].format || [];
+        for(var fi=0; fi<formats.length; fi++){
+          var codecs = formats[fi].codec || [];
+          var fname = formats[fi].format_name || '';
+          for(var ci=0; ci<codecs.length; ci++){
+            var c = codecs[ci];
+            var base = c.base_url || '';
+            var infos = c.url_info || [];
+            for(var ui=0; ui<infos.length; ui++){
+              var host = infos[ui].host || '';
+              var extra = infos[ui].extra || '';
+              if(base && host){
+                var url = host + base + extra;
+                if(url.indexOf('http') === 0){
+                  urls.push({
+                    url: url,
+                    hls: /\.m3u8/.test(url) || fname === 'ts' || fname === 'fmp4',
+                    mcdn: /mcdn/i.test(url)
+                  });
                 }
               }
             }
           }
         }
-      } catch(e2) {}
-      throw new Error((j && j.message) || 'B站取流失败');
+      }
+      if(!urls.length) return null;
+      // pure_live：mcdn 靠后
+      urls.sort(function(a,b){ return (a.mcdn?1:0) - (b.mcdn?1:0); });
+      var best = urls[0];
+      return best.hls ? { url:best.url, format:'application/x-mpegURL' } : { url:best.url };
     }
-    var durl = (j.data && j.data.durl) || [];
-    if(!durl.length || !durl[0].url) throw new Error('B站无流地址');
-    var url = durl[0].url;
-    if(/\.m3u8/.test(url)) return { url:url, format:'application/x-mpegURL' };
-    return { url:url };
+
+    try {
+      var j2 = await req(
+        'https://api.live.bilibili.com/xlive/web-room/v2/index/getRoomPlayInfo?room_id=' + encodeURIComponent(realRid)
+          + '&protocol=0,1&format=0,1,2&codec=0&platform=html5&dolby=5&qn=' + qn,
+        { responseType:'json', headers: biliHdr(), pc:true }
+      );
+      var picked = pickFromPlayInfo(j2);
+      if(picked) return picked;
+    } catch(e) {}
+
+    // 旧 playUrl 兜底
+    var j = await req(
+      'https://api.live.bilibili.com/room/v1/Room/playUrl?cid=' + encodeURIComponent(realRid) + '&qn=' + qn + '&platform=web',
+      { responseType:'json', headers: biliHdr(), pc:true }
+    );
+    if(j && j.code === 0){
+      var durl = (j.data && j.data.durl) || [];
+      if(durl.length && durl[0].url){
+        var url = durl[0].url;
+        if(/\.m3u8/.test(url)) return { url:url, format:'application/x-mpegURL' };
+        return { url:url };
+      }
+    }
+    throw new Error((j && j.message) || 'B站取流失败');
   }
 
 
@@ -2226,6 +2552,22 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
 
   async function ksLive(gid, page){
     var cate = gid || 'rec';
+    // pure_live: 分类用 gameboard / non-gameboard
+    if(String(cate).indexOf('ks:') === 0){
+      var gameId = String(cate).slice(3);
+      var api = gameId.length < 7
+        ? 'https://live.kuaishou.com/live_api/gameboard/list'
+        : 'https://live.kuaishou.com/live_api/non-gameboard/list';
+      var j = await req(api + '?filterType=0&pageSize=20&gameId=' + encodeURIComponent(gameId) + '&page=' + page, {
+        responseType:'json', headers: ksHdr(), pc:true, timeout: 25
+      });
+      if(!j || !j.data){
+        throw new Error((j && (j.error_msg || j.errorMsg)) || '快手分区失败');
+      }
+      var list = j.data.list || j.data.lives || j.data.verticalList || [];
+      var arr = collectKs(list);
+      return { items: arr, more: !!(j.data.hasMore || j.data.cursor || arr.length >= 15) };
+    }
     var j = await req('https://live.kuaishou.com/live_api/hot/list?page=' + page, {
       responseType:'json', headers: ksHdr(), pc:true, timeout: 25
     });
@@ -2233,15 +2575,14 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
       throw new Error((j && (j.error_msg || j.errorMsg)) || '快手列表失败');
     }
     var arr = collectKs(j.data.list || []);
-    // 按游戏名过滤
+    // 兼容旧 game:名字 过滤
     if(String(cate).indexOf('game:') === 0){
       var gname = String(cate).slice(5);
       arr = arr.filter(function(r){
         return r.cate && r.cate.indexOf(gname) >= 0;
       });
-      // 本页没有对应游戏时，多翻几页凑一些
-      if(!arr.length && page === 1){
-        for(var p = 2; p <= 4 && arr.length < 12; p++){
+      if(arr.length < 6 && page === 1){
+        for(var p=2; p<=4 && arr.length < 12; p++){
           try {
             var j2 = await req('https://live.kuaishou.com/live_api/hot/list?page=' + p, {
               responseType:'json', headers: ksHdr(), pc:true, timeout: 20
@@ -2396,12 +2737,187 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
   }
 
   /* ========== 统一引擎 ========== */
+
+  /* ========== 动态分类（对齐纯粹直播：进站/切源自动同步全部分区） ========== */
+  async function fetchHuyaCate(){
+    var parents = [
+      { id:'1', name:'网游' }, { id:'2', name:'单机' },
+      { id:'8', name:'娱乐' }, { id:'3', name:'手游' }
+    ];
+    var tree = [{ g:'', name:'推荐', children:[] }];
+    var flat = [{ g:'', name:'推荐' }];
+    for(var i=0;i<parents.length;i++){
+      var p = parents[i];
+      try{
+        var j = await req('https://live.cdn.huya.com/liveconfig/game/bussLive?bussType='+p.id, {
+          responseType:'json', pc:true, referer:'https://www.huya.com/'
+        });
+        var list = Array.isArray(j) ? j : (j && (j.data || j.vGameList)) || [];
+        if(j && j.data && !Array.isArray(j.data)) list = j.data.vGameList || j.data.gameList || j.data.list || [];
+        var kids = [];
+        for(var k=0;k<list.length;k++){
+          var it = list[k];
+          if(!it || it.isHide == 1) continue;
+          var gid = String(it.gid != null ? it.gid : (it.gameId || ''));
+          var nm = it.gameFullName || it.gameName || '';
+          if(!gid || !nm) continue;
+          kids.push({ g:gid, name:nm });
+          flat.push({ g:gid, name:nm });
+        }
+        tree.push({ g:'p:'+p.id, name:p.name, children:kids });
+      }catch(e){}
+    }
+    if(flat.length <= 1) return null;
+    return { tree:tree, flat:flat };
+  }
+
+  async function fetchDouyuCate(){
+    var j = await req('https://m.douyu.com/api/cate/list', {
+      responseType:'json', pc:true, referer:'https://m.douyu.com/'
+    });
+    var data = (j && j.data) || {};
+    var c1 = data.cate1Info || [];
+    var c2 = data.cate2Info || [];
+    if(!c2.length) return null;
+    var tree = [{ g:'0_0', name:'推荐', children:[] }];
+    var flat = [{ g:'0_0', name:'推荐' }];
+    var by1 = {};
+    for(var i=0;i<c2.length;i++){
+      var it = c2[i];
+      var id1 = String(it.cate1Id);
+      if(!by1[id1]) by1[id1] = [];
+      var g = '2_' + it.cate2Id;
+      var nm = it.cate2Name || '';
+      if(!nm) continue;
+      by1[id1].push({ g:g, name:nm });
+      flat.push({ g:g, name:nm });
+    }
+    for(var j1=0;j1<c1.length;j1++){
+      var p = c1[j1];
+      var kids = by1[String(p.cate1Id)] || [];
+      tree.push({ g:'p:'+p.cate1Id, name:p.cate1Name || ('分类'+p.cate1Id), children:kids });
+    }
+    return { tree:tree, flat:flat };
+  }
+
+  async function fetchBiliCate(){
+    var j = await req('https://api.live.bilibili.com/room/v1/Area/getList', {
+      responseType:'json', pc:true, referer:'https://live.bilibili.com/',
+      headers: { 'User-Agent': PC_UA, 'Referer':'https://live.bilibili.com/' }
+    });
+    if(!j || (j.code !== 0 && j.code !== undefined)) return null;
+    var data = j.data || [];
+    if(!data.length) return null;
+    var tree = [{ g:'0-0', name:'推荐', children:[] }];
+    var flat = [{ g:'0-0', name:'推荐' }];
+    for(var i=0;i<data.length;i++){
+      var p = data[i];
+      var kids = [];
+      var list = p.list || [];
+      for(var k=0;k<list.length;k++){
+        var it = list[k];
+        var g = String(p.id) + '-' + String(it.id);
+        var nm = it.name || '';
+        if(!nm) continue;
+        kids.push({ g:g, name:nm });
+        flat.push({ g:g, name:nm });
+      }
+      tree.push({ g:'p:'+p.id, name:p.name || ('分区'+p.id), children:kids });
+    }
+    return { tree:tree, flat:flat };
+  }
+
+  async function fetchDouyinCate(){
+    // pure_live：从 live.douyin.com 首页 HTML 解析 categoryData
+    try{
+      var html = await req('https://live.douyin.com/?from_nav=1', {
+        pc:true, referer:'https://live.douyin.com/',
+        headers: { 'User-Agent': PC_UA, 'Referer':'https://live.douyin.com/' }
+      });
+      var marker = '{"pathname":"/","categoryData":';
+      var idx = String(html).indexOf(marker);
+      if(idx < 0) marker = '\\"pathname\\":\\"/\\",\\"categoryData\\":';
+      idx = String(html).indexOf('categoryData');
+      if(idx < 0) return null;
+      // 尝试在 RENDER_DATA 或类似块中找
+      var m = String(html).match(/categoryData"\s*:\s*(\[[\s\S]*?\])\s*[,}]/);
+      if(!m) m = String(html).match(/"categoryData":(\[[\s\S]*?\])\s*[,}]/);
+      if(!m) return null;
+      var data;
+      try{ data = JSON.parse(m[1]); }catch(e){
+        try{ data = JSON.parse(m[1].replace(/\\"/g,'"').replace(/\\\\/g,'\\')); }catch(e2){ return null; }
+      }
+      if(!Array.isArray(data) || !data.length) return null;
+      var tree = [{ g:'', name:'推荐', children:[] }];
+      var flat = [{ g:'', name:'推荐' }];
+      for(var i=0;i<data.length;i++){
+        var item = data[i];
+        var part = item.partition || {};
+        var pid = String(part.id_str || part.id || '') + ',' + String(part.type || '1');
+        var pname = part.title || ('分区'+(i+1));
+        var kids = [];
+        var subs = item.sub_partition || item.sub_partitions || [];
+        // 父级自身也可作为分区
+        kids.push({ g:pid, name:pname });
+        flat.push({ g:pid, name:pname });
+        for(var k=0;k<subs.length;k++){
+          var sp = (subs[k] && (subs[k].partition || subs[k])) || {};
+          var sid = String(sp.id_str || sp.id || '') + ',' + String(sp.type || '1');
+          var sn = sp.title || '';
+          if(!sn) continue;
+          kids.push({ g:sid, name:sn });
+          flat.push({ g:sid, name:sn });
+        }
+        tree.push({ g:'p:'+pid, name:pname, children:kids });
+      }
+      return { tree:tree, flat:flat };
+    }catch(e){ return null; }
+  }
+
+  async function fetchKsCate(){
+    var parents = [
+      { id:'1', name:'热门' }, { id:'2', name:'网游' }, { id:'3', name:'单机' },
+      { id:'4', name:'手游' }, { id:'5', name:'棋牌' }, { id:'6', name:'娱乐' },
+      { id:'7', name:'综合' }, { id:'8', name:'文化' }
+    ];
+    var tree = [{ g:'rec', name:'热门', children:[] }];
+    var flat = [{ g:'rec', name:'热门' }];
+    for(var i=0;i<parents.length;i++){
+      var p = parents[i];
+      try{
+        var j = await req('https://live.kuaishou.com/live_api/category/data?type='+p.id+'&page=1&size=100', {
+          responseType:'json', pc:true, referer:'https://live.kuaishou.com/',
+          headers: { 'User-Agent': PC_UA, 'Referer':'https://live.kuaishou.com/', 'Origin':'https://live.kuaishou.com' }
+        });
+        var list = (j && j.data && (j.data.list || j.data.categories || j.data.categoryList)) || [];
+        var kids = [];
+        for(var k=0;k<list.length;k++){
+          var it = list[k];
+          var id = String(it.id || it.categoryId || it.gameId || '');
+          var nm = it.name || it.categoryName || it.gameName || '';
+          if(!id || !nm) continue;
+          // pure_live: areaId 短于7用 gameboard，否则 non-gameboard；列表侧用 id
+          var g = id.length < 7 ? ('game:'+id) : ('board:'+id);
+          // 实际 live 函数用 game:name 过滤；这里改用真实 id
+          g = 'ks:' + id;
+          kids.push({ g:g, name:nm, _ksId:id });
+          flat.push({ g:g, name:nm, _ksId:id });
+        }
+        if(kids.length) tree.push({ g:'p:'+p.id, name:p.name, children:kids });
+      }catch(e){}
+    }
+    if(flat.length <= 1) return null;
+    return { tree:tree, flat:flat };
+  }
+
   var ADAPTERS = {
     huya: {
       id: 'huya',
       word: '虎牙直播',
       site: 'https://www.huya.com',
       cate: HUYA_CATE,
+      cateTree: null,
+      fetchCate: fetchHuyaCate,
       live: huyaLive,
       search: huyaSearch,
       stream: huyaStream,
@@ -2412,6 +2928,8 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
       word: '斗鱼直播',
       site: 'https://www.douyu.com',
       cate: DOUYU_CATE,
+      cateTree: null,
+      fetchCate: fetchDouyuCate,
       live: douyuLive,
       search: douyuSearch,
       stream: douyuStream,
@@ -2422,6 +2940,8 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
       word: '抖音直播',
       site: 'https://live.douyin.com',
       cate: DOUYIN_CATE,
+      cateTree: null,
+      fetchCate: fetchDouyinCate,
       live: douyinLive,
       search: douyinSearch,
       stream: douyinStream,
@@ -2432,6 +2952,8 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
       word: 'B站直播',
       site: 'https://live.bilibili.com',
       cate: BILI_CATE,
+      cateTree: null,
+      fetchCate: fetchBiliCate,
       live: biliLive,
       search: biliSearch,
       stream: biliStream,
@@ -2442,6 +2964,8 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
       word: '快手直播',
       site: 'https://live.kuaishou.com',
       cate: KS_CATE,
+      cateTree: null,
+      fetchCate: fetchKsCate,
       live: ksLive,
       search: ksSearch,
       stream: ksStream,
@@ -2453,6 +2977,9 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
     ADAPTERS: ADAPTERS,
     setPrefs: function(p){ for(var k in p) if(p[k]!==undefined) prefs[k]=p[k]; },
     getUA: function(){ return prefs.ua; },
+    getPCUA: function(){ return PC_UA; },
+    getBiliCk: function(){ return biliCookie(); },
+    biliCheckLogin: biliCheckLogin,
     resImg: resUrl,
     req: req,
     md5: md5
@@ -2474,8 +3001,8 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
   var A = E.ADAPTERS.huya;
   var native=false;
   var elList=$('list'), elState=$('state'), elMore=$('more'), elTabs=$('tabs'), elToast=$('toast'), elAreas=$('liveAreas');
-  var prefs={ rate:'0', wall:'pic' };
-  var view={ cate:'', page:1, items:[], loading:false, seq:0, more:true, kind:'live', kw:'', subFilter:'' };
+  var prefs={ rate:'0', wall:'pic', biliCk:'' };
+  var view={ cate:'', page:1, items:[], loading:false, seq:0, more:true, kind:'live', kw:'', subFilter:'', parentKey:'' };
 
   function toast(m){ elToast.textContent=m; elToast.className='toast show'; clearTimeout(toast._t); toast._t=setTimeout(function(){elToast.className='toast';},2400); }
   function bodyClass(n,o){ var b=document.body,c=(' '+b.className+' ').replace(new RegExp('\\s'+n+'\\s','g'),' '); b.className=(o?c+n:c).replace(/\s+/g,' ').replace(/^ | $/g,''); }
@@ -2521,7 +3048,33 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
 
   function updateAreas(){
     if(!elAreas) return;
-    var seen={}, order=[], i, c;
+    // 动态分区树：二级子分区
+    if(A.cateTree && view.parentKey){
+      var node = null, i;
+      for(i=0;i<A.cateTree.length;i++){
+        if(A.cateTree[i].g === view.parentKey){ node = A.cateTree[i]; break; }
+      }
+      var kids = (node && node.children) || [];
+      if(kids.length){
+        elAreas.replaceChildren();
+        kids.forEach(function(ch){
+          var b=document.createElement('button');
+          b.type='button';
+          b.className='larea'+(view.cate===ch.g?' on':'');
+          b.textContent=ch.name;
+          b.addEventListener('click', function(){
+            view.kind='live'; view.cate=ch.g; view.subFilter='';
+            updateAreas(); load(true);
+          });
+          elAreas.appendChild(b);
+        });
+        elAreas.className='liveareas on';
+        try{ enableHScroll(elAreas); }catch(e){}
+        return;
+      }
+    }
+    // 回退：按当前列表房间分类名本地筛选
+    var seen={}, order=[], c;
     for(i=0;i<view.items.length;i++){ c=view.items[i].cate; if(c && !seen[c]){ seen[c]=1; order.push(c); } }
     if(order.length<2){ elAreas.className='liveareas'; elAreas.replaceChildren(); return; }
     order.sort();
@@ -2532,6 +3085,22 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
   }
   function setSubFilter(name){ view.subFilter=name; if(elAreas){ Array.prototype.forEach.call(elAreas.querySelectorAll('.larea'),function(b){ b.className='larea'+(b.textContent===(name||'全部')?' on':''); }); } applySubFilter(); }
   function applySubFilter(){ Array.prototype.forEach.call(elList.children,function(w){ var c=w.getAttribute('data-cate')||''; w.style.display=(!view.subFilter||c===view.subFilter)?'':'none'; }); }
+
+  /** 从平台接口同步全部分区（失败则保留内置兜底） */
+  async function ensureCate(force){
+    if(!A.fetchCate) return;
+    if(A._cateReady && !force) return;
+    try{
+      var res = await A.fetchCate();
+      if(res && res.flat && res.flat.length){
+        A.cate = res.flat;
+        A.cateTree = res.tree || null;
+        A._cateReady = true;
+      }
+    }catch(e){
+      // 保持默认 cate
+    }
+  }
 
   async function fetchPage(){
     if(view.kind==='search') return A.search(view.kw, view.page);
@@ -2593,7 +3162,22 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
         else throw e1;
       }
       // 若缓存流起播前仍想刷新，可再请求；这里已有 s
-      var ref={ 'User-Agent':E.getUA()||'', Referer:A.referer||'' };
+      // 播放头：尽量贴近网页，减少 CDN 鉴权/断流
+      var playUA = E.getUA() || '';
+      if(A.id === 'huya' || A.id === 'douyu' || A.id === 'bili') playUA = (E.getPCUA && E.getPCUA()) || playUA;
+      if(!playUA) playUA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36';
+      var ref = {
+        'User-Agent': playUA,
+        'Referer': A.referer || '',
+        'Origin': (A.referer || '').replace(/\/$/, '')
+      };
+      // B站带登录 Cookie，CDN/鉴权更稳，原画才容易通
+      if(A.id === 'bili'){
+        try{
+          var bck = E.getBiliCk && E.getBiliCk();
+          if(bck) ref['Cookie'] = bck;
+        }catch(e){}
+      }
       var art=prefs.wall==='pic' ? (E.resImg(item.pic||'')||HUYA_ART) : '';
       if(native && fm.vodInline){
         var epn = s.format?'HLS':'FLV';
@@ -2619,10 +3203,47 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
   function clearSearchBox(){ setVal('q',''); if(typeof syncClear==='function') syncClear(); closeSug(); }
   function renderTabs(){
     elTabs.replaceChildren();
-    try{enableHScroll(elTabs);}catch(e){}
-    A.cate.forEach(function(t){
-      var b=document.createElement('button'); b.className='tab'+(t.g===view.cate&&view.kind==='live'?' on':''); b.textContent=t.name;
-      b.addEventListener('click',function(){ clearSearchBox(); view.kind='live'; view.cate=t.g; renderTabs(); scrollTabIntoView(); load(true); });
+    // 有分区树时：一级只显示大类，二级在 liveareas
+    var tabs;
+    if(A.cateTree && A.cateTree.length){
+      tabs = A.cateTree.map(function(n){
+        return { g:n.g, name:n.name, children:n.children||[] };
+      });
+    } else {
+      tabs = A.cate || [];
+    }
+    tabs.forEach(function(t){
+      var b=document.createElement('button');
+      b.type='button';
+      var on = false;
+      if(view.kind==='live'){
+        if(A.cateTree){
+          on = (view.parentKey === t.g) || (!view.parentKey && (t.g===''||t.g==='0_0'||t.g==='rec'||t.g==='0-0') && (view.cate===t.g || view.cate===''||view.cate==='0_0'||view.cate==='rec'||view.cate==='0-0'));
+          if(!on && t.children && t.children.length){
+            for(var i=0;i<t.children.length;i++){ if(t.children[i].g===view.cate){ on=true; break; } }
+          }
+        } else {
+          on = view.cate===t.g;
+        }
+      }
+      b.className='tab'+(on?' on':'');
+      b.textContent=t.name;
+      b.addEventListener('click',function(){
+        clearSearchBox();
+        view.kind='live';
+        view.subFilter='';
+        if(A.cateTree && t.children && t.children.length){
+          view.parentKey = t.g;
+          view.cate = t.children[0].g;
+        } else {
+          view.parentKey = t.g;
+          view.cate = t.g;
+        }
+        renderTabs();
+        scrollTabIntoView();
+        updateAreas();
+        load(true);
+      });
       elTabs.appendChild(b);
     });
     scrollTabIntoView();
@@ -2653,8 +3274,44 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
   function closeSheet(silent){ var k; for(k in sheets) sheets[k].className='sheet'; bodyClass('locked',false); openName=''; if(!silent&&history.state&&history.state.sheet) history.back(); }
   window.addEventListener('popstate',function(){ if(openName){ closeSheet(true); } });
 
-  async function loadPrefs(){ var r=await store.get('prefs'); if(r){ try{ var p=JSON.parse(r); if(p.rate!==undefined&&p.rate!==null&&p.rate!=='')prefs.rate=String(p.rate); else prefs.rate='0'; if(p.wall)prefs.wall=p.wall; }catch(e){} } setVal('rate',prefs.rate); setVal('wall',prefs.wall); E.setPrefs(prefs); buildPickers(); syncPickers(); }
-  async function savePrefs(){ prefs.rate=getVal('rate')||'0'; prefs.wall=getVal('wall')||'pic'; await store.set('prefs',JSON.stringify(prefs)); E.setPrefs(prefs); syncPickers(); toast('已保存 · 清晰度 '+({'0':'原画','1':'流畅','2':'高清','3':'超清','4':'蓝光'}[prefs.rate]||prefs.rate)); closeSheet(); }
+  async function loadPrefs(){
+    var r=await store.get('prefs');
+    if(r){
+      try{
+        var p=JSON.parse(r);
+        if(p.rate!==undefined&&p.rate!==null&&p.rate!=='') prefs.rate=String(p.rate); else prefs.rate='0';
+        if(p.wall) prefs.wall=p.wall;
+        if(p.biliCk) prefs.biliCk=String(p.biliCk);
+      }catch(e){}
+    }
+    setVal('rate',prefs.rate);
+    setVal('wall',prefs.wall);
+    var ta=$('biliCk'); if(ta) ta.value=prefs.biliCk||'';
+    E.setPrefs(prefs);
+    buildPickers();
+    syncPickers();
+    updateBiliCkStatus();
+  }
+  function updateBiliCkStatus(extra){
+    var el=$('biliCkStatus'); if(!el) return;
+    var ck=(prefs.biliCk||'').trim();
+    if(extra){ el.textContent=extra; return; }
+    el.textContent = ck ? '已保存 Cookie（点击「检测登录」验证）' : '未配置 · 未登录时多为高清/720p 档';
+  }
+  async function savePrefs(){
+    prefs.rate=getVal('rate')||'0';
+    prefs.wall=getVal('wall')||'pic';
+    var ta=$('biliCk');
+    prefs.biliCk = ta ? String(ta.value||'').trim() : (prefs.biliCk||'');
+    await store.set('prefs',JSON.stringify(prefs));
+    E.setPrefs(prefs);
+    syncPickers();
+    updateBiliCkStatus();
+    var tip = '已保存 · 清晰度 '+({'0':'原画','1':'流畅','2':'高清','3':'超清','4':'蓝光'}[prefs.rate]||prefs.rate);
+    if(prefs.biliCk) tip += ' · B站 Cookie';
+    toast(tip);
+    closeSheet();
+  }
 
   function diagLine(n,note){ var el=document.createElement('div'); el.className='diag-line'; el.innerHTML='<b>'+n+'</b> · <span>检测中…</span><div style="margin-top:4px">'+note+'</div>'; return el; }
   async function probe(el,fn){ var t0=Date.now(); try{ await fn(); el.querySelector('span').innerHTML='<span class="ok">通过 · '+(Date.now()-t0)+'ms</span>'; }catch(e){ el.querySelector('span').innerHTML='<span class="bad">失败 · '+String(e.message).slice(0,50)+'</span>'; } }
@@ -2776,13 +3433,18 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
     await store.set('src', id);
     view.token = (view.token||0) + 1;
     view.kind = 'live';
-    view.cate = A.cate[0].g;
     view.kw = '';
+    view.parentKey = '';
     clearSearchBox();
     applySrcTheme();
     updateSwitcher();
     await loadHistory();
+    toast('同步分区中…');
+    await ensureCate(true);
+    view.cate = (A.cate[0] && A.cate[0].g) || '';
+    view.parentKey = (A.cateTree && A.cateTree[0] && A.cateTree[0].g) || view.cate;
     renderTabs();
+    updateAreas();
     load(true);
     window.scrollTo(0, 0);
   }
@@ -2801,7 +3463,36 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
     on('runDiag','click',runDiag);
     on('optMask','click',closePicker);
     on('saveBtn','click',savePrefs);
-    on('resetBtn','click',function(){ setVal('rate','0'); setVal('wall','pic'); syncPickers(); });
+    on('resetBtn','click',function(){ setVal('rate','0'); setVal('wall','pic'); var ta=$('biliCk'); if(ta) ta.value=''; prefs.biliCk=''; syncPickers(); updateBiliCkStatus(); });
+    on('biliCkClear','click',function(){
+      var ta=$('biliCk'); if(ta) ta.value='';
+      prefs.biliCk='';
+      E.setPrefs(prefs);
+      updateBiliCkStatus('已清除 Cookie');
+      toast('已清除 B站 Cookie');
+    });
+    on('biliCkCheck','click', async function(){
+      var ta=$('biliCk');
+      prefs.biliCk = ta ? String(ta.value||'').trim() : '';
+      E.setPrefs(prefs);
+      if(!prefs.biliCk){ updateBiliCkStatus('请先粘贴 Cookie'); toast('请先粘贴 SESSDATA'); return; }
+      updateBiliCkStatus('检测中…');
+      try{
+        var r = await E.biliCheckLogin();
+        if(r && r.ok){
+          updateBiliCkStatus('✓ 已登录：' + r.msg);
+          toast('登录有效：' + r.msg);
+          // 自动保存
+          await store.set('prefs', JSON.stringify(prefs));
+        } else {
+          updateBiliCkStatus('✗ ' + ((r && r.msg) || '无效'));
+          toast('登录无效：' + ((r && r.msg) || ''));
+        }
+      }catch(e){
+        updateBiliCkStatus('✗ 检测失败：' + (e.message||e));
+        toast('检测失败');
+      }
+    });
     document.addEventListener('touchstart',function(e){ var t=e.target; if(t&&t.closest&&t.closest('.search'))return; if(document.activeElement!==$('q')&&!hasBodyClass('searching'))return; closeSug(); var q=$('q'); if(q&&q.blur)q.blur(); bodyClass('searching',false); },{passive:true});
     var segs = document.querySelectorAll('.switcher .sseg');
     Array.prototype.forEach.call(segs, function (seg) {
@@ -2825,10 +3516,16 @@ html.no-css-functions .wrap{ padding-bottom:48px; }
     updateSwitcher();
     try{ await loadPrefs(); }catch(e){}
     try{ bind(); }catch(e){}
-    try{ renderTabs(); }catch(e){}
+    try{ await loadHistory(); }catch(e){}
+    try{
+      toast('同步分区中…');
+      await ensureCate(false);
+      view.cate = (A.cate[0] && A.cate[0].g) || '';
+      view.parentKey = (A.cateTree && A.cateTree[0] && A.cateTree[0].g) || view.cate;
+    }catch(e){}
+    try{ renderTabs(); updateAreas(); }catch(e){}
     try{ autoPage(); }catch(e){}
     try{ initGestures(); enableHScroll(elTabs); enableHScroll(elAreas); }catch(e){}
-    try{ await loadHistory(); }catch(e){}
     if(native&&fm.ui&&fm.ui.setChrome){ try{ fm.ui.setChrome({mode:'edge',statusBarStyle:'light',startup:true})['catch'](function(){}); }catch(e){} }
     load(true);
     setTimeout(positionInd, 80);

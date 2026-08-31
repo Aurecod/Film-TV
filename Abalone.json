@@ -681,17 +681,6 @@
       "ext": ""
     },
     {
-      "key": "123Av",
-      "name": "123Av",
-      "type": 3,
-      "api": "csp_Av123",
-      "jar": "./jar/Quss.jar",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "changeable": 0
-    },
-    {
       "key": "whos",
       "name": "whos.tv",
       "type": 3,

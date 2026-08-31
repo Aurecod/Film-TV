@@ -49,6 +49,18 @@
       "homePage": "./File/html/Hunter/宝宝在线.html"
     },
     {
+      "key": "local_听书",
+      "name": "听书ʰᵗᵐˡ",
+      "type": 3,
+      "homePage": "./File/html/Hunter/听书.html"
+    },
+    {
+      "key": "local_玩偶聚合",
+      "name": "玩偶聚合ʰᵗᵐˡ",
+      "type": 3,
+      "homePage": "./File/html/Hunter/玩偶聚合.html"
+    },
+    {
       "key": "local_YouTuBe",
       "name": "YouTuBeᵖʸ",
       "type": 3,
@@ -305,20 +317,6 @@
       "name": "星芽短剧ᵖʸ",
       "type": 3,
       "api": "./File/py/Hunter/星芽短剧.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_小苹果",
-      "name": "小苹果ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/小苹果.py",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 1,
