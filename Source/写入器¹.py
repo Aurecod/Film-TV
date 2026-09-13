@@ -17,8 +17,10 @@ class Spider(Spider):
     REGISTRY_PATH = "/storage/emulated/0/Film-TV/Abalone.json"
     GENERATED_PREFIX = "local_"
 
-    ICON_SCAN = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2NCIgaGVpZ2h0PSI2NCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM0Q0FGNTAiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48Y2lyY2xlIGN4PSIxMSIgY3k9IjExIiByPSI4Ii8+PGxpbmUgeDE9IjIxIiB5MT0iMjEiIHgyPSIxNi42NSIgeTI9IjE2LjY1Ii8+PC9zdmc+"
-    ICON_CLEAR = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2NCIgaGVpZ2h0PSI2NCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiNFNTM3MzciIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cG9seWxpbmUgcG9pbnRzPSIzIDYgNSA2IDIxIDYiLz48cGF0aCBkPSJNMTkgNnYxNGEyIDIgMCAwIDEtMiAySDdhMiAyIDAgMCAxLTItMlY2bDMgMEg0Ii8+PHBhdGggZD0iTTEwIDExdjYiLz48cGF0aCBkPSJNMTQgMTF2NiIvPjwvc3ZnPg=="
+    ICON_HTML = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2NCIgaGVpZ2h0PSI2NCIgdmlld0JveD0iMCAwIDI0IDI0Ij48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZm9udC1zaXplPSIzMiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSI+🍀PC90ZXh0Pjwvc3ZnPg=="
+    ICON_PY = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2NCIgaGVpZ2h0PSI2NCIgdmlld0JveD0iMCAwIDI0IDI0Ij48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZm9udC1zaXplPSIzMiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSI+🌴PC90ZXh0Pjwvc3ZnPg=="
+    ICON_ALL = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2NCIgaGVpZ2h0PSI2NCIgdmlld0JveD0iMCAwIDI0IDI0Ij48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZm9udC1zaXplPSIzMiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSI+📦PC90ZXh0Pjwvc3ZnPg=="
+    ICON_CLEAR = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2NCIgaGVpZ2h0PSI2NCIgdmlld0JveD0iMCAwIDI0IDI0Ij48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZm9udC1zaXplPSIzMiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSI+🗑PC90ZXh0Pjwvc3ZnPg=="
 
     def init(self, extend=""):
         self.py_paths = []
@@ -33,7 +35,6 @@ class Spider(Spider):
         if os.path.exists(self.HTML_PATH_2) and self.HTML_PATH_2 not in self.html_paths:
             self.html_paths.append(self.HTML_PATH_2)
 
-        # ===== 新增：从 extend 读取目标 JSON 路径 =====
         self.target_path = self.REGISTRY_PATH
         if extend:
             ext = extend.strip().strip('"').strip("'").replace("file://", "")
@@ -44,7 +45,6 @@ class Spider(Spider):
             elif ext:
                 self.target_path = ext
 
-        # 确保目录存在
         d = os.path.dirname(self.target_path)
         if d and not os.path.exists(d):
             try:
@@ -84,34 +84,50 @@ class Spider(Spider):
     def categoryContent(self, tid, pg, filter, extend):
         if tid == "injected":
             items = [
-                {"vod_id": "__inject__", "vod_name": "写入", "vod_remarks": "扫描目录，写入所有站点", "vod_pic": self.ICON_SCAN, "action": "inject"},
-                {"vod_id": "__clear__", "vod_name": "清除", "vod_remarks": "移除所有写入站点", "vod_pic": self.ICON_CLEAR, "action": "clear"}
+                {"vod_id": "__inject_all__", "vod_name": "全部写入", "vod_remarks": "扫描 Html + Py 目录，写入所有站点", "vod_pic": self.ICON_ALL, "action": "inject_all", "style": {"type": "rect", "ratio": 1.48}},
+                {"vod_id": "__clear_all__", "vod_name": "全部清除", "vod_remarks": "移除所有写入站点", "vod_pic": self.ICON_CLEAR, "action": "clear_all", "style": {"type": "rect", "ratio": 1.48}},
+                {"vod_id": "__inject_html__", "vod_name": "Html 写入", "vod_remarks": "只扫描 Html 目录", "vod_pic": self.ICON_HTML, "action": "inject_html", "style": {"type": "rect", "ratio": 1.48}},
+                {"vod_id": "__clear_html__", "vod_name": "Html 清除", "vod_remarks": "只移除 Html 站点", "vod_pic": self.ICON_CLEAR, "action": "clear_html", "style": {"type": "rect", "ratio": 1.48}},
+                {"vod_id": "__inject_py__", "vod_name": "Py 写入", "vod_remarks": "只扫描 Py 目录", "vod_pic": self.ICON_PY, "action": "inject_py", "style": {"type": "rect", "ratio": 1.48}},
+                {"vod_id": "__clear_py__", "vod_name": "Py 清除", "vod_remarks": "只移除 Py 站点", "vod_pic": self.ICON_CLEAR, "action": "clear_py", "style": {"type": "rect", "ratio": 1.48}},
             ]
             return self._paged_result(items, pg)
-        else:
-            return {"list": []}
+        return {"list": []}
 
     def detailContent(self, array):
         return {"list": []}
 
     def action(self, action):
-        if action == "inject":
-            return self._action_inject()
-        elif action == "clear":
-            return self._action_clear()
+        if action == "inject_all":
+            return self._action_inject_all()
+        elif action == "clear_all":
+            return self._action_clear_all()
+        elif action == "inject_html":
+            return self._action_inject_html()
+        elif action == "clear_html":
+            return self._action_clear_html()
+        elif action == "inject_py":
+            return self._action_inject_py()
+        elif action == "clear_py":
+            return self._action_clear_py()
         else:
             return {"code": 0, "msg": "未知操作"}
 
     def searchContent(self, key, quick, pg="1"):
         key = key.lower()
         items = []
-        all_paths = self.py_paths + self.html_paths
-        for path in all_paths:
+        for path in self.html_paths:
             if not os.path.exists(path):
                 continue
             for f in os.listdir(path):
-                if key in f.lower() and (f.endswith(".py") or f.endswith(".html")) and not f.startswith("__"):
-                    items.append({"vod_id": hashlib.md5(f.encode()).hexdigest()[:16], "vod_name": f, "vod_remarks": "文件", "vod_pic": ""})
+                if key in f.lower() and f.endswith(".html") and not f.startswith("__"):
+                    items.append({"vod_id": hashlib.md5(f.encode()).hexdigest()[:16], "vod_name": f + " (HTML)", "vod_remarks": "文件", "vod_pic": self.ICON_HTML})
+        for path in self.py_paths:
+            if not os.path.exists(path):
+                continue
+            for f in os.listdir(path):
+                if key in f.lower() and f.endswith(".py") and not f.startswith("__"):
+                    items.append({"vod_id": hashlib.md5(f.encode()).hexdigest()[:16], "vod_name": f + " (Py)", "vod_remarks": "文件", "vod_pic": self.ICON_PY})
         return self._paged_result(items, pg)
 
     def playerContent(self, flag, id, vipFlags):
@@ -170,21 +186,15 @@ class Spider(Spider):
         return None
 
     def _build_site(self, file_path, ext):
-        full_name = os.path.basename(file_path)          # 含扩展名
-        base_name = os.path.splitext(full_name)[0]       # 不含扩展名
-        key = self.GENERATED_PREFIX + base_name          # "local_文件名"
-        
-        # ---- 改为相对路径 ----
-        # 获取配置文件所在目录的绝对路径
+        full_name = os.path.basename(file_path)
+        base_name = os.path.splitext(full_name)[0]
+        key = self.GENERATED_PREFIX + base_name
+
         target_dir = os.path.dirname(os.path.abspath(self.target_path))
-        # 计算相对路径
         rel_path = os.path.relpath(file_path, target_dir)
-        # 统一为 Unix 风格斜杠，并添加 "./"
         file_url = "./" + rel_path.replace(os.sep, "/")
-        # 如果相对路径为空（即文件就在配置目录下），则直接 "./文件名"
         if rel_path == ".":
             file_url = "./" + full_name
-        # ---------------------
 
         if ext == '.py':
             display_name = full_name[:-3] + "ᵖʸ" if full_name.endswith(".py") else full_name + "ᵖʸ"
@@ -200,7 +210,7 @@ class Spider(Spider):
                 "style": {"type": "rect"},
                 "ext": ""
             }
-        else:  # html
+        else:
             display_name = full_name[:-5] + "ʰᵗᵐˡ" if full_name.endswith(".html") else full_name + "ʰᵗᵐˡ"
             site = {
                 "key": key,
@@ -210,13 +220,12 @@ class Spider(Spider):
             }
         return site
 
-    def _action_inject(self):
+    def _action_inject_all(self):
         data = self._load_target()
         sites = data.get("sites", [])
         manual = [s for s in sites if not self._is_generated(s)]
         new_sites = []
 
-        # HTML 优先
         for path in self.html_paths:
             if not os.path.exists(path):
                 continue
@@ -225,7 +234,6 @@ class Spider(Spider):
                     full_path = os.path.join(path, f)
                     new_sites.append(self._build_site(full_path, '.html'))
 
-        # Py 其次
         for path in self.py_paths:
             if not os.path.exists(path):
                 continue
@@ -240,14 +248,76 @@ class Spider(Spider):
 
         count = len(new_sites)
         target = os.path.basename(self.target_path)
-        return {"code": 0, "msg": f"✅ 已写入 {count} 个站点到 {target}（HTML + Py，已置顶）\n⚠️ FongMi 请手动点「配置地址」刷新"}
+        return {"code": 0, "msg": f"✅ 已写入 {count} 个站点到 {target}（Html + Py，已置顶）\n⚠️ FongMi 请手动点「配置地址」刷新"}
 
-    def _action_clear(self):
+    def _action_clear_all(self):
         data = self._load_target()
         data["sites"] = [s for s in data.get("sites", []) if not self._is_generated(s)]
         self._save_target(data)
         self._reload_app()
         return {"code": 0, "msg": "🗑 已移除所有写入站点\n⚠️ FongMi 请手动点「配置地址」刷新"}
+
+    def _action_inject_html(self):
+        data = self._load_target()
+        sites = data.get("sites", [])
+        manual = [s for s in sites if not self._is_generated(s)]
+        new_sites = []
+
+        for path in self.html_paths:
+            if not os.path.exists(path):
+                continue
+            for f in os.listdir(path):
+                if f.endswith(".html") and not f.startswith("__"):
+                    full_path = os.path.join(path, f)
+                    new_sites.append(self._build_site(full_path, '.html'))
+
+        data["sites"] = new_sites + manual
+        self._save_target(data)
+        self._reload_app()
+
+        count = len(new_sites)
+        target = os.path.basename(self.target_path)
+        return {"code": 0, "msg": f"✅ 已写入 {count} 个 Html 站点到 {target}（已置顶）\n⚠️ FongMi 请手动点「配置地址」刷新"}
+
+    def _action_clear_html(self):
+        data = self._load_target()
+        sites = data.get("sites", [])
+        kept = [s for s in sites if not (self._is_generated(s) and s.get("homePage"))]
+        data["sites"] = kept
+        self._save_target(data)
+        self._reload_app()
+        return {"code": 0, "msg": "🗑 已移除所有写入的 Html 站点\n⚠️ FongMi 请手动点「配置地址」刷新"}
+
+    def _action_inject_py(self):
+        data = self._load_target()
+        sites = data.get("sites", [])
+        manual = [s for s in sites if not self._is_generated(s)]
+        new_sites = []
+
+        for path in self.py_paths:
+            if not os.path.exists(path):
+                continue
+            for f in os.listdir(path):
+                if f.endswith(".py") and not f.startswith("__"):
+                    full_path = os.path.join(path, f)
+                    new_sites.append(self._build_site(full_path, '.py'))
+
+        data["sites"] = new_sites + manual
+        self._save_target(data)
+        self._reload_app()
+
+        count = len(new_sites)
+        target = os.path.basename(self.target_path)
+        return {"code": 0, "msg": f"✅ 已写入 {count} 个 Py 站点到 {target}（已置顶）\n⚠️ FongMi 请手动点「配置地址」刷新"}
+
+    def _action_clear_py(self):
+        data = self._load_target()
+        sites = data.get("sites", [])
+        kept = [s for s in sites if not (self._is_generated(s) and not s.get("homePage"))]
+        data["sites"] = kept
+        self._save_target(data)
+        self._reload_app()
+        return {"code": 0, "msg": "🗑 已移除所有写入的 Py 站点\n⚠️ FongMi 请手动点「配置地址」刷新"}
 
     def _reload_app(self):
         try:

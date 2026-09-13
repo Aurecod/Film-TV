@@ -60,8 +60,8 @@
       }
     },
     {
-      "key": "猎人·直播",
-      "name": "꒰ঌ猎人·直播໒꒱",
+      "key": "猎人直播",
+      "name": "꒰ঌ猎人直播໒꒱",
       "jar": "./jar/pro.jar",
       "type": 3,
       "api": "csp_ProxySpider",
