@@ -60,7 +60,6 @@ except ImportError:
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-# 全局内存短时缓存 (解决客户端并发请求/预加载/反复切页卡顿)
 CACHE_STORE = {}
 CACHE_LOCK = threading.Lock()
 
@@ -101,7 +100,6 @@ class Spider(BaseSpider):
         "所有标签", "关于我们", "官方tg群", "官方推特", "ai换脸脱衣", "广告", "商务合作"
     }
 
-    # 多线路域名池（含 CloudFront 亚马逊全球 CDN 与高速镜像）
     DOMAIN_POOL = [
         "https://d10cq29fdobmmg.cloudfront.net",
         "https://catch.belwfufv.cc",
@@ -162,7 +160,6 @@ class Spider(BaseSpider):
         return "911爆料网"
 
     def _select_fastest_host(self):
-        """并发测速选出延迟最低的主机，并缓存 15 分钟"""
         cache_key = "fastest_911_host"
         cached = get_cache(cache_key)
         if cached:
@@ -249,12 +246,31 @@ class Spider(BaseSpider):
     def _fix_pic(self, pic):
         if not pic:
             return ""
+        pic = str(pic).strip()
+        if "type=img" in pic and "url=" in pic:
+            return pic
+
+        m = re.search(r"loadBannerDirect\(['\"]([^'\"]+)['\"]", pic)
+        if m:
+            pic = m.group(1).strip()
+
         pic_url = self._fix_url(pic)
+        if not pic_url or pic_url.startswith("data:image"):
+            return ""
+
+        low = pic_url.lower()
+        if any(x in low for x in ["placeholder", "loading", "blank", "1px", "default.gif", "home-cover-placeholder"]):
+            return ""
+
         base = self._proxy_base()
-        if base and pic_url.startswith("http"):
+        if base:
             sep = "&" if "?" in base else "?"
+            if "do=" not in base:
+                base = base + sep + "do=py"
+                sep = "&"
             return f"{base}{sep}type=img&url={quote(pic_url, safe='')}"
-        if "@Referer=" not in pic_url and pic_url.startswith("http"):
+
+        if "@Referer=" not in pic_url:
             pic_url += f"@Referer={self.host}/&User-Agent={self.ua}"
         return pic_url
 
@@ -270,7 +286,6 @@ class Spider(BaseSpider):
                 if parsed.netloc and parsed.netloc != urlparse(b_host).netloc:
                     candidates.append(url.replace(f"{parsed.scheme}://{parsed.netloc}", b_host))
 
-        # 双级超时优化：连接超时 2.5s，传输超时 5s
         for target_url in candidates[:3]:
             try:
                 r = self.session.get(target_url, headers=self.headers, timeout=(2.5, 5), verify=False)
@@ -324,12 +339,10 @@ class Spider(BaseSpider):
         if not raw_str and node is not None:
             raw_str = str(node)
 
-        # 1. 匹配 loadBannerDirect
         script_match = re.search(r"loadBannerDirect\(['\"]([^'\"]+)['\"]", raw_str)
         if script_match:
             return script_match.group(1).strip()
 
-        # 2. 匹配 meta 标签
         if hasattr(node, "xpath") and etree:
             meta_imgs = node.xpath('.//meta[@itemprop="image" or @itemprop="thumbnailUrl"]/@content')
             if meta_imgs and meta_imgs[0].strip():
@@ -339,7 +352,6 @@ class Spider(BaseSpider):
             if meta_img and meta_img.get("content"):
                 return meta_img.get("content").strip()
 
-        # 3. 匹配混淆与懒加载属性
         if hasattr(node, "xpath") and etree:
             for attr in ["z-image-loader-url", "data-xkrkllgl", "data-original", "data-src", "data-lazy-src", "data-cover", "data-thumb", "data-echo", "data-bg", "src"]:
                 vals = node.xpath(f'.//img/@{attr}')
@@ -355,7 +367,6 @@ class Spider(BaseSpider):
                     if val and not val.startswith("data:image") and not any(x in val.lower() for x in ["placeholder", "loading", "blank", "1px", "default", "ads"]):
                         return val
 
-        # 4. 匹配 CSS background-image
         bg_match = re.search(r'background-image\s*:\s*url\([\'"]?([^\'")]+)[\'"]?\)', raw_str, re.I)
         if bg_match:
             bg_url = bg_match.group(1).strip()
@@ -385,7 +396,6 @@ class Spider(BaseSpider):
         if not html_text:
             return videos
 
-        # 优先采用 C 语言级加速的 lxml.etree 极速解析
         if etree:
             try:
                 parser = etree.HTMLParser(recover=True, encoding="utf-8")
@@ -417,7 +427,6 @@ class Spider(BaseSpider):
             except Exception:
                 pass
 
-        # 备选 BeautifulSoup 降级
         if not videos and BeautifulSoup:
             doc = BeautifulSoup(html_text, "html.parser")
             containers = doc.select("div#index article, div#archive article, ul.row li, div.article-item, article, .post-item, .video-item, div[class*='item']")
@@ -452,7 +461,6 @@ class Spider(BaseSpider):
         }
 
     def homeVideoContent(self):
-        # 直接复用 categoryContent 推荐第一页，利用内存缓存
         return self.categoryContent("category/jrgb", "1")
 
     def categoryContent(self, tid, pg, filter=False, extend=None):
@@ -495,7 +503,8 @@ class Spider(BaseSpider):
                     url = video_cfg.get("url") or ""
                 except Exception:
                     m = re.search(r'"video"\s*:\s*\{.*?\"url\"\s*:\s*"([^"]+)"', raw_conf)
-                    if m: url = m.group(1)
+                    if m:
+                        url = m.group(1)
                 if url:
                     clean_u = self._fix_url(url.replace(r"\/", "/").replace("\\", "").strip())
                     if clean_u and clean_u not in seen_urls:
@@ -556,7 +565,6 @@ class Spider(BaseSpider):
         if not html_text:
             return {"list": []}
 
-        # 1. 标题提取
         title = ""
         t_match = re.search(r'<h1[^>]*class=["\'][^"\']*(?:title|headline)[^"\']*["\'][^>]*>(.+?)</h1>', html_text, re.I | re.S)
         if t_match:
@@ -570,7 +578,6 @@ class Spider(BaseSpider):
             if t_match:
                 title = t_match.group(1).split("-")[0].split("_")[0].strip()
 
-        # 2. 封面提取
         pic = ""
         og_match = re.search(r'<meta[^>]+property=["\']og:image["\'][^>]+content=["\']([^"\']+)["\']', html_text, re.I)
         if not og_match:
@@ -582,7 +589,6 @@ class Spider(BaseSpider):
             if p_match:
                 pic = p_match.group(1).strip()
 
-        # 3. 简介提取
         desc = ""
         desc_match = re.search(r'<meta[^>]+(?:name|property)=["\'](?:og:description|description)["\'][^>]+content=["\']([^"\']+)["\']', html_text, re.I)
         if not desc_match:
@@ -590,16 +596,13 @@ class Spider(BaseSpider):
         if desc_match:
             desc = desc_match.group(1).strip()
 
-        # 4. 发布时间
         date_str = ""
         d_match = re.search(r'(?:datePublished|pubdate|time)[^>]*>([0-9\-\s:]+)<', html_text, re.I)
         if d_match:
             date_str = d_match.group(1).strip()
 
-        # 5. 精确提取视频流列表
         play_urls = self._extract_video_urls(html_text)
 
-        # 6. 选集与线路组装
         episodes = []
         for idx, p_url in enumerate(play_urls, 1):
             ep_title = f"视频{idx}" if len(play_urls) > 1 else "在线播放"
@@ -678,7 +681,6 @@ class Spider(BaseSpider):
             if m:
                 url = m.group(1).strip()
 
-        # 图片二进制内存缓存（快速滑动防抖，防止重复请求和重复 AES 解密）
         with self._img_lock:
             if url in self._img_cache:
                 mime, c_data = self._img_cache[url]
@@ -690,18 +692,23 @@ class Spider(BaseSpider):
                 "User-Agent": self.ua
             }
             r = self.session.get(url, headers=req_headers, timeout=(2.5, 6), verify=False, allow_redirects=True)
-            content = r.content
+            content = r.content or b""
 
-            is_encrypted = any(x in url for x in ["/xiao/", "/upload_01/xiao/", "/upload/upload/xiao/"])
-            is_valid_magic = (content.startswith(b"\xff\xd8\xff") or content.startswith(b"\x89PNG") or content.startswith(b"GIF") or content[:4] == b"RIFF")
-            
-            if is_encrypted or not is_valid_magic:
+            is_magic = (content.startswith(b"\xff\xd8\xff") or content.startswith(b"\x89PNG")
+                        or content.startswith(b"GIF") or content[:4] == b"RIFF")
+
+            is_encrypted_path = any(x in url for x in ["/xiao/", "/upload_01/xiao/", "/upload/upload/xiao/"])
+            if is_encrypted_path or not is_magic:
                 try:
                     dec = self._decrypt_image_bytes(content)
-                    if dec and (dec.startswith(b"\xff\xd8\xff") or dec.startswith(b"\x89PNG") or dec.startswith(b"GIF") or dec[:4] == b"RIFF"):
+                    if dec and (dec.startswith(b"\xff\xd8\xff") or dec.startswith(b"\x89PNG")
+                                or dec.startswith(b"GIF") or dec[:4] == b"RIFF"):
                         content = dec
                 except Exception:
                     pass
+
+            if not content:
+                return [502, "text/plain", b""]
 
             mime = self._mime_from_bytes(content)
 

@@ -153,8 +153,13 @@ class Spider(BaseSpider):
     def playerContent(self, flag, id, vipFlags):
         vid, seq = self._split(id)
         obj = self._api("/drama/play", {"id": vid, "seq": str(seq)}, True)
-        data = obj.get("data", {}) if isinstance(obj, dict) else {}
-        url = data.get("m3u8") or data.get("url") or self._hls(vid, seq)
+        url = ""
+        if isinstance(obj, dict):
+            data = obj.get("data") or {}
+            if isinstance(data, dict):
+                url = (data.get("m3u8") or data.get("url") or "").strip()
+        if not url or not url.startswith("http"):
+            url = self._hls(vid, seq)
         return {"parse": 0, "playUrl": "", "url": url, "jx": 0, "header": {"User-Agent": self.headers["User-Agent"], "Referer": self.host + "/home", "Origin": self.host}}
 
     def _api(self, path, data=None, silent=False):
@@ -306,8 +311,14 @@ class Spider(BaseSpider):
         return str(x or "").replace("rp_", "")
 
     def _split(self, x):
-        p = str(x).split("|", 1)
-        return self._sid(p[0]), p[1] if len(p) > 1 and p[1] else "1"
+        s = str(x)
+        if "|" in s:
+            left, seq = s.split("|", 1)
+        else:
+            left, seq = s, "1"
+        if "$" in left:
+            left = left.split("$", 1)[1]
+        return self._sid(left), seq
 
     def _hls(self, vid, seq):
         return "%s/api/drama/hls/%s/%s/play.m3u8?line=free" % (self.host, self._sid(vid), seq)
