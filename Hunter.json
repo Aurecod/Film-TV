@@ -118,6 +118,20 @@
       "ext": ""
     },
     {
+      "key": "local_Libvio",
+      "name": "Libvioᵖʸ",
+      "type": 3,
+      "api": "./File/py/Hunter/Libvio.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1,
+      "order_num": 0,
+      "style": {
+        "type": "rect"
+      },
+      "ext": ""
+    },
+    {
       "key": "local_独播库",
       "name": "独播库ᵖʸ",
       "type": 3,
@@ -132,10 +146,10 @@
       "ext": ""
     },
     {
-      "key": "local_云朵影视",
-      "name": "云朵影视ᵖʸ",
+      "key": "local_爱优腾芒",
+      "name": "爱优腾芒ᵖʸ",
       "type": 3,
-      "api": "./File/py/Hunter/云朵影视.py",
+      "api": "./File/py/Hunter/爱优腾芒.py",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 1,
