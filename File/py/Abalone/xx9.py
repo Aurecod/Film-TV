@@ -4,6 +4,8 @@ import sys
 import json
 import time
 import base64
+import threading
+import urllib.parse
 
 from base.spider import Spider
 
@@ -68,6 +70,9 @@ class Spider(Spider):
         self._jwt_ts = 0
         self._access = None
         self._access_ts = 0
+        self._pic_cache = {}
+        self._pic_cache_lock = threading.Lock()
+        self._pic_proxy_base = ""
         return
 
     def _rnd(self, n):
@@ -204,12 +209,48 @@ class Spider(Spider):
         return self._access
 
     # ================= 工具 =================
+    def _proxy_base(self):
+        if getattr(self, "_pic_proxy_base", None):
+            return self._pic_proxy_base
+        base = ""
+        for arg in (True, False):
+            try:
+                u = str(self.getProxyUrl(local=arg) or "")
+                if "://" not in u:
+                    continue
+                from urllib.parse import urlparse
+                p = urlparse(u)
+                if p.netloc:
+                    base = "%s://%s%s" % (p.scheme, p.netloc, p.path.rstrip("/"))
+                    break
+            except Exception:
+                continue
+        if base:
+            self._pic_proxy_base = base
+        return base
+
+    def _pic_url(self, u):
+        # 图片走本地代理（因为 CDN 返回的是 XOR 编码字节，直接加载必失败）
+        if not u:
+            return ""
+        full = u if u.startswith("http") else self.PIC_BASE + u
+        base = self._proxy_base()
+        if not base:
+            return full
+        enc = base64.urlsafe_b64encode(full.encode("utf-8")).decode("utf-8").rstrip("=")
+        return "%s?type=pic&url=%s" % (base, enc)
+
+    def _decode_pic(self, raw):
+        # xx9 CDN: 首字节是 XOR key，之后每字节 XOR key
+        if not raw or len(raw) < 4:
+            return raw
+        key = raw[0]
+        return bytes([b ^ key for b in raw[1:]])
+
     def _pic(self, p):
         if not p:
             return ""
-        if p.startswith("http"):
-            return p
-        return self.PIC_BASE + p
+        return self._pic_url(p)
 
     def _vod_list_item(self, it):
         vid = it.get("id") or it.get("vodId")
@@ -421,4 +462,143 @@ class Spider(Spider):
         }
 
     def localProxy(self, param):
-        return [200, "application/json", ""]
+        # FongMi 传过来的 param 可能是 dict / URL / JSON str / query string
+        # 本源只做图片代理，收到 url 就按 pic 处理
+        p = self._param(param)
+        enc_url = (p.get("url") or "").strip()
+        if not enc_url:
+            return [404, "text/plain", ""]
+        raw = self._d64(enc_url)
+        if not raw:
+            return [404, "image/png", b""]
+        # 兼容 FongMi 直接把裸 URL 传过来的情况
+        if raw.startswith("/"):
+            full = self.PIC_BASE + raw
+        elif raw.startswith("http"):
+            full = raw
+        else:
+            full = self.PIC_BASE + "/" + raw.lstrip("/")
+        return self._fetch_pic_bytes(full)
+
+    def _param(self, param):
+        if isinstance(param, dict):
+            return dict(param)
+        if isinstance(param, (list, tuple)) and param:
+            return self._param(param[0])
+        s = str(param or "").strip()
+        if not s:
+            return {}
+        if s.startswith("{"):
+            try:
+                return json.loads(s)
+            except Exception:
+                pass
+        q = s
+        if "?" in q:
+            q = q.split("?", 1)[1]
+        try:
+            out = {}
+            for k, v in urllib.parse.parse_qs(q, keep_blank_values=True).items():
+                out[k] = v[0] if v else ""
+            if q and not out:
+                out["url"] = q
+            return out
+        except Exception:
+            return {}
+
+    def _fetch_pic_bytes(self, full):
+        # 缓存
+        cache = getattr(self, "_pic_cache", None)
+        if cache is None:
+            cache = {}
+            self._pic_cache = cache
+        lock = getattr(self, "_pic_cache_lock", None) or threading.Lock()
+        with lock:
+            hit = cache.get(full)
+            if hit and time.time() - hit[1] < 3600:
+                return hit[0]
+        # HTTP 优先（HTTPS 有 TLS handshake 问题），HTTPS 备用
+        cands = []
+        if full.startswith("https://"):
+            cands.append("http://" + full[len("https://"):])
+            cands.append(full)
+        elif full.startswith("http://"):
+            cands.append(full)
+            cands.append("https://" + full[len("http://"):])
+        else:
+            cands.append(full)
+        headers = {
+            "User-Agent": self.UA,
+            "Accept": "image/*,*/*;q=0.8",
+            "Accept-Encoding": "identity",
+            "Referer": "https://xx9.com/",
+        }
+        result = None
+        for u in cands:
+            for _ in range(2):
+                try:
+                    r = self.fetch(u, headers=headers, timeout=10, verify=False)
+                    if r.status_code == 200:
+                        data = r.content or b""
+                        if len(data) < 4:
+                            continue
+                        dec = self._decode_pic(data)
+                        if self._is_image(dec):
+                            ct = self._mime(dec)
+                            result = [200, ct, dec, {"Content-Type": ct}]
+                            break
+                        if self._is_image(data):
+                            ct = self._mime(data)
+                            result = [200, ct, data, {"Content-Type": ct}]
+                            break
+                except Exception:
+                    time.sleep(0.15)
+                    continue
+            if result:
+                break
+        if result is None:
+            result = [404, "image/png", b""]
+        with lock:
+            cache[full] = (result, time.time())
+            if len(cache) > 200:
+                for k, _ in sorted(cache.items(), key=lambda kv: kv[1][1])[:60]:
+                    cache.pop(k, None)
+        return result
+
+    @staticmethod
+    def _is_image(b):
+        if not b or len(b) < 4:
+            return False
+        if b[:8] == b"\x89PNG\r\n\x1a\n":
+            return True
+        if b[:2] == b"\xff\xd8":
+            return True
+        if b[:4] == b"GIF8":
+            return True
+        if b[:4] == b"RIFF" and b[8:12] == b"WEBP":
+            return True
+        return False
+
+    @staticmethod
+    def _mime(b):
+        if not b:
+            return "image/png"
+        if b[:8] == b"\x89PNG\r\n\x1a\n":
+            return "image/png"
+        if b[:2] == b"\xff\xd8":
+            return "image/jpeg"
+        if b[:4] == b"GIF8":
+            return "image/gif"
+        if b[:4] == b"RIFF" and b[8:12] == b"WEBP":
+            return "image/webp"
+        return "image/png"
+
+    @staticmethod
+    def _d64(s):
+        s = str(s or "").strip().replace(" ", "+")
+        for dec in (base64.urlsafe_b64decode, base64.b64decode):
+            try:
+                return dec(s + "=" * (-len(s) % 4)).decode("utf-8")
+            except Exception:
+                continue
+        return ""

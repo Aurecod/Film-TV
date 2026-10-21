@@ -20,10 +20,10 @@
       "ext": ""
     },
     {
-      "key": "local_酷我音乐",
-      "name": "酷我音乐ᵖʸ",
+      "key": "local_[影]Uvod",
+      "name": "[影]Uvodᵖʸ",
       "type": 3,
-      "api": "./File/py/Hunter/酷我音乐.py",
+      "api": "./File/py/Hunter/[影]Uvod.py",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 1,
@@ -34,10 +34,10 @@
       "ext": ""
     },
     {
-      "key": "local_YouTuBe备",
-      "name": "YouTuBe备ᵖʸ",
+      "key": "local_YouTuBeA",
+      "name": "YouTuBeAᵖʸ",
       "type": 3,
-      "api": "./File/py/Hunter/YouTuBe备.py",
+      "api": "./File/py/Hunter/YouTuBeA.py",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 1,
@@ -48,10 +48,10 @@
       "ext": ""
     },
     {
-      "key": "local_凡客TV",
-      "name": "凡客TVᵖʸ",
+      "key": "local_[影]瓜子",
+      "name": "[影]瓜子ᵖʸ",
       "type": 3,
-      "api": "./File/py/Hunter/凡客TV.py",
+      "api": "./File/py/Hunter/[影]瓜子.py",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 1,
@@ -62,10 +62,10 @@
       "ext": ""
     },
     {
-      "key": "local_北斗影院",
-      "name": "北斗影院ᵖʸ",
+      "key": "local_[影]Libvio",
+      "name": "[影]Libvioᵖʸ",
       "type": 3,
-      "api": "./File/py/Hunter/北斗影院.py",
+      "api": "./File/py/Hunter/[影]Libvio.py",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 1,
@@ -76,10 +76,10 @@
       "ext": ""
     },
     {
-      "key": "local_威视TV",
-      "name": "威视TVᵖʸ",
+      "key": "local_[影]影探",
+      "name": "[影]影探ᵖʸ",
       "type": 3,
-      "api": "./File/py/Hunter/威视TV.py",
+      "api": "./File/py/Hunter/[影]影探.py",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 1,
@@ -104,10 +104,10 @@
       "ext": ""
     },
     {
-      "key": "local_瓜子",
-      "name": "瓜子ᵖʸ",
+      "key": "local_[影]可可",
+      "name": "[影]可可ᵖʸ",
       "type": 3,
-      "api": "./File/py/Hunter/瓜子.py",
+      "api": "./File/py/Hunter/[影]可可.py",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 1,
@@ -118,10 +118,10 @@
       "ext": ""
     },
     {
-      "key": "local_金牌",
-      "name": "金牌ᵖʸ",
+      "key": "local_[直]虎牙斗鱼网易",
+      "name": "[直]虎牙斗鱼网易ᵖʸ",
       "type": 3,
-      "api": "./File/py/Hunter/金牌.py",
+      "api": "./File/py/Hunter/[直]虎牙斗鱼网易.py",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 1,
@@ -132,10 +132,10 @@
       "ext": ""
     },
     {
-      "key": "local_Libvio",
-      "name": "Libvioᵖʸ",
+      "key": "local_[影]凡客TV",
+      "name": "[影]凡客TVᵖʸ",
       "type": 3,
-      "api": "./File/py/Hunter/Libvio.py",
+      "api": "./File/py/Hunter/[影]凡客TV.py",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 1,
@@ -146,10 +146,10 @@
       "ext": ""
     },
     {
-      "key": "local_独播库",
-      "name": "独播库ᵖʸ",
+      "key": "local_[短]红果漫剧",
+      "name": "[短]红果漫剧ᵖʸ",
       "type": 3,
-      "api": "./File/py/Hunter/独播库.py",
+      "api": "./File/py/Hunter/[短]红果漫剧.py",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 1,
@@ -160,10 +160,10 @@
       "ext": ""
     },
     {
-      "key": "local_hongguo",
-      "name": "hongguoᵖʸ",
+      "key": "local_[影]饭搭子",
+      "name": "[影]饭搭子ᵖʸ",
       "type": 3,
-      "api": "./File/py/Hunter/hongguo.py",
+      "api": "./File/py/Hunter/[影]饭搭子.py",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 1,
@@ -174,10 +174,10 @@
       "ext": ""
     },
     {
-      "key": "local_凤梨音乐",
-      "name": "凤梨音乐ᵖʸ",
+      "key": "local_[短]MoboReels",
+      "name": "[短]MoboReelsᵖʸ",
       "type": 3,
-      "api": "./File/py/Hunter/凤梨音乐.py",
+      "api": "./File/py/Hunter/[短]MoboReels.py",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 1,
@@ -188,10 +188,10 @@
       "ext": ""
     },
     {
-      "key": "local_努努影院",
-      "name": "努努影院ᵖʸ",
+      "key": "local_[影]牛牛视频",
+      "name": "[影]牛牛视频ᵖʸ",
       "type": 3,
-      "api": "./File/py/Hunter/努努影院.py",
+      "api": "./File/py/Hunter/[影]牛牛视频.py",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 1,
@@ -202,10 +202,10 @@
       "ext": ""
     },
     {
-      "key": "local_饭团影视",
-      "name": "饭团影视ᵖʸ",
+      "key": "local_[音]酷我音乐",
+      "name": "[音]酷我音乐ᵖʸ",
       "type": 3,
-      "api": "./File/py/Hunter/饭团影视.py",
+      "api": "./File/py/Hunter/[音]酷我音乐.py",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 1,
@@ -216,10 +216,10 @@
       "ext": ""
     },
     {
-      "key": "local_斗鱼虎牙",
-      "name": "斗鱼虎牙ᵖʸ",
+      "key": "local_[直]央视频",
+      "name": "[直]央视频ᵖʸ",
       "type": 3,
-      "api": "./File/py/Hunter/斗鱼虎牙.py",
+      "api": "./File/py/Hunter/[直]央视频.py",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 1,
@@ -230,234 +230,10 @@
       "ext": ""
     },
     {
-      "key": "local_爱瓜影视",
-      "name": "爱瓜影视ᵖʸ",
+      "key": "local_[影]枫叶影院",
+      "name": "[影]枫叶影院ᵖʸ",
       "type": 3,
-      "api": "./File/py/Hunter/爱瓜影视.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_4K影视",
-      "name": "4K影视ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/4K影视.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_枫叶影院",
-      "name": "枫叶影院ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/枫叶影院.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_奇优影院",
-      "name": "奇优影院ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/奇优影院.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_可可影视",
-      "name": "可可影视ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/可可影视.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_电影猎手",
-      "name": "电影猎手ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/电影猎手.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_moboreels",
-      "name": "moboreelsᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/moboreels.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_永乐视频",
-      "name": "永乐视频ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/永乐视频.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_移动4k",
-      "name": "移动4kᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/移动4k.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_Uvod",
-      "name": "Uvodᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/Uvod.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_一起看",
-      "name": "一起看ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/一起看.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_极速追剧",
-      "name": "极速追剧ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/极速追剧.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_饭搭子影视",
-      "name": "饭搭子影视ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/饭搭子影视.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_云朵影视",
-      "name": "云朵影视ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/云朵影视.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_FoFo影院",
-      "name": "FoFo影院ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/FoFo影院.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_追影",
-      "name": "追影ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/追影.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_绅士影视",
-      "name": "绅士影视ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/绅士影视.py",
+      "api": "./File/py/Hunter/[影]枫叶影院.py",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 1,
@@ -482,10 +258,10 @@
       "ext": ""
     },
     {
-      "key": "local_聚合直播",
-      "name": "聚合直播ᵖʸ",
+      "key": "local_[影]北斗影院",
+      "name": "[影]北斗影院ᵖʸ",
       "type": 3,
-      "api": "./File/py/Hunter/聚合直播.py",
+      "api": "./File/py/Hunter/[影]北斗影院.py",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 1,
@@ -496,10 +272,10 @@
       "ext": ""
     },
     {
-      "key": "local_红果短剧",
-      "name": "红果短剧ᵖʸ",
+      "key": "local_[影]欧乐影院",
+      "name": "[影]欧乐影院ᵖʸ",
       "type": 3,
-      "api": "./File/py/Hunter/红果短剧.py",
+      "api": "./File/py/Hunter/[影]欧乐影院.py",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 1,
@@ -510,38 +286,10 @@
       "ext": ""
     },
     {
-      "key": "local_MoboReels畅读热剧",
-      "name": "MoboReels畅读热剧ᵖʸ",
+      "key": "local_[音]凤梨音乐",
+      "name": "[音]凤梨音乐ᵖʸ",
       "type": 3,
-      "api": "./File/py/Hunter/MoboReels畅读热剧.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[书]275听书",
-      "name": "[书]275听书ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[书]275听书.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[书]听友",
-      "name": "[书]听友ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[书]听友.py",
+      "api": "./File/py/Hunter/[音]凤梨音乐.py",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 1,
@@ -580,122 +328,10 @@
       "ext": ""
     },
     {
-      "key": "local_[书]悦听吧",
-      "name": "[书]悦听吧ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[书]悦听吧.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[书]易听书网",
-      "name": "[书]易听书网ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[书]易听书网.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[助眠]ASMR吧",
-      "name": "[助眠]ASMR吧ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[助眠]ASMR吧.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
       "key": "local_[影]1234影视",
       "name": "[影]1234影视ᵖʸ",
       "type": 3,
       "api": "./File/py/Hunter/[影]1234影视.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]37电影网",
-      "name": "[影]37电影网ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]37电影网.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]4K影视",
-      "name": "[影]4K影视ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]4K影视.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]555影视",
-      "name": "[影]555影视ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]555影视.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]55影院",
-      "name": "[影]55影院ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]55影院.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]6080影视",
-      "name": "[影]6080影视ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]6080影视.py",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 1,
@@ -762,48 +398,6 @@
       "ext": ""
     },
     {
-      "key": "local_[影]E佬苹果",
-      "name": "[影]E佬苹果ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]E佬苹果.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]FoFo影院",
-      "name": "[影]FoFo影院ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]FoFo影院.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]LIBVIO",
-      "name": "[影]LIBVIOᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]LIBVIO.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
       "key": "local_[影]VS影院",
       "name": "[影]VS影院ᵖʸ",
       "type": 3,
@@ -818,248 +412,10 @@
       "ext": ""
     },
     {
-      "key": "local_[影]ZIP0影视",
-      "name": "[影]ZIP0影视ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]ZIP0影视.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]bilibili",
-      "name": "[影]bilibiliᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]bilibili.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]ik4k影院",
-      "name": "[影]ik4k影院ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]ik4k影院.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]pomo",
-      "name": "[影]pomoᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]pomo.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]vidhub",
-      "name": "[影]vidhubᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]vidhub.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]一席",
-      "name": "[影]一席ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]一席.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]一起刷",
-      "name": "[影]一起刷ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]一起刷.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]一起影视",
-      "name": "[影]一起影视ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]一起影视.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]云朵视频",
-      "name": "[影]云朵视频ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]云朵视频.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]仙腾影院",
-      "name": "[影]仙腾影院ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]仙腾影院.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]优酷",
-      "name": "[影]优酷ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]优酷.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]低端影视",
-      "name": "[影]低端影视ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]低端影视.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]兄弟影视",
-      "name": "[影]兄弟影视ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]兄弟影视.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]免扫",
-      "name": "[影]免扫ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]免扫.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]兔岛影院",
-      "name": "[影]兔岛影院ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]兔岛影院.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]八度影院",
-      "name": "[影]八度影院ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]八度影院.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
       "key": "local_[影]八戒影视",
       "name": "[影]八戒影视ᵖʸ",
       "type": 3,
       "api": "./File/py/Hunter/[影]八戒影视.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]共青春",
-      "name": "[影]共青春ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]共青春.py",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 1,
@@ -1112,34 +468,6 @@
       "ext": ""
     },
     {
-      "key": "local_[影]剧透社",
-      "name": "[影]剧透社ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]剧透社.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]剧集网",
-      "name": "[影]剧集网ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]剧集网.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
       "key": "local_[影]努努影院",
       "name": "[影]努努影院ᵖʸ",
       "type": 3,
@@ -1158,62 +486,6 @@
       "name": "[影]华谊影视ᵖʸ",
       "type": 3,
       "api": "./File/py/Hunter/[影]华谊影视.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]厂长影视",
-      "name": "[影]厂长影视ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]厂长影视.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]厂长资源",
-      "name": "[影]厂长资源ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]厂长资源.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]君念影院",
-      "name": "[影]君念影院ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]君念影院.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]周六影库",
-      "name": "[影]周六影库ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]周六影库.py",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 1,
@@ -1256,20 +528,6 @@
       "name": "[影]咸鱼影视ᵖʸ",
       "type": 3,
       "api": "./File/py/Hunter/[影]咸鱼影视.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]嗷呜",
-      "name": "[影]嗷呜ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]嗷呜.py",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 1,
@@ -1336,80 +594,10 @@
       "ext": ""
     },
     {
-      "key": "local_[影]大白鲨影院",
-      "name": "[影]大白鲨影院ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]大白鲨影院.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]大象短剧",
-      "name": "[影]大象短剧ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]大象短剧.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
       "key": "local_[影]大马猴",
       "name": "[影]大马猴ᵖʸ",
       "type": 3,
       "api": "./File/py/Hunter/[影]大马猴.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]奇优影院",
-      "name": "[影]奇优影院ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]奇优影院.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]奇点影视",
-      "name": "[影]奇点影视ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]奇点影视.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]威视TV",
-      "name": "[影]威视TVᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]威视TV.py",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 1,
@@ -1434,90 +622,6 @@
       "ext": ""
     },
     {
-      "key": "local_[影]小苹果",
-      "name": "[影]小苹果ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]小苹果.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]小鸡暴走",
-      "name": "[影]小鸡暴走ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]小鸡暴走.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]山水影视",
-      "name": "[影]山水影视ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]山水影视.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]开心影院",
-      "name": "[影]开心影院ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]开心影院.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]开端影视",
-      "name": "[影]开端影视ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]开端影视.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]影巢",
-      "name": "[影]影巢ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]影巢.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
       "key": "local_[影]影视秒播",
       "name": "[影]影视秒播ᵖʸ",
       "type": 3,
@@ -1532,136 +636,10 @@
       "ext": ""
     },
     {
-      "key": "local_[影]手机影院",
-      "name": "[影]手机影院ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]手机影院.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
       "key": "local_[影]抖音",
       "name": "[影]抖音ᵖʸ",
       "type": 3,
       "api": "./File/py/Hunter/[影]抖音.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]搜剧AI",
-      "name": "[影]搜剧AIᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]搜剧AI.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]无极电影",
-      "name": "[影]无极电影ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]无极电影.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]星辰",
-      "name": "[影]星辰ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]星辰.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]星辰影院",
-      "name": "[影]星辰影院ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]星辰影院.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]枝枝影视",
-      "name": "[影]枝枝影视ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]枝枝影视.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]枫叶",
-      "name": "[影]枫叶ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]枫叶.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]枫叶4K",
-      "name": "[影]枫叶4Kᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]枫叶4K.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]枫叶影院",
-      "name": "[影]枫叶影院ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]枫叶影院.py",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 1,
@@ -1700,108 +678,10 @@
       "ext": ""
     },
     {
-      "key": "local_[影]歪比",
-      "name": "[影]歪比ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]歪比.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]毒口条影视",
-      "name": "[影]毒口条影视ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]毒口条影视.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]毒舌影视",
-      "name": "[影]毒舌影视ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]毒舌影视.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]泡泡影院",
-      "name": "[影]泡泡影院ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]泡泡影院.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
       "key": "local_[影]泥视频",
       "name": "[影]泥视频ᵖʸ",
       "type": 3,
       "api": "./File/py/Hunter/[影]泥视频.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]火云",
-      "name": "[影]火云ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]火云.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]热播APP",
-      "name": "[影]热播APPᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]热播APP.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]爱奇艺",
-      "name": "[影]爱奇艺ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]爱奇艺.py",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 1,
@@ -1840,66 +720,10 @@
       "ext": ""
     },
     {
-      "key": "local_[影]特狗影视",
-      "name": "[影]特狗影视ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]特狗影视.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
       "key": "local_[影]独播库",
       "name": "[影]独播库ᵖʸ",
       "type": 3,
       "api": "./File/py/Hunter/[影]独播库.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]瓜子",
-      "name": "[影]瓜子ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]瓜子.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]瓜子APP",
-      "name": "[影]瓜子APPᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]瓜子APP.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]电影云集",
-      "name": "[影]电影云集ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]电影云集.py",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 1,
@@ -1924,206 +748,10 @@
       "ext": ""
     },
     {
-      "key": "local_[影]百花影院",
-      "name": "[影]百花影院ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]百花影院.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]看剧AI19",
-      "name": "[影]看剧AI19ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]看剧AI19.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]米饭",
-      "name": "[影]米饭ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]米饭.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
       "key": "local_[影]美剧天堂",
       "name": "[影]美剧天堂ᵖʸ",
       "type": 3,
       "api": "./File/py/Hunter/[影]美剧天堂.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]腾讯",
-      "name": "[影]腾讯ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]腾讯.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]芒果TV",
-      "name": "[影]芒果TVᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]芒果TV.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]苹果视频",
-      "name": "[影]苹果视频ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]苹果视频.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]茶杯狐",
-      "name": "[影]茶杯狐ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]茶杯狐.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]草莓影视",
-      "name": "[影]草莓影视ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]草莓影视.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]莫小影",
-      "name": "[影]莫小影ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]莫小影.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]虎牙斗鱼网易",
-      "name": "[影]虎牙斗鱼网易ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]虎牙斗鱼网易.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]蝶卡影视",
-      "name": "[影]蝶卡影视ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]蝶卡影视.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]袋鼠影视",
-      "name": "[影]袋鼠影视ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]袋鼠影视.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]视觉影院",
-      "name": "[影]视觉影院ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]视觉影院.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]追剧达人",
-      "name": "[影]追剧达人ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]追剧达人.py",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 1,
@@ -2148,262 +776,10 @@
       "ext": ""
     },
     {
-      "key": "local_[影]速搜",
-      "name": "[影]速搜ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]速搜.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]采集聚合",
-      "name": "[影]采集聚合ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]采集聚合.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]金牌APP",
-      "name": "[影]金牌APPᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]金牌APP.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]青牛影视",
-      "name": "[影]青牛影视ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]青牛影视.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]非凡资源",
-      "name": "[影]非凡资源ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]非凡资源.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]饭团影视",
-      "name": "[影]饭团影视ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]饭团影视.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]饭搭子影视",
-      "name": "[影]饭搭子影视ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]饭搭子影视.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]骚火电影",
-      "name": "[影]骚火电影ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]骚火电影.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]高清点播",
-      "name": "[影]高清点播ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]高清点播.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]麒麟影视",
-      "name": "[影]麒麟影视ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]麒麟影视.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]麦田影院",
-      "name": "[影]麦田影院ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]麦田影院.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[漫]动漫巴士",
-      "name": "[漫]动漫巴士ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[漫]动漫巴士.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[漫]哈密瓜",
-      "name": "[漫]哈密瓜ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[漫]哈密瓜.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[漫]樱之空动漫",
-      "name": "[漫]樱之空动漫ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[漫]樱之空动漫.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
       "key": "local_[直]哔哩直播",
       "name": "[直]哔哩直播ᵖʸ",
       "type": 3,
       "api": "./File/py/Hunter/[直]哔哩直播.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[直]央视网",
-      "name": "[直]央视网ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[直]央视网.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[直]直播平台",
-      "name": "[直]直播平台ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[直]直播平台.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[直]聚合直播",
-      "name": "[直]聚合直播ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[直]聚合直播.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[短]28短剧",
-      "name": "[短]28短剧ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[短]28短剧.py",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 1,
@@ -2428,122 +804,10 @@
       "ext": ""
     },
     {
-      "key": "local_[短]果果短剧",
-      "name": "[短]果果短剧ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[短]果果短剧.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
       "key": "local_[短]毒舌短剧",
       "name": "[短]毒舌短剧ᵖʸ",
       "type": 3,
       "api": "./File/py/Hunter/[短]毒舌短剧.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[短]牛牛短剧",
-      "name": "[短]牛牛短剧ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[短]牛牛短剧.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[短]番茄短剧",
-      "name": "[短]番茄短剧ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[短]番茄短剧.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[短]短剧大全",
-      "name": "[短]短剧大全ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[短]短剧大全.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[短]短剧巴士",
-      "name": "[短]短剧巴士ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[短]短剧巴士.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[短]红豆短剧",
-      "name": "[短]红豆短剧ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[短]红豆短剧.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[音]DJ呦呦",
-      "name": "[音]DJ呦呦ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[音]DJ呦呦.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[音]DJ哟哟",
-      "name": "[音]DJ哟哟ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[音]DJ哟哟.py",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 1,
@@ -2568,80 +832,10 @@
       "ext": ""
     },
     {
-      "key": "local_[音]酷我",
-      "name": "[音]酷我ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[音]酷我.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[音]音乐聚合",
-      "name": "[音]音乐聚合ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[音]音乐聚合.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_听友合体",
-      "name": "听友合体ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/听友合体.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
       "key": "local_[影]电影天堂",
       "name": "[影]电影天堂ᵖʸ",
       "type": 3,
       "api": "./File/py/Hunter/[影]电影天堂.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]电影猎手",
-      "name": "[影]电影猎手ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]电影猎手.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]白洋影院",
-      "name": "[影]白洋影院ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]白洋影院.py",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 1,
@@ -2666,122 +860,10 @@
       "ext": ""
     },
     {
-      "key": "local_[影]真狼影视",
-      "name": "[影]真狼影视ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]真狼影视.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]第七影院",
-      "name": "[影]第七影院ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]第七影院.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
       "key": "local_[影]第九短剧",
       "name": "[影]第九短剧ᵖʸ",
       "type": 3,
       "api": "./File/py/Hunter/[影]第九短剧.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]网飞TV",
-      "name": "[影]网飞TVᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]网飞TV.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]网飞猫",
-      "name": "[影]网飞猫ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]网飞猫.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]芭蕉剧场",
-      "name": "[影]芭蕉剧场ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]芭蕉剧场.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]西瓜视频",
-      "name": "[影]西瓜视频ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]西瓜视频.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]观风影视",
-      "name": "[影]观风影视ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]观风影视.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]豆花影视",
-      "name": "[影]豆花影视ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]豆花影视.py",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 1,
@@ -2806,80 +888,10 @@
       "ext": ""
     },
     {
-      "key": "local_[影]青蛙影视",
-      "name": "[影]青蛙影视ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]青蛙影视.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
       "key": "local_[影]韩剧巴士",
       "name": "[影]韩剧巴士ᵖʸ",
       "type": 3,
       "api": "./File/py/Hunter/[影]韩剧巴士.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]韩小圈",
-      "name": "[影]韩小圈ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]韩小圈.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]飞快TV",
-      "name": "[影]飞快TVᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]飞快TV.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]飞牛影视",
-      "name": "[影]飞牛影视ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]飞牛影视.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[影]骚火影视",
-      "name": "[影]骚火影视ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[影]骚火影视.py",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 1,
@@ -2918,122 +930,10 @@
       "ext": ""
     },
     {
-      "key": "local_[漫]MiFun动漫",
-      "name": "[漫]MiFun动漫ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[漫]MiFun动漫.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[漫]共和国动漫",
-      "name": "[漫]共和国动漫ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[漫]共和国动漫.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[漫]囧",
-      "name": "[漫]囧ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[漫]囧.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[漫]青空次元",
-      "name": "[漫]青空次元ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[漫]青空次元.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[漫]黑猫动漫",
-      "name": "[漫]黑猫动漫ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[漫]黑猫动漫.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[球]咖啡直播",
-      "name": "[球]咖啡直播ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[球]咖啡直播.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
       "key": "local_[短]55短剧",
       "name": "[短]55短剧ᵖʸ",
       "type": 3,
       "api": "./File/py/Hunter/[短]55短剧.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[短]五五短剧",
-      "name": "[短]五五短剧ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[短]五五短剧.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[短]全能短剧",
-      "name": "[短]全能短剧ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[短]全能短剧.py",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 1,
@@ -3058,150 +958,10 @@
       "ext": ""
     },
     {
-      "key": "local_[短]在线短剧",
-      "name": "[短]在线短剧ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[短]在线短剧.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[短]开心短剧",
-      "name": "[短]开心短剧ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[短]开心短剧.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
       "key": "local_[短]悟圣短剧",
       "name": "[短]悟圣短剧ᵖʸ",
       "type": 3,
       "api": "./File/py/Hunter/[短]悟圣短剧.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[短]映刻短剧",
-      "name": "[短]映刻短剧ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[短]映刻短剧.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[短]樱桃短剧",
-      "name": "[短]樱桃短剧ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[短]樱桃短剧.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[短]河马剧场",
-      "name": "[短]河马剧场ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[短]河马剧场.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[短]河马短剧",
-      "name": "[短]河马短剧ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[短]河马短剧.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[短]石榴短剧",
-      "name": "[短]石榴短剧ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[短]石榴短剧.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[短]红果短剧最终版",
-      "name": "[短]红果短剧最终版ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[短]红果短剧最终版.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[短]红豆",
-      "name": "[短]红豆ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[短]红豆.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[短]蚕驰短剧",
-      "name": "[短]蚕驰短剧ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[短]蚕驰短剧.py",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 1,
@@ -3230,76 +990,6 @@
       "name": "[音]影子音乐ᵖʸ",
       "type": 3,
       "api": "./File/py/Hunter/[音]影子音乐.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[音]枫叶音乐",
-      "name": "[音]枫叶音乐ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[音]枫叶音乐.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_[音]酷我音乐",
-      "name": "[音]酷我音乐ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/[音]酷我音乐.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_红果短剧new",
-      "name": "红果短剧newᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/红果短剧new.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_欧乐影院",
-      "name": "欧乐影院ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/欧乐影院.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect"
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_袋鼠影视",
-      "name": "袋鼠影视ᵖʸ",
-      "type": 3,
-      "api": "./File/py/Hunter/袋鼠影视.py",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 1,

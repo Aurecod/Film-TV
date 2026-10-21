@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-# by @6666
 import concurrent.futures
 import json
 import re
