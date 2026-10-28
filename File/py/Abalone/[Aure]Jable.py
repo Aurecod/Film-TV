@@ -1,3 +1,18 @@
+# -*- coding: utf-8 -*-
+"""
+Jable (jable.my / jable666.net) — FongMi py spider
+站点：jable 系成人站镜像（免 Cloudflare，py 路线可直连）。
+官方域名 jable.tv 有 CF 保护，需用同目录 jar/JableTv.jar（WebView 路线）。
+
+结构（2026-10-28 逆向，jable.my 验证）：
+  列表   /latest-updates/<page>/  /hot/<page>/  /tags/<slug>/<page>/
+        卡片 = div.col-6 > div.video-img-box：<a href=.../videos/<code>/> +
+        <img data-src=封面> + span.label(时长) + h6.title(标题)
+  详情   /videos/<code>/  —— 播放地址在 <script>var hlsUrl='<m3u8>';</script>
+        hlsUrl 含短时效 token（约 3h），每次播放重取详情页拿新鲜地址
+  搜索   /search/<kw>/    —— 仅第 1 页有效（站点分页为会话机制）
+  播放   m3u8 CDN 免鉴权直连，parse=0
+"""
 
 import sys
 import re
@@ -15,7 +30,8 @@ except Exception:
 
 NAME = "Jable"
 HOSTS = ["https://jable.my", "https://jable666.net"]
-UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+      "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
 DEBUG = False
 STYLE = {"type": "rect", "ratio": 1.33}
 PAGE_SIZE = 24
@@ -26,6 +42,123 @@ CARD_RE = re.compile(
     r'<span class="label">([^<]*)</span>[\s\S]*?'
     r'<h6 class="title"><a href="[^"]*">([\s\S]*?)</a></h6>'
 )
+
+# 分类表：{type_name, type_id}。type_id 直接拼进 /<tid>/<page>/。
+CATS = [
+    ("最近更新", "latest-updates"),
+    ("热门影片", "hot"),
+    ("和服", "tags/kimono"),
+    ("兽耳", "tags/kemonomimi"),
+    ("肉丝", "tags/flesh-toned-pantyhose"),
+    ("兔女郎", "tags/bunny-girl"),
+    ("黑丝", "tags/black-pantyhose"),
+    ("丝袜", "tags/pantyhose"),
+    ("过膝袜", "tags/knee-socks"),
+    ("眼镜娘", "tags/glasses"),
+    ("水着", "tags/swimsuit"),
+    ("校服", "tags/school-uniform"),
+    ("运动装", "tags/sportswear"),
+    ("Cosplay", "tags/Cosplay"),
+    ("吊带袜", "tags/stockings"),
+    ("渔网", "tags/fishnets"),
+    ("婚纱", "tags/wedding-dress"),
+    ("女仆", "tags/maid"),
+    ("旗袍", "tags/cheongsam"),
+    ("贫乳", "tags/small-tits"),
+    ("白虎", "tags/hairless-pussy"),
+    ("娇小", "tags/dainty"),
+    ("纹身", "tags/tattoo"),
+    ("熟女", "tags/mature-woman"),
+    ("软体", "tags/flexible-body"),
+    ("美尻", "tags/beautiful-butt"),
+    ("美腿", "tags/beautiful-leg"),
+    ("短发", "tags/short-hair"),
+    ("黑肉", "tags/suntan"),
+    ("长身", "tags/tall"),
+    ("少女", "tags/girl"),
+    ("巨乳", "tags/big-tits"),
+    ("中出", "tags/creampie"),
+    ("肛交", "tags/anal-sex"),
+    ("深喉", "tags/deep-throat"),
+    ("口交", "tags/blowjob"),
+    ("接吻", "tags/kiss"),
+    ("脚交", "tags/footjob"),
+    ("痉挛", "tags/spasms"),
+    ("潮吹", "tags/squirting"),
+    ("口爆", "tags/cum-in-mouth"),
+    ("颜射", "tags/facial"),
+    ("乳交", "tags/tit-wank"),
+    ("泡姬", "tags/soapland"),
+    ("多P", "tags/groupsex"),
+    ("母乳", "tags/breast-milk"),
+    ("痴汉", "tags/chikan"),
+    ("痴女", "tags/chizyo"),
+    ("按摩", "tags/massage"),
+    ("放尿", "tags/piss"),
+    ("集团进犯", "tags/gang-intrusion"),
+    ("进犯", "tags/intrusion"),
+    ("3P", "tags/3p"),
+    ("捆绑", "tags/bondage"),
+    ("一日十回", "tags/10-times-a-day"),
+    ("凌辱", "tags/insult"),
+    ("男M", "tags/masochism-guy"),
+    ("露出", "tags/outdoor"),
+    ("泥醉", "tags/crapulence"),
+    ("瞬间插入", "tags/quickie"),
+    ("刑具", "tags/grip"),
+    ("调教", "tags/tune"),
+    ("黑人", "tags/black"),
+    ("夫目前犯", "tags/sex-beside-husband"),
+    ("丑男", "tags/ugly-man"),
+    ("年龄差", "tags/age-difference"),
+    ("亲属", "tags/kinship"),
+    ("催眠", "tags/hypnosis"),
+    ("复仇", "tags/avenge"),
+    ("媚药", "tags/love-potion"),
+    ("巨汉", "tags/giant"),
+    ("时间停止", "tags/time-stop"),
+    ("童贞", "tags/virginity"),
+    ("出轨", "tags/affair"),
+    ("NTR", "tags/ntr"),
+    ("偷拍", "tags/private-cam"),
+    ("下雨天", "tags/rainy-day"),
+    ("诱惑", "tags/temptation"),
+    ("球队经理", "tags/team-manager"),
+    ("家庭教师", "tags/private-teacher"),
+    ("风俗娘", "tags/club-hostess-and-sex-worker"),
+    ("OL", "tags/ol"),
+    ("家政妇", "tags/housewife"),
+    ("人妻", "tags/wife"),
+    ("偶像", "tags/idol"),
+    ("空姐", "tags/flight-attendant"),
+    ("护士", "tags/nurse"),
+    ("主播", "tags/female-anchor"),
+    ("医生", "tags/doctor"),
+    ("情侣", "tags/couple"),
+    ("搜查官", "tags/detective"),
+    ("逃犯", "tags/fugitive"),
+    ("老师", "tags/teacher"),
+    ("未亡人", "tags/widow"),
+    ("便利店", "tags/store"),
+    ("图书馆", "tags/library"),
+    ("学校", "tags/school"),
+    ("监狱", "tags/prison"),
+    ("洗浴场", "tags/bathing-place"),
+    ("汽车", "tags/car"),
+    ("温泉", "tags/hot-spring"),
+    ("泳池", "tags/swimming-pool"),
+    ("健身房", "tags/gym-room"),
+    ("厕所", "tags/toilet"),
+    ("电车", "tags/tram"),
+    ("魔镜号", "tags/magic-mirror"),
+    ("处女", "tags/first-night"),
+    ("节日主题", "tags/festival"),
+    ("4小时以上", "tags/more-than-4-hours"),
+    ("感谢祭", "tags/thanksgiving"),
+    ("综艺", "tags/variety-show"),
+    ("录像", "tags/video-recording"),
+    ("处女作/引退作", "tags/debut-retires"),
+]
 
 
 class Spider(BaseSpider):
@@ -79,22 +212,7 @@ class Spider(BaseSpider):
         return {"msg": "不支持此操作"}
 
     def homeContent(self, filter):
-        classes = [
-            {"type_id": "latest-updates", "type_name": "最近更新"},
-            {"type_id": "hot", "type_name": "热门影片"},
-            {"type_id": "categories/chinese-subtitle", "type_name": "中文字幕"},
-            {"type_id": "categories/roleplay", "type_name": "角色剧情"},
-            {"type_id": "categories/uniform", "type_name": "制服诱惑"},
-            {"type_id": "categories/sex-only", "type_name": "直接开啪"},
-            {"type_id": "categories/pantyhose", "type_name": "丝袜美腿"},
-            {"type_id": "categories/groupsex", "type_name": "多P群交"},
-            {"type_id": "categories/bdsm", "type_name": "主奴调教"},
-            {"type_id": "categories/pov", "type_name": "男友视角"},
-            {"type_id": "categories/insult", "type_name": "凌辱快感"},
-            {"type_id": "categories/private-cam", "type_name": "盗摄偷拍"},
-            {"type_id": "categories/uncensored", "type_name": "无码解放"},
-            {"type_id": "categories/lesbian", "type_name": "女同欢愉"},
-        ]
+        classes = [{"type_id": tid, "type_name": name} for name, tid in CATS]
         result = {"class": classes}
         if filter:
             sort_filter = {
@@ -116,7 +234,14 @@ class Spider(BaseSpider):
 
     def categoryContent(self, tid, pg, filter, extend):
         pg = self._int(pg, 1)
-        items = self._fetch_list(str(tid), pg, extend or {})
+        tid = str(tid or "").strip()
+        # 演员可点击（BBCode [a=cr:...]），点击后 FongMi 把 id 作为 tid 传回
+        if tid.startswith("actor/"):
+            from urllib.parse import unquote
+            name = unquote(tid[len("actor/"):])
+            items = self._fetch_search(name, pg)
+        else:
+            items = self._fetch_list(tid, pg, extend or {})
         return {
             "list": [self._vod(x) for x in items],
             "page": pg,
@@ -132,7 +257,8 @@ class Spider(BaseSpider):
             return {"list": [], "msg": "获取详情失败"}
         m = re.search(r'<h4>([^<]+)</h4>', html)
         name = m.group(1).strip() if m else vid
-        m = re.search(r'property="og:image" content="([^"]+)"', html) or re.search(r'poster="([^"]+)"', html)
+        m = (re.search(r'property="og:image" content="([^"]+)"', html)
+             or re.search(r'poster="([^"]+)"', html))
         pic = m.group(1) if m else ""
         m = re.search(r'<span class="mr-3">([^<]*(?:前|ago)[^<]*)</span>', html)
         remarks = m.group(1).strip() if m else ""
@@ -152,7 +278,7 @@ class Spider(BaseSpider):
             "vod_pic": pic,
             "type_name": cat,
             "vod_remarks": remarks,
-            "vod_actor": "、".join(actors),
+            "vod_actor": "、".join([self._clickable(a) for a in actors]),
             "vod_content": content,
             "vod_play_from": "Jable",
             "vod_play_url": "正片$" + vid,
@@ -172,8 +298,10 @@ class Spider(BaseSpider):
     def playerContent(self, flag, id, vipFlags):
         vid = str(id or "").strip()
         page_url = self.host + "/videos/" + quote(vid) + "/"
+        # hlsUrl 含短时效 token（约 3h），必须重新取详情页拿新鲜地址
         html = self._get("/videos/%s/" % quote(vid), referer=self.host + "/")
-        m = re.search(r"hlsUrl\s*=\s*'([^']+)'", html or "") or re.search(r'hlsUrl\s*=\s*"([^"]+)"', html or "")
+        m = (re.search(r"hlsUrl\s*=\s*'([^']+)'", html or "")
+             or re.search(r'hlsUrl\s*=\s*"([^"]+)"', html or ""))
         if not m:
             return {"parse": 0, "msg": "未找到播放地址"}
         return {
@@ -186,7 +314,6 @@ class Spider(BaseSpider):
 
     def liveContent(self, url):
         return "[]"
-
 
     def _get(self, path, referer=None):
         path = "/" + str(path).lstrip("/")
@@ -213,11 +340,13 @@ class Spider(BaseSpider):
     def _fetch_list(self, tid, pg, extend):
         tid = str(tid or "latest-updates").strip().strip("/")
         sort_by = str((extend or {}).get("sort_by") or "").strip()
-        if sort_by not in ("post_date", "post_date_and_popularity", "video_viewed", "most_favourited"):
+        if sort_by not in ("post_date", "post_date_and_popularity",
+                           "video_viewed", "most_favourited"):
             sort_by = "post_date"
-        path = "/%s/%d/?sort_by=%s" % (tid, pg, sort_by)
         if pg <= 1:
             path = "/%s/?sort_by=%s" % (tid, sort_by)
+        else:
+            path = "/%s/%d/?sort_by=%s" % (tid, pg, sort_by)
         html = self._get(path)
         if html and ("video-img-box" not in html) and pg <= 1:
             html = self._get("/%s/1/?sort_by=%s" % (tid, sort_by))
@@ -238,7 +367,8 @@ class Spider(BaseSpider):
             return items
         seen = set()
         for m in CARD_RE.finditer(html):
-            url, vid, pic, dur, title = m.group(1), m.group(2), m.group(3), m.group(4).strip(), m.group(5).strip()
+            url, vid, pic, dur, title = (m.group(1), m.group(2), m.group(3),
+                                         m.group(4).strip(), m.group(5).strip())
             if not vid or vid in seen:
                 continue
             seen.add(vid)
@@ -255,8 +385,19 @@ class Spider(BaseSpider):
             "vod_name": item.get("name") or item.get("id") or "",
             "vod_pic": item.get("pic") or "",
             "vod_remarks": item.get("remarks") or "",
-            "style": STYLE,
         }
+
+    def _clickable(self, name):
+        """FongMi 可点击 BBCode：点击后调用 categoryContent(id, ...)。"""
+        if not name:
+            return ""
+        try:
+            payload = json.dumps(
+                {"id": "actor/" + quote(name), "name": name, "type_flag": "0"},
+                ensure_ascii=False)
+            return "[a=cr:%s/]%s[/a]" % (payload, name)
+        except Exception:
+            return name
 
     def _int(self, x, d=0):
         try:

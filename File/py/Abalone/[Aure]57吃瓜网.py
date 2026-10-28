@@ -466,7 +466,7 @@ class Spider(BaseSpider):
         if not name:
             return ""
         ident = f"{kind}/{quote(name, safe='')}"
-        payload = json.dumps({"id": ident, "name": name, "type_flag": "1"}, ensure_ascii=False, separators=(",", ":"))
+        payload = json.dumps({"id": ident, "name": name, "type_flag": "0"}, ensure_ascii=False, separators=(",", ":"))
         return f"[a=cr:{payload}/]{name}[/a]"
 
     def _fix_pic(self, url):
@@ -495,7 +495,6 @@ class Spider(BaseSpider):
             "vod_name": item.get("name") or item.get("title") or vid,
             "vod_pic": self._fix_pic(item.get("pic", "")),
             "vod_remarks": item.get("remarks") or "",
-            "style": STYLE,
         }
 
     def _list(self, data):

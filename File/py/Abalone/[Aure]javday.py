@@ -378,7 +378,6 @@ class Spider(BaseSpider):
             "vod_name": item.get("name") or "",
             "vod_pic": item.get("pic") or "",
             "vod_remarks": item.get("remarks") or "",
-            "style": STYLE,
         }
 
     def _safe_label(self, t):
@@ -389,7 +388,7 @@ class Spider(BaseSpider):
             return ""
         payload = json.dumps(
             {"id": "{}/{}".format(kind, quote(name, safe="")),
-             "name": name, "type_flag": "1"},
+             "name": name, "type_flag": "0"},
             ensure_ascii=False, separators=(",", ":"),
         )
         return "[a=cr:{}/]{}[/a]".format(payload, name)

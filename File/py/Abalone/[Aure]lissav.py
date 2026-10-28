@@ -433,7 +433,6 @@ class Spider(BaseSpider):
             "vod_name": item.get("title") or vid,
             "vod_pic": self._pic(item),
             "vod_remarks": item.get("remarks") or "",
-            "style": STYLE,
         }
 
     def _pic(self, item):
@@ -455,7 +454,7 @@ class Spider(BaseSpider):
             return ""
         ident = f"{kind}/{quote(name, safe='')}"
         payload = json.dumps(
-            {"id": ident, "name": name, "type_flag": "1"},
+            {"id": ident, "name": name, "type_flag": "0"},
             ensure_ascii=False,
             separators=(",", ":"),
         )

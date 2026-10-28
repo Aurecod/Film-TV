@@ -774,7 +774,6 @@ class Spider(BaseSpider):
             "vod_name": item.get("name") or item.get("id") or "",
             "vod_pic": self._pic_url(item.get("pic") or ""),
             "vod_remarks": item.get("remarks") or "",
-            "style": STYLE,
         }
 
     def _int(self, x, d=0):

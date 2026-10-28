@@ -1,28 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-咕噜咕噜 —— TVBox T3 源（type=3 Python 爬虫）。
-
-由上传的 T4 版「咕噜💕.py」改写：
-  · 接口层：VodHandler(home/category/detail/search/player) -> T3 Spider 五接口
-    (homeContent/categoryContent/detailContent/searchContent/playerContent)
-  · 依赖层：T3 运行时无 requests / pycryptodome，全部降级为纯标准库：
-    P-256 点运算(ECDH)、AES-256-CBC 握手、AES-256-GCM 会话、urllib HTTP、手动 gzip
-  · 协议逻辑（protobuf 编解码、握手、boot 线路表、搜索/详情/播放）原样保留
-
-协议要点（勿删）：
-  · handshake：本地生成 P-256 密钥对 -> ECC ECDH 协商共享密钥 -> HKDF 派生会话密钥
-  · 会话后所有请求 AES-GCM 加密（nonce+ciphertext+tag），内层 zlib raw-deflate
-  · 列表/详情/播放都走 POST（明文 http://103.45.132.22:19987/app/bn/v2）
-  · boot() 从服务器拉 players（线路表）+ parsers（解析器表）
-  · detail 有版本守卫：响应含 VERSION_GUARD_MARKERS 时拒绝（服务器要求升级）
-  · play：id 格式 "play_id@parser_id@vod_name@index"，分服务端/外部解析两种
-
-T3 运行说明：
-  - TVBox type=3 配置：api 填本文件公网 URL；searchable/quickSearch/filterable 按需
-  - 类名约定 Spider；文件底部另提供模块级函数双入口（drpy site 模式兼容）
-  - 命令行自检：python 咕噜💕-T3.py home | search 关键词 | category 分类 页 | detail id | play 解析器 id
-"""
-
 from __future__ import annotations
 
 import base64
@@ -52,8 +28,84 @@ FALLBACK_PARSERS = {
          "mode": "json", "result_key": "url", "server": False},
 }
 
+DEFAULT_COVER = ("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAI"
+                 "AAAADCAIAAAA2iEnWAAAADklEQVR42mMwBgMGFAoAJbwDl2wf"
+                 "/PQAAAAASUVORK5CYII=")
 
-# ============ protobuf 工具 ============
+ENRICH_POOL_SIZE = 6
+ENRICH_BUDGET = 4.5
+_INFO_CACHE_LIMIT = 1500
+_INFO_CACHE = {}
+_RATE_LIMIT_UNTIL = 0.0
+
+_NOT_TITLE_WORDS = frozenset((
+    "正片", "预告", "花絮", "特辑", "片段", "解说", "合集", "完整版", "抢先版",
+    "枪版", "高清", "超清", "蓝光", "标清", "国语", "粤语", "中字", "中文字幕",
+    "双语", "无删减", "会员", "独播", "首播", "院线", "热播", "更新", "连载",
+    "电影", "电视剧", "综艺", "动漫", "动画", "短剧", "纪录片", "剧情", "喜剧",
+    "爱情", "动作", "科幻", "恐怖", "悬疑", "战争", "历史", "传记", "音乐",
+    "歌舞", "家庭", "犯罪", "冒险", "武侠", "奇幻", "魔幻", "古装", "言情",
+    "国产", "欧美", "日韩", "港台", "其他", "内地", "大陆", "美国", "日本",
+    "韩国", "英国", "法国", "泰国", "印度", "tc", "ts", "hd", "bd", "4k",
+    "1080p", "720p", "蓝光原盘", "国产剧", "连续剧", "番剧", "口碑佳作",
+))
+
+
+def _looks_like_title(text: str) -> bool:
+    t = (text or "").strip()
+    if not (2 <= len(t) <= 30):
+        return False
+    if t.lower() in _NOT_TITLE_WORDS:
+        return False
+    if re.match(r"^\d{1,2}月\d{1,2}日", t) or re.search(r"上映|更新至|全\d+集$|第\d+集", t):
+        return False
+    if t.isdigit():
+        return False
+    return True
+
+
+def _name_from_tags(tags, actors, keyword, vod_id):
+    tags = [t for t in (tags or []) if t]
+    actors = [t for t in (actors or []) if t]
+
+    if keyword:
+        key = keyword.strip().lower()
+        for tag in tags:
+            if key and (tag.lower() == key or key in tag.lower()) and len(tag) <= 40:
+                return tag
+
+    titles = [t for t in tags if _looks_like_title(t)]
+    if titles:
+        titles.sort(key=len, reverse=True)
+        return titles[0]
+
+    for actor in actors[:3]:
+        for tag in tags:
+            if actor and actor in tag and _looks_like_title(tag):
+                return tag
+
+    if actors:
+        return "%s 等主演" % actors[0]
+    return "影片%s" % (vod_id or "")
+
+
+def _cache_put(vod_id, name, pic):
+    if not vod_id:
+        return
+    if len(_INFO_CACHE) >= _INFO_CACHE_LIMIT:
+        for key in list(_INFO_CACHE)[: _INFO_CACHE_LIMIT // 3]:
+            _INFO_CACHE.pop(key, None)
+    _INFO_CACHE[str(vod_id)] = (name or "", pic or "")
+
+
+def _rate_limited_now():
+    return time.time() < _RATE_LIMIT_UNTIL
+
+
+def _mark_rate_limited(seconds=20):
+    global _RATE_LIMIT_UNTIL
+    _RATE_LIMIT_UNTIL = max(_RATE_LIMIT_UNTIL, time.time() + seconds)
+
 
 def _varint(value):
     if value < 0:
@@ -150,8 +202,6 @@ def _raw_deflate(data):
                                   memLevel=8, strategy=zlib.Z_RLE)
     return compressor.compress(data) + compressor.flush()
 
-
-# ============ 纯标准库密码学 ============
 
 def _xtime(a):
     b = a << 1
@@ -394,8 +444,6 @@ def _aes256_gcm_decrypt(key, nonce, data, tag, aad=b""):
     return bytes(out)
 
 
-# P-256 (secp256r1) 椭圆曲线
-
 _P256_P = 0xFFFFFFFF00000001000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFF
 _P256_A = _P256_P - 3
 _P256_B = 0x5AC635D8AA3A93E7B3EBBD55769886BC651D06B0CC53B0F63BCE3C3E27D2604B
@@ -492,8 +540,6 @@ def _derive_key(session_id, shared_x):
     return hmac.new(prk, b"v2-session\x01", hashlib.sha256).digest()
 
 
-# ============ HTTP（纯 urllib） ============
-
 def _http_post(url, body, headers, timeout=15):
     request = urllib.request.Request(url, data=body, headers=headers, method="POST")
     try:
@@ -529,8 +575,6 @@ def _http_get(url, headers, timeout=15):
             pass
     return response.status, content
 
-
-# ============ 协议客户端 ============
 
 class _GuluProtocol:
     def __init__(self, timeout=15):
@@ -670,13 +714,37 @@ class _GuluProtocol:
         response = self.request(61, payload)
         data = _field_value(response, 4, b"", wire=2)
         videos = []
+        guarded = []
         for message in _field_values(data, 1, wire=2):
+            vod_id = str(_field_value(message, 1, 0, wire=0))
+            vod_name = _text(_field_value(message, 3, b"", wire=2))
+            vod_pic = _text(_field_value(message, 6, b"", wire=2))
+            vod_remarks = _text(_field_value(message, 11, b"", wire=2))
+
+            is_guard = (any(marker in (vod_name or "").lower()
+                            or marker in (vod_pic or "").lower()
+                            for marker in ("glgl.tv", "shu.jpg", "111.170.58.215"))
+                        or (vod_name or "").startswith("最新版本下载")
+                        or (vod_name or "").startswith("最新版下载地址"))
+
+            if is_guard:
+                vod_pic = DEFAULT_COVER
+                vod_name = _name_from_tags(
+                    [_text(v) for v in _field_values(message, 17, wire=2)],
+                    [_text(v) for v in _field_values(message, 14, wire=2)],
+                    keyword, vod_id)
+                guarded.append(vod_id)
+
             videos.append({
-                "vod_id": str(_field_value(message, 1, 0, wire=0)),
-                "vod_name": _text(_field_value(message, 3, b"", wire=2)),
-                "vod_pic": _text(_field_value(message, 6, b"", wire=2)),
-                "vod_remarks": _text(_field_value(message, 11, b"", wire=2)),
+                "vod_id": vod_id,
+                "vod_name": vod_name,
+                "vod_pic": vod_pic,
+                "vod_remarks": vod_remarks,
             })
+
+        if guarded:
+            self._enrich(videos, guarded)
+
         page_info = _field_value(data, 2, b"", wire=2)
         return {"videos": videos,
                 "page": _field_value(page_info, 1, int(page), wire=0),
@@ -687,7 +755,7 @@ class _GuluProtocol:
     def detail(self, vod_id):
         self.last_detail_error = ""
         payload = (_field_varint(1, int(vod_id)) + _field_bytes(3, APP_VERSION)
-                   + _field_bytes(4, b"1") + _field_varint(5, 1))
+                   + _field_bytes(4, b"0") + _field_varint(5, 1))
         response = self.request(62, payload,
                                 extra_headers={"x-player-page-protection": "1"})
         data = _field_value(response, 4, b"", wire=2)
@@ -730,6 +798,20 @@ class _GuluProtocol:
                 "year": _text(_field_value(data, 30, b"", wire=2)),
                 "sources": sources}
 
+    def light_info(self, vod_id):
+        payload = (_field_varint(1, int(vod_id)) + _field_bytes(3, APP_VERSION)
+                   + _field_bytes(4, b"0") + _field_varint(5, 1))
+        response = self.request(62, payload,
+                                extra_headers={"x-player-page-protection": "1"})
+        data = _field_value(response, 4, b"", wire=2)
+        name = _text(_field_value(data, 5, b"", wire=2)) or ""
+        pic = _text(_field_value(data, 13, b"", wire=2)) or ""
+        probe = (name + " " + pic).lower()
+        if not name or name.startswith("最新版") or any(
+                marker in probe for marker in VERSION_GUARD_MARKERS):
+            return "", ""
+        return name, pic
+
     def play(self, parser_id, play_id):
         payload = _field_varint(1, int(parser_id)) + _field_bytes(2, play_id)
         response = self.request(69, payload)
@@ -742,11 +824,38 @@ class _GuluProtocol:
         self.request_id = 0
 
 
-# ============ T3 接口 ============
+_SESSION_POOL = []
+_POOL_LOCK = threading.Lock()
+
+
+def _build_session_pool(count, deadline):
+    with _POOL_LOCK:
+        if len(_SESSION_POOL) >= count:
+            return list(_SESSION_POOL[:count])
+        need = count - len(_SESSION_POOL)
+        if need <= 0:
+            return list(_SESSION_POOL[:count])
+        slots = [None] * need
+
+        def make(index):
+            try:
+                proto = _GuluProtocol()
+                proto.handshake()
+                slots[index] = proto
+            except Exception:
+                slots[index] = None
+
+        threads = [threading.Thread(target=make, args=(i,)) for i in range(need)]
+        for thread in threads:
+            thread.daemon = True
+            thread.start()
+        for thread in threads:
+            thread.join(max(0.05, min(2.5, deadline - time.time())))
+        _SESSION_POOL.extend([p for p in slots if p])
+        return list(_SESSION_POOL[:count])
+
 
 class Spider:
-    """咕噜咕噜 T3 源（TVBox type=3 Python 爬虫）。"""
-
     source_name = "gulu"
     display_name = "咕噜咕噜"
 
@@ -764,36 +873,107 @@ class Spider:
 
     def __init__(self) -> None:
         self.protocol = _GuluProtocol()
+        self.list_protocol = _GuluProtocol()
         self.last_error = ""
 
     def init(self, extend=""):
-        """drpy 空闲刷新钩子：仅复位会话无关状态，不依赖本方法被执行。"""
         return None
 
-    def _ensure_boot(self) -> None:
+    def _ensure_boot(self, need_config=True) -> None:
         try:
             if not self.protocol.session_id:
                 self.protocol.handshake()
-            if not self.protocol.players:
+            if need_config and not self.protocol.players:
                 self.protocol.boot()
         except Exception as e:
             self.last_error = "%s:%s" % (type(e).__name__, e)
 
-    def _search(self, keyword, page=1, limit=21, category_id=""):
-        self._ensure_boot()
+    def _ensure_list(self) -> None:
         try:
-            return self.protocol.search(keyword, page, limit, category_id)
+            if not self.list_protocol.session_id:
+                self.list_protocol.handshake()
+        except Exception as e:
+            self.last_error = "%s:%s" % (type(e).__name__, e)
+
+    def _search(self, keyword, page=1, limit=21, category_id=""):
+        self._ensure_list()
+        try:
+            return self.list_protocol.search(keyword, page, limit, category_id)
         except Exception:
             try:
-                self.protocol.reset_session()
-                self._ensure_boot()
-                return self.protocol.search(keyword, page, limit, category_id)
+                self.list_protocol.reset_session()
+                self._ensure_list()
+                return self.list_protocol.search(keyword, page, limit, category_id)
             except Exception as e:
                 self.last_error = "%s" % e
                 return {"videos": [], "page": page, "pagecount": 1,
                         "limit": limit, "total": 0}
 
-    # ---- T3 契约 ----
+    def _enrich(self, videos, ids, budget=ENRICH_BUDGET):
+        if not videos or not ids:
+            return
+
+        for card in videos:
+            info = _INFO_CACHE.get(card.get("vod_id"))
+            if info:
+                if info[0]:
+                    card["vod_name"] = info[0]
+                if info[1]:
+                    card["vod_pic"] = info[1]
+
+        pending = [vid for vid in dict.fromkeys(ids)
+                   if vid and vid not in _INFO_CACHE]
+        if not pending or _rate_limited_now():
+            return
+
+        deadline = time.time() + max(1.0, budget)
+        sessions = _build_session_pool(min(ENRICH_POOL_SIZE, len(pending)), deadline)
+        if not sessions:
+            return
+
+        lock = threading.Lock()
+        stop = threading.Event()
+
+        def worker(session):
+            misses = 0
+            while not stop.is_set():
+                if time.time() >= deadline:
+                    return
+                with lock:
+                    if not pending:
+                        return
+                    vid = pending.pop()
+                try:
+                    name, pic = session.light_info(vid)
+                except Exception as exc:
+                    if "429" in str(exc):
+                        _mark_rate_limited()
+                        stop.set()
+                        return
+                    misses += 1
+                    if misses >= 3 or not session.session_id:
+                        return
+                    continue
+                misses = 0
+                if name or pic:
+                    _cache_put(vid, name, pic)
+
+        threads = [threading.Thread(target=worker, args=(s,)) for s in sessions]
+        for thread in threads:
+            thread.daemon = True
+            thread.start()
+        for thread in threads:
+            thread.join(max(0.05, deadline - time.time()) + 0.3)
+        stop.set()
+
+        for card in videos:
+            info = _INFO_CACHE.get(card.get("vod_id"))
+            if not info:
+                continue
+            if info[0]:
+                card["vod_name"] = info[0]
+            if info[1]:
+                card["vod_pic"] = info[1]
 
     def homeContent(self, filter=False):
         classes = [{"type_id": tid, "type_name": nm} for tid, nm in self._categories]
@@ -831,6 +1011,7 @@ class Spider:
             detail = self.protocol.detail(vod_id)
         if not detail:
             return {"list": []}
+        _cache_put(vod_id, detail["name"], detail["pic"])
 
         play_from, play_blocks = [], []
         for source in detail["sources"]:
@@ -895,8 +1076,6 @@ class Spider:
                         url = ""
         return {"parse": 0, "url": url or "", "header": json.dumps(header)}
 
-    # ---- 工具 ----
-
     def _cards(self, videos, page, limit):
         cards = []
         for v in videos:
@@ -940,8 +1119,6 @@ class Spider:
         return 4000
 
     def _play_header(self, url: str) -> dict:
-        # 多数第三方 CDN 带不带 Referer 都能播；但 picovr / ppvod / quark
-        # 带 Referer 反而 403（实测）。动态：这些域名去 Referer。
         _no_ref = ("picovr.com", "ppvod", "drive.quark.cn")
         h = {"User-Agent": USER_AGENT}
         if not (url and any(d in url for d in _no_ref)):
@@ -991,8 +1168,6 @@ class Spider:
                     return found
         return ""
 
-    # ---- drpy 兼容辅助 ----
-
     def getName(self):
         return self.display_name
 
@@ -1011,8 +1186,6 @@ class Spider:
     def destroy(self):
         return None
 
-
-# ============ 模块级双入口（drpy site 模式 / 旧内核兼容） ============
 
 _SINGLETON = None
 
@@ -1048,11 +1221,8 @@ def playerContent(flag, id, vipFlags=None):
     return _get_singleton().playerContent(flag, id, vipFlags)
 
 
-# 类名别名（部分内核按小写 spider 约定取类）
 spider = Spider
 
-
-# ============ 命令行自检 ============
 
 if __name__ == "__main__":
     import argparse

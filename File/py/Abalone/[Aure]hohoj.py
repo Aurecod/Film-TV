@@ -357,7 +357,6 @@ class Spider(BaseSpider):
             "vod_name": title,
             "vod_pic": item.get("img") or "",
             "vod_remarks": item.get("badge") or "",
-            "style": STYLE,
         }
 
     def _int(self, x, d=0):

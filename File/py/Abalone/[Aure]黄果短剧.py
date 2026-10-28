@@ -277,7 +277,6 @@ class Spider(BaseSpider):
                     "vod_name": self._unesc(title) or vid,
                     "vod_pic": self._pic_url(pic.group(1) if pic else ""),
                     "vod_remarks": rem,
-                    "style": STYLE,
                 })
             except Exception:
                 continue
