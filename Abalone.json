@@ -1210,6 +1210,20 @@
       "ext": ""
     },
     {
+      "key": "local_[影]牛牛视频",
+      "name": "[影]牛牛视频ᵖʸ",
+      "type": 3,
+      "api": "./File/py/Abalone/[影]牛牛视频.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1,
+      "order_num": 0,
+      "style": {
+        "type": "rect"
+      },
+      "ext": ""
+    },
+    {
       "key": "local_禁果短剧",
       "name": "禁果短剧ᵖʸ",
       "type": 3,
