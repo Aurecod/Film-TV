@@ -207,7 +207,8 @@ class Spider(Spider):
                 "quickSearch": 1,
                 "filterable": 1,
                 "order_num": 0,
-                "style": {"type": "rect"},
+                "style": {"type": "rect",
+                "ratio": 1.755},
                 "ext": ""
             }
         else:

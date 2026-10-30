@@ -234,9 +234,76 @@ FALLBACK_GROUPS = [
 ]
 
 
+# ---- v2.0 迁移: requests.Session -> self.net 兼容适配器 (内联) ----
+class _NetResp(object):
+    """模拟 requests.Response: 基于 self.net.req 返回的 dict。"""
+    def __init__(self, resp_dict, url):
+        self._d = resp_dict or {}
+        self.url = url
+        self.status_code = int(self._d.get("code") or 0)
+        self._content = self._d.get("content", "")
+        self.headers = self._d.get("headers") or {}
+        self.encoding = None
+        self.apparent_encoding = "utf-8"
+        self.text = self._content if isinstance(self._content, str) else ""
+        if not self.text and isinstance(self._content, (bytes, bytearray)):
+            self.text = bytes(self._content).decode("utf-8", "ignore")
+    @property
+    def content(self):
+        return self._content if isinstance(self._content, (bytes, bytearray)) else self.text.encode("utf-8", "ignore")
+    def json(self):
+        import json as _json
+        return _json.loads(self.text or "{}")
+    def raise_for_status(self):
+        if self.status_code < 200 or self.status_code >= 300:
+            raise RuntimeError("HTTP %s" % self.status_code)
+    def __repr__(self):
+        return "<_NetResp %s>" % self.status_code
+
+
+class _NetSession(object):
+    """requests.Session 兼容层: 用宿主注入的 self.net 实现 get/post。"""
+    def __init__(self, net, headers=None, default_headers=None):
+        self.net = net
+        self.headers = headers if headers is not None else {}
+        if default_headers:
+            for k, v in default_headers.items():
+                self.headers.setdefault(k, v)
+    def _merge(self, headers):
+        h = dict(self.headers)
+        if headers:
+            for k, v in headers.items():
+                h[k] = v
+        return h
+    def get(self, url, params=None, headers=None, timeout=None, **kw):
+        h = self._merge(headers)
+        opts = {"headers": h}
+        if timeout:
+            opts["timeout"] = int(timeout) * 1000 if timeout < 100 else int(timeout)
+        full = url
+        if params:
+            import urllib.parse as _up
+            sep = "&" if "?" in url else "?"
+            full = url + sep + _up.urlencode(params)
+        resp = self.net.req(full, opts)
+        return _NetResp(resp, full)
+    def post(self, url, data=None, params=None, headers=None, timeout=None, **kw):
+        h = self._merge(headers)
+        opts = {"method": "POST", "headers": h, "postType": "form", "data": data or {}}
+        if timeout:
+            opts["timeout"] = int(timeout) * 1000 if timeout < 100 else int(timeout)
+        full = url
+        if params:
+            import urllib.parse as _up
+            sep = "&" if "?" in url else "?"
+            full = url + sep + _up.urlencode(params)
+        resp = self.net.req(full, opts)
+        return _NetResp(resp, full)
+
 class Spider(SpiderBase):
 
     def __init__(self):
+        super().__init__()
         super(Spider, self).__init__()
         self.siteName = "黄果短剧"
         self.siteUrl = SITE
@@ -262,8 +329,33 @@ class Spider(SpiderBase):
                 self.options = {}
         return True
 
-    def getName(self):
-        return self.siteName
+    def getProxyUrl(self, params=None, local=True):
+        """FongMi 5.8.4 catvod 契约: Proxy.getUrl(local) + ?do=py + siteKey。
+        竞速版不继承 base.spider, 需自行实现。TVBox/影视仓无 com.github.catvod.Proxy 时返回空。"""
+        base = ""
+        try:
+            from com.github.catvod import Proxy
+            base = str(Proxy.getUrl(local))
+        except Exception:
+            base = ""
+        if not base:
+            return ""
+        sk = ""
+        try:
+            sk = str(getattr(self, "siteKey", "") or "")
+        except Exception:
+            sk = ""
+        q = []
+        if params:
+            for k, v in params.items():
+                q.append("%s=%s" % (k, v if isinstance(v, str) else json.dumps(v, ensure_ascii=False)[1:-1]))
+        url = base + "?do=py"
+        if sk:
+            url += "&siteKey=" + sk
+        if q:
+            url += "&" + "&".join(q)
+        return url
+
 
     def isVideoFormat(self, url):
         low = (url or "").lower()
@@ -369,12 +461,13 @@ class Spider(SpiderBase):
         except Exception:
             proxy = ""
         if not proxy:
-            return p
+            # 代理不可用时不要返回直链加密图(无法显示), 用占位图兜底
+            return "https://dummyimage.com/600x800/1e293b/ffffff.png?text=NO_COVER"
         enc = quote(base64.b64encode(p.encode("utf-8")).decode("utf-8"), safe="")
         sep = "&" if "?" in proxy else "?"
         return "%s%surl=%s&type=img" % (proxy, sep, enc)
 
-    def localProxy(self, params):
+    def proxy(self, params):
         if isinstance(params, str):
             try:
                 params = json.loads(params)
@@ -397,8 +490,11 @@ class Spider(SpiderBase):
         def try_decrypt_aes(data):
             try:
                 from Crypto.Cipher import AES
+                n = len(data) - (len(data) % 16)
+                if n <= 0:
+                    return None
                 cipher = AES.new(IMG_KEY, AES.MODE_CBC, IMG_IV)
-                dec = cipher.decrypt(data)
+                dec = cipher.decrypt(data[:n])
                 pad = dec[-1]
                 if 0 < pad <= 16 and dec[-pad:] == bytes([pad]) * pad:
                     dec = dec[:-pad]
@@ -431,7 +527,9 @@ class Spider(SpiderBase):
             ret = detect_and_return(dec)
             if ret:
                 return ret
-        return [res.get("code") or 200, "image/jpeg", raw_bytes]
+        return [404, "text/plain; charset=utf-8", "Image decrypt failed"]
+
+    localProxy = proxy
 
     # ---------------- 竞速 ----------------
 
@@ -574,9 +672,16 @@ class Spider(SpiderBase):
         return self._race([lambda: self._api_search(kw, page),
                            lambda: self._page_search(kw, page)], ok=self._ok_list)
 
+
     def detailContent(self, ids):
-        raw_id = ids[0] if isinstance(ids, (list, tuple)) else str(ids)
-        vid = str(raw_id).strip()
+        if not ids:
+            return {"list": []}
+        responses = [self._detail(str(video_id)) for video_id in ids]
+        merged = {k: v for k, v in (responses[0] or {}).items() if k != "list"} if responses[0] else {}
+        merged["list"] = [item for response in responses if response for item in (response.get("list") or [])]
+        return merged
+    def _detail(self, vid):
+        vid = str(vid or "").strip()
         return self._race([lambda: self._api_detail(vid),
                            lambda: self._page_detail(vid)], ok=self._ok_detail)
 

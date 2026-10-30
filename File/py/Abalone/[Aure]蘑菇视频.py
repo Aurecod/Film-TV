@@ -38,7 +38,6 @@ def clean_label(text):
     t = re.sub(r"[\$#\r\n\t]+", " ", t)
     return t.strip()
 
-
 # ============================================================
 # AutoDNS —— 无视梯子状态的自动路由
 # ------------------------------------------------------------
@@ -66,7 +65,6 @@ _DOH_ENDPOINTS = [
     ("https://8.8.8.8/resolve?name={h}&type=A", "GoogleDoH-Direct"),
     ("https://doh.opendns.com/dns-query?name={h}&type=A", "OpenDNSDoH"),
 ]
-
 
 class AutoDNS(object):
     """跨 DNS 自动解析：系统 → 多个 DoH。线程安全 + 缓存。"""
@@ -142,12 +140,10 @@ class AutoDNS(object):
                 continue
         return []
 
-
 # 全局 AutoDNS 实例（模块级）
 _autodns = AutoDNS()
 
 _orig_getaddrinfo = socket.getaddrinfo
-
 
 def _install_autodns():
     """把 socket.getaddrinfo 替换成 AutoDNS 兜底版本。幂等。"""
@@ -190,12 +186,10 @@ def _install_autodns():
     patched._autodns_patched = True
     socket.getaddrinfo = patched
 
-
 try:
     _install_autodns()
 except Exception:
     pass
-
 
 def _split_url(url):
     """把 URL 拆成 (scheme, host, port, path, params, query, frag) 等。"""
@@ -209,7 +203,6 @@ def _split_url(url):
                 p.username, p.password)
     except Exception:
         return None
-
 
 ZONE_MATRIX = [
     {
@@ -593,8 +586,120 @@ ZONE_MATRIX = [
     }
 ]
 
+# ---- v2.0 迁移: requests.Session -> self.net 兼容适配器 (内联) ----
+class _NetResp(object):
+    """模拟 requests.Response: 基于 self.net.req 或 urllib 返回的 dict。"""
+    def __init__(self, resp_dict, url):
+        self._d = resp_dict or {}
+        self.url = url
+        self.status_code = int(self._d.get("code") or 0)
+        self._content = self._d.get("content", "")
+        self.headers = self._d.get("headers") or {}
+        self.encoding = None
+        self.apparent_encoding = "utf-8"
+        self.text = self._content if isinstance(self._content, str) else ""
+        if not self.text and isinstance(self._content, (bytes, bytearray)):
+            self.text = bytes(self._content).decode("utf-8", "ignore")
+    @property
+    def content(self):
+        return self._content if isinstance(self._content, (bytes, bytearray)) else self.text.encode("utf-8", "ignore")
+    def json(self):
+        import json as _json
+        return _json.loads(self.text)
+    def raise_for_status(self):
+        if self.status_code >= 400:
+            raise Exception("HTTP %s" % self.status_code)
+    def __repr__(self):
+        return "<_NetResp %s %d>" % (self.url, self.status_code)
+
+class _NetSession(object):
+    """requests.Session 兼容层: 优先宿主注入 self.net, 无则 urllib 直连(标准库, 任何播放器可跑)。"""
+    def __init__(self, net, headers=None, default_headers=None):
+        self.net = net
+        self.headers = headers if headers is not None else {}
+        if default_headers:
+            for k, v in default_headers.items():
+                self.headers.setdefault(k, v)
+    def _merge(self, headers):
+        h = dict(self.headers)
+        if headers:
+            for k, v in headers.items():
+                h[k] = v
+        return h
+    @staticmethod
+    def _build_url(url, params):
+        if not params:
+            return url
+        import urllib.parse as _up
+        sep = "&" if "?" in url else "?"
+        return url + sep + _up.urlencode(params)
+    def _urllib_get(self, full, headers, timeout):
+        import urllib.request as _ur, ssl as _ssl
+        try:
+            ctx = _ssl._create_unverified_context()
+        except Exception:
+            ctx = None
+        req = _ur.Request(full, headers=headers)
+        with _ur.urlopen(req, timeout=timeout or 15, context=ctx) as resp:
+            raw = resp.read()
+            enc = resp.headers.get("Content-Encoding", "")
+            if "gzip" in enc:
+                import gzip as _g
+                raw = _g.decompress(raw)
+            return {"code": resp.status, "content": raw, "headers": dict(resp.headers), "error": ""}
+    def _urllib_post(self, full, headers, data, timeout):
+        import urllib.request as _ur, urllib.parse as _up, ssl as _ssl
+        try:
+            ctx = _ssl._create_unverified_context()
+        except Exception:
+            ctx = None
+        body = _up.urlencode(data or {}).encode("utf-8")
+        req = _ur.Request(full, data=body, headers=headers, method="POST")
+        with _ur.urlopen(req, timeout=timeout or 15, context=ctx) as resp:
+            raw = resp.read()
+            return {"code": resp.status, "content": raw, "headers": dict(resp.headers), "error": ""}
+    def get(self, url, params=None, headers=None, timeout=None, **kw):
+        h = self._merge(headers)
+        full = self._build_url(url, params)
+        timeout_s = None
+        if timeout:
+            timeout_s = int(timeout) / 1000 if timeout > 100 else int(timeout)
+        if self.net is not None:
+            opts = {"headers": h}
+            if timeout_s:
+                opts["timeout"] = int(timeout_s * 1000)
+            try:
+                resp = self.net.req(full, opts)
+                return _NetResp(resp, full)
+            except Exception:
+                pass
+        try:
+            return _NetResp(self._urllib_get(full, h, timeout_s), full)
+        except Exception as e:
+            return _NetResp({"code": 0, "content": b"", "headers": {}, "error": str(e)}, full)
+    def post(self, url, data=None, params=None, headers=None, timeout=None, **kw):
+        h = self._merge(headers)
+        full = self._build_url(url, params)
+        timeout_s = None
+        if timeout:
+            timeout_s = int(timeout) / 1000 if timeout > 100 else int(timeout)
+        if self.net is not None:
+            opts = {"method": "POST", "headers": h, "postType": "form", "data": data or {}}
+            if timeout_s:
+                opts["timeout"] = int(timeout_s * 1000)
+            try:
+                resp = self.net.req(full, opts)
+                return _NetResp(resp, full)
+            except Exception:
+                pass
+        try:
+            return _NetResp(self._urllib_post(full, h, data or {}, timeout_s), full)
+        except Exception as e:
+            return _NetResp({"code": 0, "content": b"", "headers": {}, "error": str(e)}, full)
+
 class Spider(SpiderBase):
     def __init__(self):
+        super().__init__()
         super(Spider, self).__init__()
         self.siteUrl = "https://moguds.cc"
         self.cdnBase = "https://d2qyuoh1tjbp7d.cloudfront.net"
@@ -622,9 +727,6 @@ class Spider(SpiderBase):
                 self.options = json.loads(extend)
             except Exception:
                 self.options = {}
-
-    def getName(self):
-        return "蘑菇视频"
 
     def isVideoFormat(self, url):
         low = (url or "").lower()
@@ -817,7 +919,10 @@ class Spider(SpiderBase):
         return result
 
     def homeVideoContent(self):
-        return {"list": []}
+        res = self._fetch("/")
+        html = res.get("text", "")
+        vod_list = self._parse_video_cards(html)
+        return {"list": vod_list}
 
     def _extract_clean_pic(self, inner_html):
         for attr in ("data-original", "data-src"):
@@ -887,6 +992,25 @@ class Spider(SpiderBase):
         if cur_page < 1:
             cur_page = 1
 
+        # 标签点击（[a=cr:...] → categoryContent("tag/<slug>")）→ 本站标签页
+        if zone_id.startswith("tag/"):
+            slug = unquote(zone_id.split("/", 1)[1])
+            if cur_page == 1:
+                target_path = "/tag/%s/" % quote(slug)
+            else:
+                target_path = "/tag/%s/%s/" % (quote(slug), cur_page)
+            res = self._fetch(target_path)
+            vod_list = self._parse_video_cards(res.get("text", ""))
+            has_more = len(vod_list) > 0
+            calc_pagecount = cur_page + 1 if has_more else cur_page
+            return {
+                "page": cur_page,
+                "pagecount": calc_pagecount,
+                "limit": 20,
+                "total": (cur_page + 1) * 20 if has_more else cur_page * max(1, len(vod_list)),
+                "list": vod_list
+            }
+
         active_target = ""
         if isinstance(extend, dict) and extend.get("sub"):
             active_target = str(extend.get("sub")).strip()
@@ -952,8 +1076,26 @@ class Spider(SpiderBase):
 
         return ""
 
+    def _clickable(self, kind, name, slug=""):
+        """官方格式: [a=cr:{"id":"...","name":"...","type_flag":"0"}/]显示名[/a]
+        type_flag=0: 点击后页面用用户 JSON 配置排列（=1 会强制单列）。"""
+        if not name:
+            return ""
+        ident = "tag/%s" % (slug or quote(name, safe='')) if kind == "tag" else \
+            "%s/%s" % (kind, quote(name, safe=''))
+        payload = json.dumps({"id": ident, "name": name, "type_flag": "0"},
+                             ensure_ascii=False, separators=(",", ":"))
+        return "[a=cr:%s/]%s[/a]" % (payload, name)
+
     def detailContent(self, ids):
-        raw_id = ids[0] if isinstance(ids, (list, tuple)) else str(ids)
+        if not ids:
+            return {"list": []}
+        responses = [self._detail(str(video_id)) for video_id in ids]
+        merged = {k: v for k, v in (responses[0] or {}).items() if k != "list"} if responses[0] else {}
+        merged["list"] = [item for response in responses if response for item in (response.get("list") or [])]
+        return merged
+    def _detail(self, vid):
+        raw_id = str(vid or "").strip()
         detail_url = raw_id if raw_id.startswith("http") else (self.siteUrl + raw_id)
         res_d = self._fetch(detail_url)
         d_html = res_d.get("text", "")
@@ -990,14 +1132,23 @@ class Spider(SpiderBase):
             if rec_idx > 24:
                 break
 
+        # 标签可点击 → 本站标签页（/tag/{slug}/ 是真实视频列表，已验证返回 20 条）
+        tag_bb = ""
+        tag_seen = set()
+        for t_m in re.finditer(r'href=["\'](/tag/[^"\']+/)["\'][^>]*>([^<]{1,60})</a>', d_html, re.I):
+            slug = t_m.group(1).strip("/").split("/", 1)[-1]
+            t_name = re.sub(r'<[^>]+>', '', t_m.group(2)).strip()
+            if not slug or slug in tag_seen:
+                continue
+            tag_seen.add(slug)
+            bb = self._clickable("tag", t_name or slug, slug)
+            tag_bb = (tag_bb + "、" + bb) if tag_bb else bb
+
         vod = {
             "vod_id": raw_id,
             "vod_name": main_title,
             "vod_pic": poster_pic,
-            "vod_bg": poster_pic,
-            "vod_background": poster_pic,
-            "vod_banner": poster_pic,
-            "vod_actor": self.brandActor,
+            "vod_actor": tag_bb if tag_bb else self.brandActor,
             "vod_director": self.brandDirector,
             "vod_remarks": format_remarks("蘑菇视频", "全%s部连播" % len(episodes)),
             "vod_content": main_title,
@@ -1068,11 +1219,13 @@ class Spider(SpiderBase):
     def action(self, action):
         return {"msg": "ok"}
 
-    def liveContent(self):
+    def liveContent(self, url=""):
         return ""
 
-    def localProxy(self, params):
+    def proxy(self, params):
         return [404, "text/plain; charset=utf-8", "Proxy not configured"]
+
+    localProxy = proxy
 
     def destroy(self):
         self.options = {}

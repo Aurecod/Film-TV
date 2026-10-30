@@ -216,6 +216,20 @@
       "ext": ""
     },
     {
+      "key": "local_[Aure]北斗影院",
+      "name": "[Aure]北斗影院ᵖʸ",
+      "type": 3,
+      "api": "./File/py/Hunter/[Aure]北斗影院.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1,
+      "order_num": 0,
+      "style": {
+        "type": "rect"
+      },
+      "ext": ""
+    },
+    {
       "key": "local_[音]酷我音乐",
       "name": "[音]酷我音乐ᵖʸ",
       "type": 3,

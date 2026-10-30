@@ -1,0 +1,288 @@
+# -*- coding: utf-8 -*-
+"""[Aure]北斗影院 (v2.0 新 API 契约, 2026-10-30 迁移)
+迁移要点: requests.Session -> self.net.req; getName 删除; detailContent 完整 ids 集合;
+action 返回 {"msg"}; localProxy 删除 (未使用); 表单/超时按毫秒。
+协议依据: FongMi/TV@fongmi 分支 + reference/python-crawler-migration.md
+"""
+import re
+import json
+import time
+
+try:
+    from base.spider import Spider as BaseSpider
+except Exception:
+    class BaseSpider:
+        def homeContent(self, filter):
+                return {"class": []}
+        def homeVideoContent(self):
+                return {"list": []}
+        def categoryContent(self, tid, pg, filter, extend):
+                return {"list": []}
+        def detailContent(self, ids):
+                return {"list": []}
+        def searchContent(self, key, quick, pg="1"):
+                return {"list": []}
+        def playerContent(self, flag, id, vipFlags):
+                return {}
+        def liveContent(self, url):
+                return ""
+        def proxy(self, params):
+                return [404, "text/plain", ""]
+        def localProxy(self, params):
+                return [404, "text/plain", ""]
+        def isVideoFormat(self, url):
+                return False
+        def manualVideoCheck(self):
+                return False
+        def action(self, action):
+                return {}
+        def getDependence(self):
+                return []
+
+NAME = "北斗影院"
+HOST = "http://www.bdjmcc.com"
+UA = "Mozilla/5.0 (Linux; Android 13; SM-G991B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
+PAGE_SIZE = 36
+CACHE_TTL = 30
+STYLE = {"type": "rect", "ratio": 1.33}
+
+
+class Spider(BaseSpider):
+
+    def __init__(self):
+        super().__init__()
+        self.host = HOST
+        self.name = NAME
+        self.headers = {
+            "User-Agent": UA,
+            "Referer": HOST + "/",
+            "Accept": "*/*",
+            "Accept-Encoding": "identity",
+        }
+        self._cache = {}
+        self._categories_cache = None
+
+    def init(self, extend=""):
+        pass
+
+    def getDependence(self):
+        return []
+
+    def destroy(self):
+        self._cache.clear()
+        self._categories_cache = None
+
+    def isVideoFormat(self, url):
+        return bool(re.search(r"\.(m3u8|mp4|flv|mkv|ts)(\?|$)", str(url)))
+
+    def manualVideoCheck(self):
+        return False
+
+    def action(self, action):
+        return {"msg": "不支持此操作"}
+
+    def _fetch(self, url):
+        """GET 请求，返回 HTML 文本。优先宿主 self.net.req，无 net 或失败回退 urllib。"""
+        ck = url
+        hit = self._cache.get(ck)
+        if hit and time.time() - hit[1] < CACHE_TTL:
+            return hit[0]
+        html = ""
+        # 宿主注入 self.net: 用它
+        if getattr(self, "net", None) is not None:
+            try:
+                resp = self.net.req(url, {"headers": self.headers, "timeout": 15000})
+                if not resp.get("error") and 200 <= (resp.get("code") or 0) < 300:
+                    html = resp.get("content", "")
+            except Exception:
+                html = ""
+        # 回退 urllib (其他播放器无 self.net 时可用)
+        if not html:
+            try:
+                import urllib.request, ssl
+                ctx = ssl._create_unverified_context()
+                req = urllib.request.Request(url, headers=self.headers)
+                with urllib.request.urlopen(req, timeout=15, context=ctx) as r:
+                    raw = r.read()
+                    enc = r.headers.get("Content-Encoding", "")
+                    if "gzip" in enc:
+                        import gzip
+                        raw = gzip.decompress(raw)
+                    html = raw.decode("utf-8", "ignore")
+            except Exception:
+                html = ""
+        if html:
+            self._cache[ck] = (html, time.time())
+        return html
+
+    def _get_categories(self):
+        if self._categories_cache is not None:
+            return self._categories_cache
+        html = self._fetch(self.host + "/")
+        arr = []
+        for href, name in re.findall(r'<li><a href="(/list/[^"]+)">([^<]+)</a></li>', html):
+            tid = href.rstrip("/1.html")
+            arr.append({"type_id": tid, "type_name": name, "style": STYLE})
+        for href, name in re.findall(r'href="(/list/[^"]+)" class="t1e2x3t34s4">([^<]+)', html):
+            tid = href.rstrip("/1.html")
+            if not any(c["type_id"] == tid for c in arr):
+                arr.append({"type_id": tid, "type_name": name, "style": STYLE})
+        if not arr:
+            arr = [{"type_id": "/list/A051pCM47kBg2", "type_name": "连续剧", "style": STYLE},
+                   {"type_id": "/list/A1sQHJp3ggh3P", "type_name": "电影", "style": STYLE},
+                   {"type_id": "/list/A2yIcGx03608i", "type_name": "动漫", "style": STYLE},
+                   {"type_id": "/list/A1U43X24bwf2t", "type_name": "综艺", "style": STYLE}]
+        self._categories_cache = arr
+        return arr
+
+    def homeContent(self, filter):
+        classes = self._get_categories()
+        return {"class": classes, "filters": self._filters(classes), "list": [self._vod(x) for x in self._home_items()]}
+
+    def homeVideoContent(self):
+        return {"list": []}
+
+    def _filters(self, classes):
+        common = [{"key": "order", "name": "排序", "value": [{"n": "默认", "v": ""}, {"n": "最新", "v": "new"}, {"n": "最热", "v": "hot"}]}]
+        return {c["type_id"]: common for c in classes}
+
+    def _home_items(self):
+        html = self._fetch(self.host + "/")
+        items = []
+        for m in re.finditer(r'class="vbk423ssf">\s*<a class="kkfmdqwasda picture" href="(/v/[^"]+)" title="([^"]+)">\s*<img[^>]+data-original="([^"]+)"', html):
+            items.append({"vod_id": m.group(1).replace("/v/", "").replace(".html", ""), "name": m.group(2), "pic": m.group(3), "remarks": ""})
+        return items
+
+    def categoryContent(self, tid, pg, filter, extend):
+        pg = self._int(pg, 1)
+        url = self.host + tid + "/" + str(pg) + ".html"
+        html = self._fetch(url)
+        items = []
+        for m in re.finditer(r'class="vbk423ssf">\s*<a class="kkfmdqwasda picture" href="(/v/[^"]+)" title="([^"]+)">\s*<img[^>]+data-original="([^"]+)"', html):
+            remarks = ""
+            after_img = html[m.end():m.end()+200]
+            rm = re.search(r'<span class="aecccdfg dfgdfgf4532328">([^<]+)</span>', after_img)
+            if rm:
+                remarks = rm.group(1)
+            items.append({"vod_id": m.group(1).replace("/v/", "").replace(".html", ""), "name": m.group(2), "pic": m.group(3), "remarks": remarks})
+        if not items:
+            for m in re.finditer(r'<a class="mfbmf311 add42dss" href="(/v/[^"]+)" title="([^"]+)">\s*<span class="t1e2x3t34s4 fddpull-rigfht fkkdasdsdf3">([^<]+)</span>\s*([^<]+)</a>', html):
+                items.append({"vod_id": m.group(1).replace("/v/", "").replace(".html", ""), "name": m.group(4).strip(), "pic": "", "remarks": m.group(3)})
+        return {"list": [self._vod(x) for x in items], "page": pg, "pagecount": 9999 if len(items) >= PAGE_SIZE else pg, "limit": PAGE_SIZE, "total": 999999}
+
+    def detailContent(self, ids):
+        """v2.0: 处理完整 ids 集合 (不只 vid); 空集合不请求。"""
+        if not ids:
+            return {"list": []}
+        responses = [self._detail(str(video_id)) for video_id in ids]
+        merged = {k: v for k, v in (responses[0] or {}).items() if k != "list"} if responses[0] else {}
+        merged["list"] = [item for response in responses if response for item in (response.get("list") or [])]
+        return merged
+
+    def _detail(self, vid):
+        url = self.host + "/v/" + vid + ".html"
+        html = self._fetch(url)
+        if not html:
+            return {"list": []}
+        name = self._extract(html, r'<h1 class="title">([^<]+)</h1>') or self._extract(html, r'<h1 class="title">\s*([^<]+)') or vid
+        pic = self._extract(html, r'data-original="([^"]+)"') or self._extract(html, r'<meta property="og:image" content="([^"]+)"') or ""
+        type_name = self._extract(html, r'<span class="t1e2x3t34s4">类型：</span>([^<]+)') or ""
+        area = self._extract(html, r'<span class="t1e2x3t34s4 sdf543">地区：</span>([^<]+)') or ""
+        year = self._extract(html, r'<span class="t1e2x3t34s4 sdf543">年份：</span>([^<]+)') or ""
+        actor = self._extract(html, r'<span class="vod-meta-label">主演：</span><span class="vod-meta-value">([^<]+)</span>') or ""
+        director = self._extract(html, r'<span class="vod-meta-label">导演：</span><span class="vod-meta-value">([^<]+)</span>') or ""
+        remarks = self._extract(html, r'<span class="vod-meta-label">更新：</span><span class="vod-meta-value">([^<]+)</span>') or ""
+        content = self._extract(html, r'<span class="left t1e2x3t34s4">简介：</span>([\s\S]*?)</p>') or ""
+        content = re.sub(r'<[^>]+>', '', content).strip()
+        tabs = re.findall(r'class="playlist-group-btn"[^>]*onclick="return window.codexPlaylistSwitch\([^,]+,\s*(\d+)\s*\);\s*">([\s\S]*?)</button>', html)
+        if not tabs:
+            tabs = [(str(i), n) for i, n in enumerate(["高清线路", "非非线路", "无极云"], 1)]
+        eps_by_tab = {}
+        for tid, tname in tabs:
+            pane_html = self._extract(html, r'data-group-pane="' + tid + r'"[\s\S]*?<ol class="dfs2_plsdfaylidst column8 clearfix">([\s\S]*?)</ol>')
+            eps = []
+            for href, title in re.findall(r'href="(/p/[^"]+)"[\s\S]*?data-group-id="' + tid + r'"[\s\S]*?title="([^"]+)"', pane_html):
+                m = re.search(r'/p/[^/]+/' + tid + r'/(\d+)\.html', href)
+                if m:
+                    eps.append((m.group(1), title))
+            if eps:
+                eps_by_tab[tid] = (tname, eps)
+        if not eps_by_tab:
+            for tid, tname in tabs:
+                eps = []
+                for href in re.findall(r'href="(/p/' + vid + r'/' + tid + r'/\d+\.html)"', html):
+                    m = re.search(r'/p/[^/]+/' + tid + r'/(\d+)\.html', href)
+                    if m:
+                        eps.append((m.group(1), "第" + m.group(1) + "集"))
+                if eps:
+                    eps_by_tab[tid] = (tname, eps)
+        play_from = []
+        play_url = []
+        for tid, (tname, eps) in eps_by_tab.items():
+            play_from.append(tname)
+            ep_strs = []
+            for ep_num, ep_title in eps:
+                ep_title = ep_title.replace("$", " ").replace("#", " ")
+                play_url_str = vid + "|" + tid + "|" + ep_num
+                ep_strs.append(ep_title + "$" + play_url_str)
+            play_url.append("#".join(ep_strs))
+        vod = {
+            "vod_id": vid,
+            "vod_name": name,
+            "vod_pic": pic,
+            "type_name": type_name,
+            "vod_year": year,
+            "vod_area": area,
+            "vod_remarks": remarks,
+            "vod_actor": actor,
+            "vod_director": director,
+            "vod_content": content,
+            "vod_play_from": "$$$".join(play_from),
+            "vod_play_url": "$$$".join(play_url),
+        }
+        return {"list": [vod]}
+
+    def searchContent(self, key, quick, pg="1"):
+        pg = self._int(pg, 1)
+        token = self._b64url(key)
+        url = self.host + "/search/" + token + "/" + str(pg) + ".html"
+        html = self._fetch(url)
+        items = []
+        for m in re.finditer(r'class="vbk423ssf">\s*<a class="kkfmdqwasda picture" href="(/v/[^"]+)" title="([^"]+)">\s*<img[^>]+data-original="([^"]+)"[^>]*>\s*<span class="aecccdfg dfgdfgf4532328">([^<]+)</span>', html):
+            items.append({"vod_id": m.group(1).replace("/v/", "").replace(".html", ""), "name": m.group(2), "pic": m.group(3), "remarks": m.group(4)})
+        return {"list": [self._vod(x) for x in items], "page": pg, "pagecount": 9999 if len(items) >= PAGE_SIZE else pg, "limit": PAGE_SIZE, "total": 999999}
+
+    def _b64url(self, s):
+        try:
+            utf8 = s.encode("utf-8")
+            import base64
+            return base64.urlsafe_b64encode(utf8).decode().rstrip("=")
+        except Exception:
+            return ""
+
+    def playerContent(self, flag, id, vipFlags):
+        parts = str(id).split("|")
+        vid = parts[0] if len(parts) > 0 else ""
+        tid = parts[1] if len(parts) > 1 else "1"
+        ep = parts[2] if len(parts) > 2 else "1"
+        url = self.host + "/p/" + vid + "/" + tid + "/" + ep + ".html"
+        html = self._fetch(url)
+        iframe_src = self._extract(html, r'id="playerFrame"\s+src="([^"]+)"')
+        if not iframe_src:
+            iframe_src = url
+        return {"parse": 1, "url": iframe_src, "header": {"User-Agent": UA, "Referer": self.host + "/"}}
+
+    def _vod(self, item):
+        item = item or {}
+        vid = str(item.get("vod_id") or "")
+        return {"vod_id": vid, "vod_name": item.get("name") or vid, "vod_pic": item.get("pic") or "", "vod_remarks": item.get("remarks") or ""}
+
+    def _extract(self, html, pattern):
+        m = re.search(pattern, html)
+        return m.group(1).strip() if m else ""
+
+    def _int(self, x, d=0):
+        try:
+            return int(x)
+        except Exception:
+            return d

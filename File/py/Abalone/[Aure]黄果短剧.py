@@ -3,8 +3,8 @@ import json
 import re
 import sys
 import time
+from urllib.parse import quote as _quote
 
-import requests
 
 sys.path.append('..')
 try:
@@ -62,6 +62,125 @@ RE_DESC = re.compile(r'hg-drama-card__desc">([^<]*)<')
 RE_TAG = re.compile(r'<a class="hg-tag" href="/tag/[^"]*">([^<]+)</a>')
 
 
+# ---- v2.0 迁移: requests.Session -> self.net 兼容适配器 (内联) ----
+class _NetResp(object):
+    """模拟 requests.Response: 基于 self.net.req 返回的 dict。"""
+    def __init__(self, resp_dict, url):
+        self._d = resp_dict or {}
+        self.url = url
+        self.status_code = int(self._d.get("code") or 0)
+        self._content = self._d.get("content", "")
+        self.headers = self._d.get("headers") or {}
+        self.encoding = None
+        self.apparent_encoding = "utf-8"
+        self.text = self._content if isinstance(self._content, str) else ""
+        if not self.text and isinstance(self._content, (bytes, bytearray)):
+            self.text = bytes(self._content).decode("utf-8", "ignore")
+    @property
+    def content(self):
+        return self._content if isinstance(self._content, (bytes, bytearray)) else self.text.encode("utf-8", "ignore")
+    def json(self):
+        import json as _json
+        return _json.loads(self.text or "{}")
+    def raise_for_status(self):
+        if self.status_code < 200 or self.status_code >= 300:
+            raise RuntimeError("HTTP %s" % self.status_code)
+    def __repr__(self):
+        return "<_NetResp %s>" % self.status_code
+
+
+class _NetSession(object):
+    """requests.Session 兼容层: 优先宿主注入 self.net, 无则 urllib 直连(标准库, 任何播放器可跑)。"""
+    def __init__(self, net, headers=None, default_headers=None):
+        self.net = net
+        self.headers = headers if headers is not None else {}
+        if default_headers:
+            for k, v in default_headers.items():
+                self.headers.setdefault(k, v)
+    def _merge(self, headers):
+        h = dict(self.headers)
+        if headers:
+            for k, v in headers.items():
+                h[k] = v
+        return h
+    def _build_url(self, url, params):
+        if not params:
+            return url
+        import urllib.parse as _up
+        sep = "&" if "?" in url else "?"
+        return url + sep + _up.urlencode(params)
+    def _urllib_get(self, full, headers, timeout):
+        import urllib.request as _ur, ssl as _ssl
+        try:
+            ctx = _ssl._create_unverified_context()
+        except Exception:
+            ctx = None
+        req = _ur.Request(full, headers=headers)
+        with _ur.urlopen(req, timeout=timeout or 15, context=ctx) as resp:
+            raw = resp.read()
+            enc = resp.headers.get("Content-Encoding", "")
+            if "gzip" in enc:
+                import gzip as _g
+                raw = _g.decompress(raw)
+            return {"code": resp.status, "content": raw, "headers": dict(resp.headers), "error": ""}
+    def _urllib_post(self, full, headers, data, timeout):
+        import urllib.request as _ur, urllib.parse as _up, ssl as _ssl
+        try:
+            ctx = _ssl._create_unverified_context()
+        except Exception:
+            ctx = None
+        body = _up.urlencode(data or {}).encode("utf-8")
+        req = _ur.Request(full, data=body, headers=headers, method="POST")
+        with _ur.urlopen(req, timeout=timeout or 15, context=ctx) as resp:
+            raw = resp.read()
+            return {"code": resp.status, "content": raw, "headers": dict(resp.headers), "error": ""}
+    def get(self, url, params=None, headers=None, timeout=None, **kw):
+        h = self._merge(headers)
+        full = self._build_url(url, params)
+        timeout_s = None
+        if timeout:
+            timeout_s = int(timeout) / 1000 if timeout > 100 else int(timeout)
+        if self.net is not None:
+            opts = {"headers": h}
+            # buffer=3: 让 FongMi net.reqParts 返回 byte[] (图片二进制, 否则 net.req 返回 String 损坏)
+            if kw.get("buffer") == 3:
+                opts["buffer"] = 3
+            if timeout_s:
+                opts["timeout"] = int(timeout_s * 1000)
+            try:
+                # 5.8.4 catvod: net.req 返回 String (图片损坏); 用 reqParts 拿 [metadata, content], buffer==3 -> content=byte[]
+                if hasattr(self.net, "reqParts"):
+                    parts = self.net.reqParts(full, opts)
+                    if isinstance(parts, (list, tuple)) and len(parts) >= 2:
+                        return _NetResp({"code": 200, "content": parts[1], "headers": {}}, full)
+                resp = self.net.req(full, opts)
+                return _NetResp(resp, full)
+            except Exception:
+                pass
+        try:
+            return _NetResp(self._urllib_get(full, h, timeout_s), full)
+        except Exception as e:
+            return _NetResp({"code": 0, "content": b"", "headers": {}, "error": str(e)}, full)
+    def post(self, url, data=None, params=None, headers=None, timeout=None, **kw):
+        h = self._merge(headers)
+        full = self._build_url(url, params)
+        timeout_s = None
+        if timeout:
+            timeout_s = int(timeout) / 1000 if timeout > 100 else int(timeout)
+        if self.net is not None:
+            opts = {"method": "POST", "headers": h, "postType": "form", "data": data or {}}
+            if timeout_s:
+                opts["timeout"] = int(timeout_s * 1000)
+            try:
+                resp = self.net.req(full, opts)
+                return _NetResp(resp, full)
+            except Exception:
+                pass
+        try:
+            return _NetResp(self._urllib_post(full, h, data or {}, timeout_s), full)
+        except Exception as e:
+            return _NetResp({"code": 0, "content": b"", "headers": {}, "error": str(e)}, full)
+
 class Spider(BaseSpider):
 
 
@@ -80,12 +199,10 @@ class Spider(BaseSpider):
             "Referer": self.host + "/",
             "Accept-Language": "zh-CN,zh;q=0.9",
         }
-        self.session = requests.Session()
+        self.session = _NetSession(getattr(self, "net", None))
         self.session.headers.update(self.headers)
         self._cache = {}
 
-    def getName(self):
-        return "黄果短剧"
 
     def getDependence(self):
         return []
@@ -100,10 +217,15 @@ class Spider(BaseSpider):
         return False
 
     def action(self, action):
-        return ""
+        return {"msg": "不支持此操作"}
 
-    def localProxy(self, param):
-        param = param or {}
+    def proxy(self, params):
+        if isinstance(params, str):
+            try:
+                params = json.loads(params)
+            except Exception:
+                params = {}
+        param = params or {}
         if param.get("type") != "pic":
             return [404, "text/plain", ""]
         url = self._d64(param.get("url", ""))
@@ -111,7 +233,7 @@ class Spider(BaseSpider):
             return [404, "text/plain", ""]
         for i in range(2):
             try:
-                r = self.session.get(url, timeout=20, verify=False)
+                r = self.session.get(url, timeout=20, verify=False, buffer=3)
                 if r.status_code != 200 or not r.content:
                     continue
                 img = self._pic_decrypt(r.content)
@@ -120,6 +242,7 @@ class Spider(BaseSpider):
                 continue
         return [404, "text/plain", ""]
 
+    localProxy = proxy
 
     def homeContent(self, filter):
         classes = [{"type_id": c, "type_name": n, "style": STYLE} for c, n in CHANNELS]
@@ -165,8 +288,16 @@ class Spider(BaseSpider):
                 "limit": PAGE_SIZE, "total": pages * PAGE_SIZE}
 
 
+
     def detailContent(self, ids):
-        vid = str(ids[0]).strip()
+        if not ids:
+            return {"list": []}
+        responses = [self._detail(str(video_id)) for video_id in ids]
+        merged = {k: v for k, v in (responses[0] or {}).items() if k != "list"} if responses[0] else {}
+        merged["list"] = [item for response in responses if response for item in (response.get("list") or [])]
+        return merged
+    def _detail(self, vid):
+        vid = str(vid).strip()
         raw = self._get("/detail/%s/" % vid)
         if not raw:
             return {"list": []}
@@ -207,7 +338,7 @@ class Spider(BaseSpider):
 
     def searchContent(self, key, quick, pg="1"):
         pg = self._int(pg, 1)
-        kw = requests.utils.quote(str(key), safe="")
+        kw = _quote(str(key), safe="")
         path = "/search/video/%s/" % kw if pg == 1 else "/search/video/%s/%d/" % (kw, pg)
         html = self._get(path) or ""
         items = self._cards(html)
@@ -330,9 +461,10 @@ class Spider(BaseSpider):
         if not proxy:
             return u
         sep = "&" if "?" in proxy else "?"
+        # 真机 FongMi getProxyUrl 已带 do=py+siteKey; 自测台注入的不带 siteKey -> 仅在缺失时补
         key = getattr(self, "siteKey", "") or ""
-        extra = ("&siteKey=%s" % key) if key else ""
-        return "%s%stype=pic&url=%s%s" % (proxy, sep, self._e64(u), extra)
+        extra = ("&siteKey=%s" % key) if (key and "siteKey=" not in proxy) else ""
+        return "%s%stype=pic&url=%s%s" % (proxy, sep, _quote(self._e64(u), safe=""), extra)
 
     def _pic_decrypt(self, raw):
         if raw[:2] == b'\xff\xd8' or raw[:4] == b'\x89PNG' or raw[8:12] == b'WEBP' or raw[:4] == b'GIF8':
@@ -342,11 +474,22 @@ class Spider(BaseSpider):
             return raw
         try:
             from Crypto.Cipher import AES
-            return AES.new(PIC_KEY, AES.MODE_CBC, PIC_IV).decrypt(raw[:n])
+            dec = AES.new(PIC_KEY, AES.MODE_CBC, PIC_IV).decrypt(raw[:n])
         except Exception:
             from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
             d = Cipher(algorithms.AES(PIC_KEY), modes.CBC(PIC_IV)).decryptor()
-            return d.update(raw[:n]) + d.finalize()
+            dec = d.update(raw[:n]) + d.finalize()
+        return self._trim(dec)
+
+    def _trim(self, b):
+        """截断到合法图片结束符（去除 NoPadding 尾部零填充/垃圾）。"""
+        if b[:2] == b'\xff\xd8':
+            i = b.rfind(b'\xff\xd9')
+            return b[:i + 2] if i > 0 else b
+        if b[:4] == b'\x89PNG':
+            i = b.rfind(b'IEND')
+            return b[:i + 8] if i > 0 else b
+        return b
 
     def _mime(self, b):
         if b[:4] == b'\x89PNG':
@@ -362,7 +505,10 @@ class Spider(BaseSpider):
         return base64.urlsafe_b64encode(str(s).encode("utf-8")).decode("utf-8")
 
     def _d64(self, s):
-        s = str(s or "").strip().replace(" ", "+")
+        s = str(s or "").strip()
+        s = _quote(s, safe="-_") if False else s  # 占位
+        from urllib.parse import unquote
+        s = unquote(s).replace(" ", "+")
         for dec in (base64.urlsafe_b64decode, base64.b64decode):
             try:
                 pad = "=" * (-len(s) % 4)

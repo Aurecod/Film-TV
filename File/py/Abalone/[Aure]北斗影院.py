@@ -1,15 +1,43 @@
-
+# -*- coding: utf-8 -*-
+"""[Aure]北斗影院 (v2.0 新 API 契约, 2026-10-30 迁移)
+迁移要点: requests.Session -> self.net.req; getName 删除; detailContent 完整 ids 集合;
+action 返回 {"msg"}; localProxy 删除 (未使用); 表单/超时按毫秒。
+协议依据: FongMi/TV@fongmi 分支 + reference/python-crawler-migration.md
+"""
 import re
 import json
 import time
-
-import requests
 
 try:
     from base.spider import Spider as BaseSpider
 except Exception:
     class BaseSpider:
-        pass
+        def homeContent(self, filter):
+                return {"class": []}
+        def homeVideoContent(self):
+                return {"list": []}
+        def categoryContent(self, tid, pg, filter, extend):
+                return {"list": []}
+        def detailContent(self, ids):
+                return {"list": []}
+        def searchContent(self, key, quick, pg="1"):
+                return {"list": []}
+        def playerContent(self, flag, id, vipFlags):
+                return {}
+        def liveContent(self, url):
+                return ""
+        def proxy(self, params):
+                return [404, "text/plain", ""]
+        def localProxy(self, params):
+                return [404, "text/plain", ""]
+        def isVideoFormat(self, url):
+                return False
+        def manualVideoCheck(self):
+                return False
+        def action(self, action):
+                return {}
+        def getDependence(self):
+                return []
 
 NAME = "北斗影院"
 HOST = "http://www.bdjmcc.com"
@@ -18,9 +46,11 @@ PAGE_SIZE = 36
 CACHE_TTL = 30
 STYLE = {"type": "rect", "ratio": 1.33}
 
+
 class Spider(BaseSpider):
 
     def __init__(self):
+        super().__init__()
         self.host = HOST
         self.name = NAME
         self.headers = {
@@ -29,22 +59,18 @@ class Spider(BaseSpider):
             "Accept": "*/*",
             "Accept-Encoding": "identity",
         }
-        self.session = requests.Session()
-        self.session.headers.update(self.headers)
         self._cache = {}
         self._categories_cache = None
 
     def init(self, extend=""):
         pass
 
-    def getName(self):
-        return self.name
-
     def getDependence(self):
         return []
 
     def destroy(self):
-        pass
+        self._cache.clear()
+        self._categories_cache = None
 
     def isVideoFormat(self, url):
         return bool(re.search(r"\.(m3u8|mp4|flv|mkv|ts)(\?|$)", str(url)))
@@ -53,36 +79,41 @@ class Spider(BaseSpider):
         return False
 
     def action(self, action):
-        return ""
+        return {"msg": "不支持此操作"}
 
     def _fetch(self, url):
+        """GET 请求，返回 HTML 文本。优先宿主 self.net.req，无 net 或失败回退 urllib。"""
         ck = url
         hit = self._cache.get(ck)
         if hit and time.time() - hit[1] < CACHE_TTL:
             return hit[0]
-        try:
-            r = self.session.get(url, timeout=15)
-            r.raise_for_status()
-            r.encoding = r.apparent_encoding or "utf-8"
-            html = r.text
-            self._cache[ck] = (html, time.time())
-            return html
-        except requests.exceptions.ChunkedEncodingError:
-
+        html = ""
+        # 宿主注入 self.net: 用它
+        if getattr(self, "net", None) is not None:
             try:
-                r = self.session.get(url, timeout=15, stream=True)
-                r.raise_for_status()
-                content = b''
-                for chunk in r.iter_content(chunk_size=8192):
-                    if chunk:
-                        content += chunk
-                html = content.decode(r.apparent_encoding or "utf-8", errors="ignore")
-                self._cache[ck] = (html, time.time())
-                return html
+                resp = self.net.req(url, {"headers": self.headers, "timeout": 15000})
+                if not resp.get("error") and 200 <= (resp.get("code") or 0) < 300:
+                    html = resp.get("content", "")
             except Exception:
-                return ""
-        except Exception:
-            return ""
+                html = ""
+        # 回退 urllib (其他播放器无 self.net 时可用)
+        if not html:
+            try:
+                import urllib.request, ssl
+                ctx = ssl._create_unverified_context()
+                req = urllib.request.Request(url, headers=self.headers)
+                with urllib.request.urlopen(req, timeout=15, context=ctx) as r:
+                    raw = r.read()
+                    enc = r.headers.get("Content-Encoding", "")
+                    if "gzip" in enc:
+                        import gzip
+                        raw = gzip.decompress(raw)
+                    html = raw.decode("utf-8", "ignore")
+            except Exception:
+                html = ""
+        if html:
+            self._cache[ck] = (html, time.time())
+        return html
 
     def _get_categories(self):
         if self._categories_cache is not None:
@@ -140,7 +171,15 @@ class Spider(BaseSpider):
         return {"list": [self._vod(x) for x in items], "page": pg, "pagecount": 9999 if len(items) >= PAGE_SIZE else pg, "limit": PAGE_SIZE, "total": 999999}
 
     def detailContent(self, ids):
-        vid = str(ids[0])
+        """v2.0: 处理完整 ids 集合 (不只 vid); 空集合不请求。"""
+        if not ids:
+            return {"list": []}
+        responses = [self._detail(str(video_id)) for video_id in ids]
+        merged = {k: v for k, v in (responses[0] or {}).items() if k != "list"} if responses[0] else {}
+        merged["list"] = [item for response in responses if response for item in (response.get("list") or [])]
+        return merged
+
+    def _detail(self, vid):
         url = self.host + "/v/" + vid + ".html"
         html = self._fetch(url)
         if not html:
@@ -205,8 +244,6 @@ class Spider(BaseSpider):
 
     def searchContent(self, key, quick, pg="1"):
         pg = self._int(pg, 1)
-        import urllib.parse
-        token = urllib.parse.quote(key).replace("%", "").replace("=", "").replace("+", "")
         token = self._b64url(key)
         url = self.host + "/search/" + token + "/" + str(pg) + ".html"
         html = self._fetch(url)
@@ -235,13 +272,10 @@ class Spider(BaseSpider):
             iframe_src = url
         return {"parse": 1, "url": iframe_src, "header": {"User-Agent": UA, "Referer": self.host + "/"}}
 
-    def localProxy(self, param):
-        return [404, "text/plain", "not found"]
-
     def _vod(self, item):
         item = item or {}
         vid = str(item.get("vod_id") or "")
-        return {"vod_id": vid, "vod_name": item.get("name") or vid, "vod_pic": item.get("pic") or "", "vod_remarks": item.get("remarks") or "",}
+        return {"vod_id": vid, "vod_name": item.get("name") or vid, "vod_pic": item.get("pic") or "", "vod_remarks": item.get("remarks") or ""}
 
     def _extract(self, html, pattern):
         m = re.search(pattern, html)

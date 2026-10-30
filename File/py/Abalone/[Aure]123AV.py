@@ -25,7 +25,6 @@ import json
 import re
 import threading
 import time
-import urllib.request
 from urllib.parse import quote, unquote
 
 try:
@@ -146,6 +145,7 @@ CATS = [
 class Spider(BaseSpider):
 
     def __init__(self):
+        super().__init__()
         self.hosts = list(HOSTS)
         self.host = self.hosts[0]
         self.name = NAME
@@ -168,9 +168,6 @@ class Spider(BaseSpider):
                     self.hosts = [site] + [h for h in self.hosts if h != site]
                     self.host = self.hosts[0]
         self.options = cfg if isinstance(cfg, dict) else {}
-
-    def getName(self):
-        return self.name
 
     def getDependence(self):
         return []
@@ -233,7 +230,15 @@ class Spider(BaseSpider):
         }
 
     def detailContent(self, ids):
-        vid = str(ids[0] if ids else "").strip()
+        if not ids:
+            return {"list": []}
+        responses = [self._detail(str(video_id)) for video_id in ids]
+        merged = {k: v for k, v in (responses[0] or {}).items() if k != "list"} if responses[0] else {}
+        merged["list"] = [item for response in responses if response for item in (response.get("list") or [])]
+        return merged
+
+    def _detail(self, vid):
+        vid = str(vid or "").strip()
         if vid.startswith("http"):
             vid = vid.rstrip("/").rsplit("/", 1)[-1]
         html = self._fetch("/en/v/" + quote(vid))
@@ -366,14 +371,33 @@ class Spider(BaseSpider):
         h = {"User-Agent": UA, "Accept": "*/*", "Accept-Language": "en-US,en;q=0.9"}
         if referer:
             h["Referer"] = referer
-        try:
-            req = urllib.request.Request(url, headers=h)
-            with urllib.request.urlopen(req, timeout=15) as resp:
-                data = resp.read().decode("utf-8", "ignore")
+        data = ""
+        # 宿主注入 self.net: 用它
+        if getattr(self, "net", None) is not None:
+            try:
+                resp = self.net.req(url, {"headers": h, "timeout": 15000})
+                if not resp.get("error") and 200 <= (resp.get("code") or 0) < 300:
+                    data = resp.get("content", "")
+            except Exception:
+                data = ""
+        # 回退 urllib (其他播放器无 self.net 时可用)
+        if not data:
+            try:
+                import urllib.request, ssl
+                ctx = ssl._create_unverified_context()
+                req = urllib.request.Request(url, headers=h)
+                with urllib.request.urlopen(req, timeout=15, context=ctx) as r:
+                    raw = r.read()
+                    enc = r.headers.get("Content-Encoding", "")
+                    if "gzip" in enc:
+                        import gzip
+                        raw = gzip.decompress(raw)
+                    data = raw.decode("utf-8", "ignore")
+            except Exception:
+                data = ""
+        if data:
             self._cache[ck] = (data, time.time())
-            return data
-        except Exception:
-            return ""
+        return data
 
     def _fetch_list(self, path):
         html = self._fetch(path, referer=self.host + "/")

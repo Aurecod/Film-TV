@@ -11,7 +11,6 @@ import time
 import threading
 from urllib.parse import quote, unquote
 
-import requests
 
 try:
     from base.spider import Spider as BaseSpider
@@ -32,11 +31,11 @@ STYLE = {"type": "rect", "ratio": 1.78}
 class Spider(BaseSpider):
 
     def __init__(self):
+        super().__init__()
         self.hosts = list(HOSTS)
         self.host = self.hosts[0]
         self.name = NAME
-        self.session = requests.Session()
-        self.session.headers.update({"User-Agent": UA, "Referer": "https://57cg4.com/", "Accept": "*/*"})
+        self.headers = {"User-Agent": UA, "Referer": "https://57cg4.com/", "Accept": "*/*"}
         self._cache = {}
         self._cache_time = {}
         self._good_host = None
@@ -60,9 +59,6 @@ class Spider(BaseSpider):
                 self.hosts = [site] + [h for h in self.hosts if h != site]
                 self.host = self.hosts[0]
         self.options = cfg
-
-    def getName(self):
-        return self.name
 
     def getDependence(self):
         return []
@@ -126,7 +122,15 @@ class Spider(BaseSpider):
 
     # ================= 详情 =================
     def detailContent(self, ids):
-        vid = str(ids[0] if ids else "")
+        if not ids:
+            return {"list": []}
+        responses = [self._detail(str(video_id)) for video_id in ids]
+        merged = {k: v for k, v in (responses[0] or {}).items() if k != "list"} if responses[0] else {}
+        merged["list"] = [item for response in responses if response for item in (response.get("list") or [])]
+        return merged
+
+    def _detail(self, vid):
+        vid = str(vid or "")
         if vid.startswith(VOD_ID_PREFIX):
             vid = vid[len(VOD_ID_PREFIX):]
         data = self._fetch_detail(vid)
@@ -251,15 +255,34 @@ class Spider(BaseSpider):
         return url
 
     def _fetch_html(self, url, referer=""):
-        """GET 请求，返回 HTML 文本"""
+        """GET 请求，返回 HTML 文本。优先宿主 self.net.req，无 net 或失败回退 urllib。"""
         if not url:
             return ""
-        headers = {"Referer": referer or "https://57cg4.com/"}
+        headers = dict(self.headers)
+        headers["Referer"] = referer or "https://57cg4.com/"
+        # 宿主注入 self.net: 用它
+        if getattr(self, "net", None) is not None:
+            try:
+                resp = self.net.req(url, {"headers": headers, "timeout": 15000})
+                if not resp.get("error") and 200 <= (resp.get("code") or 0) < 300:
+                    return resp.get("content", "")
+            except Exception:
+                pass
+        # 回退 urllib (其他播放器无 self.net 时可用)
         try:
-            r = self.session.get(url, headers=headers, timeout=15, verify=False)
-            r.encoding = r.apparent_encoding or "utf-8"
-            r.raise_for_status()
-            return r.text
+            import urllib.request, ssl
+            ctx = ssl._create_unverified_context()
+            req = urllib.request.Request(url, headers=headers)
+            with urllib.request.urlopen(req, timeout=15, context=ctx) as r:
+                raw = r.read()
+                enc = r.headers.get("Content-Encoding", "")
+                if "gzip" in enc:
+                    import gzip
+                    raw = gzip.decompress(raw)
+                try:
+                    return raw.decode("utf-8", "ignore")
+                except Exception:
+                    return raw.decode("latin-1", "ignore")
         except Exception:
             return ""
 

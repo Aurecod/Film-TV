@@ -27,7 +27,32 @@ try:
     from base.spider import Spider as BaseSpider
 except Exception:
     class BaseSpider:
-        pass
+        def homeContent(self, filter):
+                return {"class": []}
+        def homeVideoContent(self):
+                return {"list": []}
+        def categoryContent(self, tid, pg, filter, extend):
+                return {"list": []}
+        def detailContent(self, ids):
+                return {"list": []}
+        def searchContent(self, key, quick, pg="1"):
+                return {"list": []}
+        def playerContent(self, flag, id, vipFlags):
+                return {}
+        def liveContent(self, url):
+                return ""
+        def proxy(self, params):
+                return [404, "text/plain", ""]
+        def localProxy(self, params):
+                return [404, "text/plain", ""]
+        def isVideoFormat(self, url):
+                return False
+        def manualVideoCheck(self):
+                return False
+        def action(self, action):
+                return {}
+        def getDependence(self):
+                return []
 
 NAME = "XOJAV"
 HOST = "https://xojav.tv"
@@ -196,11 +221,122 @@ P_PIC = re.compile(r'data-src="(https://cdn\.18jav\.tv[^"]+)"')
 P_DUR = re.compile(r'card-video__duration">([^<]+)<')
 P_TITLE = re.compile(r'card-video__title">\s*<a[^>]*>\s*([^<]+?)\s*</a>', re.S)
 
+# ---- v2.0 迁移: requests.Session -> self.net 兼容适配器 (内联) ----
+class _NetResp(object):
+    """模拟 requests.Response: 基于 self.net.req 或 urllib 返回的 dict。"""
+    def __init__(self, resp_dict, url):
+        self._d = resp_dict or {}
+        self.url = url
+        self.status_code = int(self._d.get("code") or 0)
+        self._content = self._d.get("content", "")
+        self.headers = self._d.get("headers") or {}
+        self.encoding = None
+        self.apparent_encoding = "utf-8"
+        self.text = self._content if isinstance(self._content, str) else ""
+        if not self.text and isinstance(self._content, (bytes, bytearray)):
+            self.text = bytes(self._content).decode("utf-8", "ignore")
+    @property
+    def content(self):
+        return self._content if isinstance(self._content, (bytes, bytearray)) else self.text.encode("utf-8", "ignore")
+    def json(self):
+        import json as _json
+        return _json.loads(self.text)
+    def raise_for_status(self):
+        if self.status_code >= 400:
+            raise Exception("HTTP %s" % self.status_code)
+    def __repr__(self):
+        return "<_NetResp %s %d>" % (self.url, self.status_code)
+
+class _NetSession(object):
+    """requests.Session 兼容层: 优先宿主注入 self.net, 无则 urllib 直连(标准库, 任何播放器可跑)。"""
+    def __init__(self, net, headers=None, default_headers=None):
+        self.net = net
+        self.headers = headers if headers is not None else {}
+        if default_headers:
+            for k, v in default_headers.items():
+                self.headers.setdefault(k, v)
+    def _merge(self, headers):
+        h = dict(self.headers)
+        if headers:
+            for k, v in headers.items():
+                h[k] = v
+        return h
+    @staticmethod
+    def _build_url(url, params):
+        if not params:
+            return url
+        import urllib.parse as _up
+        sep = "&" if "?" in url else "?"
+        return url + sep + _up.urlencode(params)
+    def _urllib_get(self, full, headers, timeout):
+        import urllib.request as _ur, ssl as _ssl
+        try:
+            ctx = _ssl._create_unverified_context()
+        except Exception:
+            ctx = None
+        req = _ur.Request(full, headers=headers)
+        with _ur.urlopen(req, timeout=timeout or 15, context=ctx) as resp:
+            raw = resp.read()
+            enc = resp.headers.get("Content-Encoding", "")
+            if "gzip" in enc:
+                import gzip as _g
+                raw = _g.decompress(raw)
+            return {"code": resp.status, "content": raw, "headers": dict(resp.headers), "error": ""}
+    def _urllib_post(self, full, headers, data, timeout):
+        import urllib.request as _ur, urllib.parse as _up, ssl as _ssl
+        try:
+            ctx = _ssl._create_unverified_context()
+        except Exception:
+            ctx = None
+        body = _up.urlencode(data or {}).encode("utf-8")
+        req = _ur.Request(full, data=body, headers=headers, method="POST")
+        with _ur.urlopen(req, timeout=timeout or 15, context=ctx) as resp:
+            raw = resp.read()
+            return {"code": resp.status, "content": raw, "headers": dict(resp.headers), "error": ""}
+    def get(self, url, params=None, headers=None, timeout=None, **kw):
+        h = self._merge(headers)
+        full = self._build_url(url, params)
+        timeout_s = None
+        if timeout:
+            timeout_s = int(timeout) / 1000 if timeout > 100 else int(timeout)
+        if self.net is not None:
+            opts = {"headers": h}
+            if timeout_s:
+                opts["timeout"] = int(timeout_s * 1000)
+            try:
+                resp = self.net.req(full, opts)
+                return _NetResp(resp, full)
+            except Exception:
+                pass
+        try:
+            return _NetResp(self._urllib_get(full, h, timeout_s), full)
+        except Exception as e:
+            return _NetResp({"code": 0, "content": b"", "headers": {}, "error": str(e)}, full)
+    def post(self, url, data=None, params=None, headers=None, timeout=None, **kw):
+        h = self._merge(headers)
+        full = self._build_url(url, params)
+        timeout_s = None
+        if timeout:
+            timeout_s = int(timeout) / 1000 if timeout > 100 else int(timeout)
+        if self.net is not None:
+            opts = {"method": "POST", "headers": h, "postType": "form", "data": data or {}}
+            if timeout_s:
+                opts["timeout"] = int(timeout_s * 1000)
+            try:
+                resp = self.net.req(full, opts)
+                return _NetResp(resp, full)
+            except Exception:
+                pass
+        try:
+            return _NetResp(self._urllib_post(full, h, data or {}, timeout_s), full)
+        except Exception as e:
+            return _NetResp({"code": 0, "content": b"", "headers": {}, "error": str(e)}, full)
 
 class Spider(BaseSpider):
 
     # ---------- 生命周期 ----------
     def __init__(self):
+        super().__init__()
         self.host = HOST
         self.name = NAME
         self._cache = {}
@@ -224,9 +360,6 @@ class Spider(BaseSpider):
         if site and site.startswith("http"):
             self.host = site
         self.options = cfg
-
-    def getName(self):
-        return self.name
 
     def getDependence(self):
         return []
@@ -438,12 +571,16 @@ class Spider(BaseSpider):
         return {"class": [], "list": items, "pagecount": pc}
 
     # ---------- 详情 ----------
+
     def detailContent(self, ids):
-        if isinstance(ids, list):
-            vid = ids[0] if ids else ""
-        else:
-            vid = ids
-        vid = (vid or "").strip()
+        if not ids:
+            return {"list": []}
+        responses = [self._detail(str(video_id)) for video_id in ids]
+        merged = {k: v for k, v in (responses[0] or {}).items() if k != "list"} if responses[0] else {}
+        merged["list"] = [item for response in responses if response for item in (response.get("list") or [])]
+        return merged
+    def _detail(self, vid):
+        vid = str(vid or "").strip()
         if not vid:
             return {"list": []}
         url = self.host + "/videos/" + quote(vid, safe="")
