@@ -1,18 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-Jable (jable.my / jable666.net) — FongMi py spider
-站点：jable 系成人站镜像（免 Cloudflare，py 路线可直连）。
-官方域名 jable.tv 有 CF 保护，需用同目录 jar/JableTv.jar（WebView 路线）。
-
-结构（2026-10-28 逆向，jable.my 验证）：
-  列表   /latest-updates/<page>/  /hot/<page>/  /tags/<slug>/<page>/
-        卡片 = div.col-6 > div.video-img-box：<a href=.../videos/<code>/> +
-        <img data-src=封面> + span.label(时长) + h6.title(标题)
-  详情   /videos/<code>/  —— 播放地址在 <script>var hlsUrl='<m3u8>';</script>
-        hlsUrl 含短时效 token（约 3h），每次播放重取详情页拿新鲜地址
-  搜索   /search/<kw>/    —— 仅第 1 页有效（站点分页为会话机制）
-  播放   m3u8 CDN 免鉴权直连，parse=0
-"""
+# [Jable¹⁸  更新于:2026-10-31 13:23]
 
 import sys
 import re
@@ -66,7 +53,6 @@ CARD_RE = re.compile(
     r'<h6 class="title"><a href="[^"]*">([\s\S]*?)</a></h6>'
 )
 
-# 分类表：{type_name, type_id}。type_id 直接拼进 /<tid>/<page>/。
 CATS = [
     ("最近更新", "latest-updates"),
     ("热门影片", "hot"),
@@ -183,9 +169,7 @@ CATS = [
     ("处女作/引退作", "tags/debut-retires"),
 ]
 
-# ---- v2.0 迁移: requests.Session -> self.net 兼容适配器 (内联) ----
 class _NetResp(object):
-    """模拟 requests.Response: 基于 self.net.req 或 urllib 返回的 dict。"""
     def __init__(self, resp_dict, url):
         self._d = resp_dict or {}
         self.url = url
@@ -210,7 +194,6 @@ class _NetResp(object):
         return "<_NetResp %s %d>" % (self.url, self.status_code)
 
 class _NetSession(object):
-    """requests.Session 兼容层: 优先宿主注入 self.net, 无则 urllib 直连(标准库, 任何播放器可跑)。"""
     def __init__(self, net, headers=None, default_headers=None):
         self.net = net
         self.headers = headers if headers is not None else {}
@@ -367,7 +350,6 @@ class Spider(BaseSpider):
     def categoryContent(self, tid, pg, filter, extend):
         pg = self._int(pg, 1)
         tid = str(tid or "").strip()
-        # 演员可点击（BBCode [a=cr:...]），点击后 FongMi 把 id 作为 tid 传回
         if tid.startswith("actor/"):
             from urllib.parse import unquote
             name = unquote(tid[len("actor/"):])
@@ -437,7 +419,6 @@ class Spider(BaseSpider):
     def playerContent(self, flag, id, vipFlags):
         vid = str(id or "").strip()
         page_url = self.host + "/videos/" + quote(vid) + "/"
-        # hlsUrl 含短时效 token（约 3h），必须重新取详情页拿新鲜地址
         html = self._get("/videos/%s/" % quote(vid), referer=self.host + "/")
         m = (re.search(r"hlsUrl\s*=\s*'([^']+)'", html or "")
              or re.search(r'hlsUrl\s*=\s*"([^"]+)"', html or ""))
@@ -527,7 +508,6 @@ class Spider(BaseSpider):
         }
 
     def _clickable(self, name):
-        """FongMi 可点击 BBCode：点击后调用 categoryContent(id, ...)。"""
         if not name:
             return ""
         try:
@@ -543,3 +523,4 @@ class Spider(BaseSpider):
             return int(x)
         except Exception:
             return d
+

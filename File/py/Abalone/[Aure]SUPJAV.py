@@ -1,19 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-SUPJAV (supjav.pics) — FongMi Type3 Python Spider
-站点: WordPress REST API 型越南 JAV 站
-协议依据: FongMi/TV@fongmi 分支源码 (chaquo/base/spider.py, app.py, bean/*.java)
-
-关键逆向结论 (2026-10-28):
-- 主域名 supjav.com 被 CF managed challenge 整站 403; 真实活动域名是 supjav.pics (WP 站, 免 CF)
-- 全站走 WP REST API: /wp-json/wp/v2/{categories,posts,actor} + 自定义播放端点 /wp-json/fb/v1/player/
-- 播放: /wp-json/fb/v1/player/?id=<post_id> -> {"success":true,"data":"<ArtPlayer HTML>"} 内 url:'...m3u8'
-- 视频是 PNG 图片序列 m3u8 (948 帧, VOD, 无加密, byteimg CDN) —— FongMi 可直接播 (parse=0)
-- 封面为 .avif; FongMi Glide 5.0.9 带 glide-avif-integration, 原生支持
-- 演员是 WP 自定义分类法 (taxonomy=actor), 有 term id; 点击走 posts?actor=<id> (比搜索可靠)
-
-自测: python3 /var/minis/skills/Quss/scripts/test_spider.py "[Aure]SUPJAV.py"
-"""
+# [SUPJAV¹⁸  更新于:2026-10-31 13:23]
 import sys
 import json
 import re
@@ -59,15 +45,11 @@ PAGE_SIZE = 30
 CACHE_TTL = 120
 DEBUG = False
 
-# 封面样式: 横版 (WP 卡片是 300x225 = 4:3)
 STYLE = {"type": "rect", "ratio": 1.33}
 
-# 分类缓存 key
 _CLS_KEY = "__cls"
 
-# ---- v2.0 迁移: requests.Session -> self.net 兼容适配器 (内联) ----
 class _NetResp(object):
-    """模拟 requests.Response: 基于 self.net.req 或 urllib 返回的 dict。"""
     def __init__(self, resp_dict, url):
         self._d = resp_dict or {}
         self.url = url
@@ -92,7 +74,6 @@ class _NetResp(object):
         return "<_NetResp %s %d>" % (self.url, self.status_code)
 
 class _NetSession(object):
-    """requests.Session 兼容层: 优先宿主注入 self.net, 无则 urllib 直连(标准库, 任何播放器可跑)。"""
     def __init__(self, net, headers=None, default_headers=None):
         self.net = net
         self.headers = headers if headers is not None else {}
@@ -194,7 +175,6 @@ class Spider(BaseSpider):
             "User-Agent": UA,
             "Accept": "application/json, text/plain, */*",
         })
-        # 不要在这里发网络请求 (见模板注释); 全部按需延迟到 _api
         if isinstance(extend, dict):
             cfg = extend
         elif extend:
@@ -229,7 +209,6 @@ class Spider(BaseSpider):
     def action(self, action):
         return {"msg": "不支持此操作"}
 
-    # ================= 首页 =================
     def homeContent(self, filter):
         classes = self._classes()
         result = {"class": classes}
@@ -242,22 +221,18 @@ class Spider(BaseSpider):
     def homeVideoContent(self):
         return {"list": []}
 
-    # ================= 分类 =================
     def categoryContent(self, tid, pg, filter, extend):
         pg = self._int(pg, 1)
         extend = extend or {}
 
-        # 演员点击: tid = "actor/<term_id>" (FongMi 把 [a=cr] 的 id 原样传回)
         if tid.startswith("actor/"):
             actor_id = tid.split("/", 1)[1]
             items, totalpages = self._posts({"actor": actor_id}, pg)
             return self._page_result(items, pg, totalpages)
 
-        # 普通分类: tid = category id
         items, totalpages = self._posts({"categories": tid}, pg)
         return self._page_result(items, pg, totalpages)
 
-    # ================= 详情 =================
 
     def detailContent(self, ids):
         if not ids:
@@ -275,7 +250,6 @@ class Spider(BaseSpider):
         title = self._clean(self._html_text(post.get("title", {}).get("rendered", "")))
         content = self._clean(self._html_text(post.get("content", {}).get("rendered", "")))
 
-        # 演员 / 分类 (从 _embed 的 wp:term 提取)
         actors = []
         categories = []
         cat_ids = set(post.get("categories") or [])
@@ -290,7 +264,6 @@ class Spider(BaseSpider):
                                for t in actors if t.get("id"))
         type_name = categories[0].get("name", "") if categories else ""
 
-        # Cen/Uncen 标识: Jav Không Che (id=6) 为无码
         remarks = "Uncen" if 6 in cat_ids else "Cen"
 
         vod_pic = self._cover(post, "full")
@@ -306,20 +279,17 @@ class Spider(BaseSpider):
             "vod_remarks": remarks,
             "vod_actor": actor_text,
             "vod_content": content,
-            # 单集: 播放引用 = post id, playerContent 据此取流
             "vod_play_from": "SUPJAV",
             "vod_play_url": "正片$" + str(post.get("id") or vid),
         }
         return {"list": [vod]}
 
-    # ================= 搜索 =================
     def searchContent(self, key, quick, pg="1"):
         pg = self._int(pg, 1)
         kw = str(key or "").strip()
         items, totalpages = self._posts({"search": kw}, pg)
         return self._page_result(items, pg, totalpages)
 
-    # ================= 播放 =================
     def playerContent(self, flag, id, vipFlags):
         pid = str(id or "").strip()
         if not pid:
@@ -337,9 +307,7 @@ class Spider(BaseSpider):
     def liveContent(self, url):
         return "[]"
 
-    # ================= 内部: REST API =================
     def _api(self, path, params=None):
-        """GET WP REST JSON, 返回 (obj, totalpages). 失败返回 ({}, 0)."""
         path = "/" + str(path).lstrip("/")
         ck = path + json.dumps(params or {}, sort_keys=True)
         with self._lock:
@@ -376,7 +344,6 @@ class Spider(BaseSpider):
         cats, _ = self._api("/wp-json/wp/v2/categories", {"per_page": 100})
         arr = []
         if isinstance(cats, list):
-            # 按视频数降序; 跳过 count=0 的垃圾分类
             for c in cats:
                 try:
                     cnt = int(c.get("count", 0) or 0)
@@ -398,7 +365,6 @@ class Spider(BaseSpider):
         return arr
 
     def _posts(self, params, pg):
-        """GET posts 列表, 返回 (items, totalpages)."""
         q = {"per_page": PAGE_SIZE, "page": pg, "_embed": "true"}
         for k, v in (params or {}).items():
             if v not in (None, "", "0"):
@@ -409,7 +375,6 @@ class Spider(BaseSpider):
         return obj, tp
 
     def _post_detail(self, vid):
-        """GET 单篇 post 详情 (含 _embed)."""
         vid = vid.strip()
         if not vid:
             return {}
@@ -417,20 +382,16 @@ class Spider(BaseSpider):
         return obj if isinstance(obj, dict) else {}
 
     def _fetch_play(self, pid):
-        """取 m3u8 直链: 播放端点返回 ArtPlayer HTML, 内嵌 url:'...m3u8'."""
         obj, _ = self._api("/wp-json/fb/v1/player/", {"id": pid})
         if not isinstance(obj, dict) or not obj.get("success"):
             return ""
         data = obj.get("data") or ""
-        # data 是 HTML 字符串; 提取 url:'...m3u8' (json.loads 已还原转义)
         m = re.search(r"url\s*:\s*['\"]([^'\"]+\.m3u8[^'\"]*)['\"]", data)
         if m:
             return m.group(1).strip()
-        # 兜底: 任意 m3u8 URL
         m = re.search(r'(https?://[^\s"\']+\.m3u8[^\s"\']*)', data)
         return m.group(1).strip() if m else ""
 
-    # ================= 内部: 映射 =================
     def _vod(self, post):
         post = post or {}
         pid = str(post.get("id") or "")
@@ -445,7 +406,6 @@ class Spider(BaseSpider):
         }
 
     def _cover(self, post, size="thumb"):
-        """从 _embedded.wp:featuredmedia 取封面 URL."""
         em = post.get("_embedded", {})
         for fm in em.get("wp:featuredmedia") or []:
             if not isinstance(fm, dict):
@@ -464,7 +424,6 @@ class Spider(BaseSpider):
     def _page_result(self, items, pg, totalpages):
         page = max(1, self._int(pg, 1))
         if not totalpages or totalpages < 1:
-            # 无翻页头时: 有数据给大数, 空给当前页
             totalpages = page if not items else 9999
         return {
             "list": [self._vod(x) for x in items],
@@ -475,7 +434,6 @@ class Spider(BaseSpider):
         }
 
     def _clickable(self, kind, ident, name):
-        """官方格式 [a=cr:{"id":"...","name":"...","type_flag":"0"}/]name[/a]"""
         if not ident:
             return ""
         payload = json.dumps(
@@ -501,3 +459,4 @@ class Spider(BaseSpider):
             return int(x)
         except Exception:
             return d
+

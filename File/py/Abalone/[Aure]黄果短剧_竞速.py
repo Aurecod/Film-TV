@@ -1,17 +1,5 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-黄果短剧 spider（单源双后端竞速版，huangguoai.com 官网）
-
-双后端并行竞速（谁快走谁）：
-  API 后端   : /api/videos?sort=new|hot, /api/videos/{id}, /api/videos/{id}/play, /api/search
-  页面后端   : 解析 / 首页, /ai-*/{page}/, /tag/{slug}/page/{N}/, /video/{id}/, /search/video/{kw}/
-
-分类以原网站为准（动态 /api/tags，失败用 FALLBACK_GROUPS）：
-  latest(最新, API sort=new) / hot(热门, API sort=hot)
-  AI成人短剧/AI成人漫剧/AI换脸/AI魔改（页面 data-channel-panel 分区）
-  9 个题材分类组（tab 不带 type_flag → 多列；组内标签 folder 卡 vod_tag=folder → 点击进 /tag/{slug}/）
-"""
+# [黄果短剧¹⁸  更新于:2026-10-31 13:23]
 
 import sys
 import os
@@ -234,9 +222,7 @@ FALLBACK_GROUPS = [
 ]
 
 
-# ---- v2.0 迁移: requests.Session -> self.net 兼容适配器 (内联) ----
 class _NetResp(object):
-    """模拟 requests.Response: 基于 self.net.req 返回的 dict。"""
     def __init__(self, resp_dict, url):
         self._d = resp_dict or {}
         self.url = url
@@ -262,7 +248,6 @@ class _NetResp(object):
 
 
 class _NetSession(object):
-    """requests.Session 兼容层: 用宿主注入的 self.net 实现 get/post。"""
     def __init__(self, net, headers=None, default_headers=None):
         self.net = net
         self.headers = headers if headers is not None else {}
@@ -330,8 +315,6 @@ class Spider(SpiderBase):
         return True
 
     def getProxyUrl(self, params=None, local=True):
-        """FongMi 5.8.4 catvod 契约: Proxy.getUrl(local) + ?do=py + siteKey。
-        竞速版不继承 base.spider, 需自行实现。TVBox/影视仓无 com.github.catvod.Proxy 时返回空。"""
         base = ""
         try:
             from com.github.catvod import Proxy
@@ -356,6 +339,19 @@ class Spider(SpiderBase):
             url += "&" + "&".join(q)
         return url
 
+    def proxyUrl(self, params=None, local=True):
+        return self.getProxyUrl(params, local)
+
+    def _img_stream(self, data):
+        net = getattr(self, "net", None)
+        if net is not None and hasattr(net, "stream"):
+            try:
+                def _gen():
+                    yield data
+                return net.stream(_gen())["stream"]
+            except Exception:
+                pass
+        return data
 
     def isVideoFormat(self, url):
         low = (url or "").lower()
@@ -370,7 +366,6 @@ class Spider(SpiderBase):
     def action(self, action):
         return {"msg": "ok"}
 
-    # ---------------- HTTP ----------------
 
     def _fetch(self, target_url, referer="", timeout=15):
         if not target_url:
@@ -443,7 +438,6 @@ class Spider(SpiderBase):
             return d.get("data")
         return d
 
-    # ---------------- 图片代理 ----------------
 
     def _proxy_pic(self, pic_url):
         p = str(pic_url or "").strip()
@@ -456,14 +450,20 @@ class Spider(SpiderBase):
             p = "https:" + p
         elif p.startswith("/"):
             p = self.siteUrl + p
+        enc = quote(base64.b64encode(p.encode("utf-8")).decode("utf-8"), safe="")
+        if hasattr(self, "proxyUrl"):
+            try:
+                p5 = self.proxyUrl({"url": enc, "type": "img"})
+                if p5:
+                    return p5
+            except Exception:
+                pass
         try:
             proxy = self.getProxyUrl()
         except Exception:
             proxy = ""
         if not proxy:
-            # 代理不可用时不要返回直链加密图(无法显示), 用占位图兜底
             return "https://dummyimage.com/600x800/1e293b/ffffff.png?text=NO_COVER"
-        enc = quote(base64.b64encode(p.encode("utf-8")).decode("utf-8"), safe="")
         sep = "&" if "?" in proxy else "?"
         return "%s%surl=%s&type=img" % (proxy, sep, enc)
 
@@ -507,16 +507,16 @@ class Spider(SpiderBase):
                 i = img_bytes.rfind(b"\xff\xd9")
                 if i >= 0:
                     img_bytes = img_bytes[:i + 2]
-                return [200, "image/jpeg", img_bytes]
+                return [200, "image/jpeg", self._img_stream(img_bytes), {}]
             if img_bytes.startswith(b"\x89PNG"):
                 i = img_bytes.rfind(b"IEND")
                 if i >= 0:
                     img_bytes = img_bytes[:i + 8]
-                return [200, "image/png", img_bytes]
+                return [200, "image/png", self._img_stream(img_bytes), {}]
             if img_bytes.startswith(b"GIF8"):
-                return [200, "image/gif", img_bytes]
+                return [200, "image/gif", self._img_stream(img_bytes), {}]
             if img_bytes.startswith(b"RIFF") and img_bytes[8:12] == b"WEBP":
-                return [200, "image/webp", img_bytes]
+                return [200, "image/webp", self._img_stream(img_bytes), {}]
             return None
 
         ret = detect_and_return(raw_bytes)
@@ -531,7 +531,6 @@ class Spider(SpiderBase):
 
     localProxy = proxy
 
-    # ---------------- 竞速 ----------------
 
     def _race(self, fns, ok=None, timeout=18):
         ok = ok or (lambda r: bool(r))
@@ -578,7 +577,6 @@ class Spider(SpiderBase):
     def _ok_play(self, r):
         return isinstance(r, dict) and bool(r.get("url"))
 
-    # ---------------- 分类（以原网站为准）----------------
 
     def _groups(self):
         now = time.time()
@@ -694,7 +692,6 @@ class Spider(SpiderBase):
         return self._race([lambda: self._api_play(vid, ep),
                            lambda: self._page_play(vid, ep)], ok=self._ok_play)
 
-    # ---------------- API 后端 ----------------
 
     def _to_vod(self, it):
         if not it:
@@ -827,7 +824,6 @@ class Spider(SpiderBase):
                 "total": int(pag.get("total") or len(v_list)) if isinstance(pag, dict) else len(v_list),
                 "list": v_list}
 
-    # ---------------- 页面后端 ----------------
 
     def _page_home(self):
         html = self._get_html("/", ttl=30)
@@ -923,7 +919,6 @@ class Spider(SpiderBase):
         return {"page": page, "pagecount": pages, "limit": len(v_list),
                 "total": pages * 20, "list": v_list}
 
-    # ---------------- HTML 解析 ----------------
 
     def _parse_tag_page(self, html):
         start = html.find("hg-card-grid")
@@ -1012,3 +1007,4 @@ class Spider(SpiderBase):
              .replace("&lt;", "<").replace("&gt;", ">")
              .replace("&#39;", "'").replace("&#x27;", "'").replace("\\u0026", "&"))
         return s
+

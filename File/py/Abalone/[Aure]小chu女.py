@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+# [小chu女¹⁸  更新于:2026-10-31 13:23]
 import base64
 import re
 import json
@@ -128,10 +130,10 @@ def _is_image(raw):
            (len(raw) > 3 and raw[:3] == b"\xff\xd8\xff")
 
 
-# ---- v2.0 迁移: requests.Session -> self.net 兼容适配器 (内联) ----
 class _NetResp(object):
-    """模拟 requests.Response: 基于 self.net.req 返回的 dict。"""
     def __init__(self, resp_dict, url):
+        if isinstance(resp_dict, str):
+            resp_dict = {"code": 200, "content": resp_dict, "headers": {}}
         self._d = resp_dict or {}
         self.url = url
         self.status_code = int(self._d.get("code") or 0)
@@ -156,7 +158,6 @@ class _NetResp(object):
 
 
 class _NetSession(object):
-    """requests.Session 兼容层: 优先宿主注入 self.net, 无则 urllib 直连(标准库, 任何播放器可跑)。"""
     def __init__(self, net, headers=None, default_headers=None):
         self.net = net
         self.headers = headers if headers is not None else {}
@@ -208,14 +209,12 @@ class _NetSession(object):
             timeout_s = int(timeout) / 1000 if timeout > 100 else int(timeout)
         if self.net is not None:
             opts = {"headers": h}
-            # buffer=3: 让 FongMi net.reqParts 返回 byte[] (图片二进制, 否则 net.req 返回 String 损坏)
             if kw.get("buffer") == 3:
                 opts["buffer"] = 3
             if timeout_s:
                 opts["timeout"] = int(timeout_s * 1000)
             try:
-                # 5.8.4 catvod: net.req 返回 String (图片损坏); 用 reqParts 拿 [metadata, content], buffer==3 -> content=byte[]
-                if hasattr(self.net, "reqParts"):
+                if kw.get("buffer") == 3 and hasattr(self.net, "reqParts"):
                     parts = self.net.reqParts(full, opts)
                     if isinstance(parts, (list, tuple)) and len(parts) >= 2:
                         return _NetResp({"code": 200, "content": parts[1], "headers": {}}, full)
@@ -308,7 +307,6 @@ class Spider(BaseSpider):
     def liveContent(self, url):
         return "[]"
 
-    # ---------------- 首页 / 分类 / 搜索 ----------------
 
     def homeContent(self, filter):
         classes = [{"type_id": c, "type_name": n, "style": STYLE} for c, n in CATEGORIES]
@@ -351,7 +349,6 @@ class Spider(BaseSpider):
             "total": len(items),
         }
 
-    # ---------------- 详情 / 播放 ----------------
 
 
     def detailContent(self, ids):
@@ -404,6 +401,17 @@ class Spider(BaseSpider):
 
     localProxy = proxy
 
+    def _img_stream(self, data):
+        net = getattr(self, "net", None)
+        if net is not None and hasattr(net, "stream"):
+            try:
+                def _gen():
+                    yield data
+                return net.stream(_gen())["stream"]
+            except Exception:
+                pass
+        return data
+
     def _pic(self, url, p):
         if not url or not url.startswith("http"):
             return [404, "image/png", b""]
@@ -436,13 +444,12 @@ class Spider(BaseSpider):
                             and (ct.startswith("image/") or _is_image(b)):
                         if not ct.startswith("image/"):
                             ct = _mime(b)
-                        return [200, ct, b, {"Content-Type": ct,
+                        return [200, ct, self._img_stream(b), {"Content-Type": ct,
                                              "Cache-Control": "public, max-age=86400"}]
                 except Exception:
                     continue
         return [404, "image/png", b""]
 
-    # ---------------- http ----------------
 
     def _url(self, path):
         if not path:
@@ -523,12 +530,11 @@ class Spider(BaseSpider):
                 cl = r.headers.get("Content-Length")
                 if cl:
                     out["Content-Length"] = cl
-                return [r.status_code or 200, cd, body, out]
+                return [r.status_code or 200, cd, self._img_stream(body), out]
             except Exception:
                 time.sleep(0.5)
         return [404, "text/plain", b""]
 
-    # ---------------- 列表解析 ----------------
 
     def _type_page(self, tid, pg):
         tid = tid.strip().strip("/")
@@ -596,7 +602,6 @@ class Spider(BaseSpider):
             out.append({"id": vid, "name": title, "pic": pic, "remarks": remarks})
         return out
 
-    # ---------------- 详情解析 ----------------
 
     def _detail(self, vid):
         html = self._get("voddetail/%s/" % vid, 120)
@@ -650,7 +655,6 @@ class Spider(BaseSpider):
         }
         return {"list": [vod]}
 
-    # ---------------- m3u8 ----------------
 
     def _m3u8(self, vid, rel_path):
         path = rel_path or "vodplay/%s-1-1/" % vid
@@ -676,7 +680,6 @@ class Spider(BaseSpider):
             return u
         return ""
 
-    # ---------------- local proxy ----------------
 
     def _param(self, param):
         if isinstance(param, dict):
@@ -708,8 +711,16 @@ class Spider(BaseSpider):
         if self._proxy_base_cache:
             return self._proxy_base_cache
         base = ""
-        # FongMi v2.0: getProxyUrl(params=None, local=True) 第一参数是业务集合(不接受 bool)
-        # TVBox: getProxyUrl(local=True)。无参调用两者兼容。
+        if hasattr(self, "proxyUrl"):
+            try:
+                u = self.proxyUrl(local=False)
+                p = urlparse(str(u or ""))
+                if p.netloc:
+                    base = "%s://%s%s" % (p.scheme, p.netloc, p.path.rstrip("/"))
+                    self._proxy_base_cache = base
+                    return base
+            except Exception:
+                pass
         for args in ((), (None, False)):
             try:
                 u = self.getProxyUrl(*args)
@@ -724,8 +735,17 @@ class Spider(BaseSpider):
         return base
 
     def _wrap(self, url):
+        if not url.startswith("http"):
+            return ""
+        if hasattr(self, "proxyUrl"):
+            try:
+                p = self.proxyUrl({"url": url})
+                if p:
+                    return p
+            except Exception:
+                pass
         base = self._proxy_base()
-        if not base or not url.startswith("http"):
+        if not base:
             return ""
         qs = {k: v[0] for k, v in parse_qs(urlparse(url).query, keep_blank_values=True).items()}
         qs["url"] = url
@@ -752,6 +772,13 @@ class Spider(BaseSpider):
         u = self._fix_url(u)
         if not u:
             return ""
+        if hasattr(self, "proxyUrl"):
+            try:
+                p = self.proxyUrl({"type": "pic", "url": _e64(u)})
+                if p:
+                    return p
+            except Exception:
+                pass
         base = self._proxy_base()
         if not base:
             return u
@@ -760,7 +787,6 @@ class Spider(BaseSpider):
             key = str(getattr(self, "siteKey", "") or "")
         except Exception:
             key = ""
-        # FongMi BaseLoader.proxy: 需要 do=py 才走 PyLoader (否则走 jarLoader 失败)
         out = "%s?do=py&type=pic&url=%s" % (base, urllib.parse.quote(_e64(u), safe=""))
         return out + ("&siteKey=%s" % key if key else "")
 
@@ -773,11 +799,11 @@ class Spider(BaseSpider):
                                               "Accept-Encoding": "identity"})
                 if r.status_code in (403, 404, 410):
                     return [r.status_code, "text/plain",
-                            r.text.encode("utf-8", "replace")]
+                            self._img_stream(r.text.encode("utf-8", "replace"))]
                 text = (r.text or "")
                 if not text.lstrip().startswith("#EXTM3U"):
                     return [r.status_code or 200, "text/plain",
-                            (r.content or text.encode("utf-8", "replace"))]
+                            self._img_stream(r.content or text.encode("utf-8", "replace"))]
                 break
             except Exception:
                 time.sleep(0.5)
@@ -800,14 +826,14 @@ class Spider(BaseSpider):
             if not ok:
                 text = text.replace(sm.group(1).strip(), child)
                 return [200, "application/vnd.apple.mpegurl",
-                        text.encode("utf-8", "replace"),
+                        self._img_stream(text.encode("utf-8", "replace")),
                         {"Content-Type": "application/vnd.apple.mpegurl",
                          "Access-Control-Allow-Origin": "*"}]
 
         cleaned = self._clean_playlist(text, plist)
         if cleaned is None:
             return self._upstream(url, p)
-        return [200, "application/vnd.apple.mpegurl", cleaned.encode("utf-8", "replace"),
+        return [200, "application/vnd.apple.mpegurl", self._img_stream(cleaned.encode("utf-8", "replace")),
                 {"Content-Type": "application/vnd.apple.mpegurl",
                  "Access-Control-Allow-Origin": "*"}]
 
@@ -870,7 +896,6 @@ class Spider(BaseSpider):
             body.append(_abs(plist_url, sg["url"]))
         return "\n".join(body) + "\n"
 
-    # ---------------- misc ----------------
 
     def _vod(self, item):
         item = item or {}
@@ -886,3 +911,4 @@ class Spider(BaseSpider):
             return int(str(x).strip() or d)
         except Exception:
             return d
+

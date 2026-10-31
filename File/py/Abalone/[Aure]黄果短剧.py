@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+# [黄果短剧¹⁸  更新于:2026-10-31 13:23]
 import base64
 import json
 import re
@@ -62,10 +64,10 @@ RE_DESC = re.compile(r'hg-drama-card__desc">([^<]*)<')
 RE_TAG = re.compile(r'<a class="hg-tag" href="/tag/[^"]*">([^<]+)</a>')
 
 
-# ---- v2.0 迁移: requests.Session -> self.net 兼容适配器 (内联) ----
 class _NetResp(object):
-    """模拟 requests.Response: 基于 self.net.req 返回的 dict。"""
     def __init__(self, resp_dict, url):
+        if isinstance(resp_dict, str):
+            resp_dict = {"code": 200, "content": resp_dict, "headers": {}}
         self._d = resp_dict or {}
         self.url = url
         self.status_code = int(self._d.get("code") or 0)
@@ -90,7 +92,6 @@ class _NetResp(object):
 
 
 class _NetSession(object):
-    """requests.Session 兼容层: 优先宿主注入 self.net, 无则 urllib 直连(标准库, 任何播放器可跑)。"""
     def __init__(self, net, headers=None, default_headers=None):
         self.net = net
         self.headers = headers if headers is not None else {}
@@ -142,14 +143,12 @@ class _NetSession(object):
             timeout_s = int(timeout) / 1000 if timeout > 100 else int(timeout)
         if self.net is not None:
             opts = {"headers": h}
-            # buffer=3: 让 FongMi net.reqParts 返回 byte[] (图片二进制, 否则 net.req 返回 String 损坏)
             if kw.get("buffer") == 3:
                 opts["buffer"] = 3
             if timeout_s:
                 opts["timeout"] = int(timeout_s * 1000)
             try:
-                # 5.8.4 catvod: net.req 返回 String (图片损坏); 用 reqParts 拿 [metadata, content], buffer==3 -> content=byte[]
-                if hasattr(self.net, "reqParts"):
+                if kw.get("buffer") == 3 and hasattr(self.net, "reqParts"):
                     parts = self.net.reqParts(full, opts)
                     if isinstance(parts, (list, tuple)) and len(parts) >= 2:
                         return _NetResp({"code": 200, "content": parts[1], "headers": {}}, full)
@@ -237,10 +236,21 @@ class Spider(BaseSpider):
                 if r.status_code != 200 or not r.content:
                     continue
                 img = self._pic_decrypt(r.content)
-                return [200, self._mime(img), img]
+                return [200, self._mime(img), self._img_stream(img), {}]
             except Exception:
                 continue
         return [404, "text/plain", ""]
+
+    def _img_stream(self, data):
+        net = getattr(self, "net", None)
+        if net is not None and hasattr(net, "stream"):
+            try:
+                def _gen():
+                    yield data
+                return net.stream(_gen())["stream"]
+            except Exception:
+                pass
+        return data
 
     localProxy = proxy
 
@@ -454,17 +464,24 @@ class Spider(BaseSpider):
         u = self._fix(u)
         if not u:
             return ""
+        enc = _quote(self._e64(u), safe="")
         try:
             proxy = self.getProxyUrl()
+            if proxy:
+                sep = "&" if "?" in proxy else "?"
+                key = getattr(self, "siteKey", "") or ""
+                extra = ("&siteKey=%s" % key) if (key and "siteKey=" not in proxy) else ""
+                return "%s%stype=pic&url=%s%s" % (proxy, sep, enc, extra)
         except Exception:
-            proxy = ""
-        if not proxy:
-            return u
-        sep = "&" if "?" in proxy else "?"
-        # 真机 FongMi getProxyUrl 已带 do=py+siteKey; 自测台注入的不带 siteKey -> 仅在缺失时补
-        key = getattr(self, "siteKey", "") or ""
-        extra = ("&siteKey=%s" % key) if (key and "siteKey=" not in proxy) else ""
-        return "%s%stype=pic&url=%s%s" % (proxy, sep, _quote(self._e64(u), safe=""), extra)
+            pass
+        if hasattr(self, "proxyUrl"):
+            try:
+                p = self.proxyUrl({"type": "pic", "url": self._e64(u)})
+                if p:
+                    return p
+            except Exception:
+                pass
+        return u
 
     def _pic_decrypt(self, raw):
         if raw[:2] == b'\xff\xd8' or raw[:4] == b'\x89PNG' or raw[8:12] == b'WEBP' or raw[:4] == b'GIF8':
@@ -482,7 +499,6 @@ class Spider(BaseSpider):
         return self._trim(dec)
 
     def _trim(self, b):
-        """截断到合法图片结束符（去除 NoPadding 尾部零填充/垃圾）。"""
         if b[:2] == b'\xff\xd8':
             i = b.rfind(b'\xff\xd9')
             return b[:i + 2] if i > 0 else b
@@ -506,7 +522,7 @@ class Spider(BaseSpider):
 
     def _d64(self, s):
         s = str(s or "").strip()
-        s = _quote(s, safe="-_") if False else s  # 占位
+        s = _quote(s, safe="-_") if False else s
         from urllib.parse import unquote
         s = unquote(s).replace(" ", "+")
         for dec in (base64.urlsafe_b64decode, base64.b64decode):
@@ -545,3 +561,4 @@ class Spider(BaseSpider):
             return int(str(x).strip())
         except Exception:
             return d
+

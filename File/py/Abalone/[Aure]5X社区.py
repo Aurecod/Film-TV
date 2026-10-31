@@ -1,23 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-5X社区 (5XSQ) FongMi Type3 Spider - v2
-站点: https://84d9yt.youkiy2.cyou  (镜像域, 主站 5xsq.com)
-结构 (沙盒实测 2026-10-27):
-  - 导航: 主页 /, 视频 /videos, 精选 /recommendation, 未审查 /uncensored,
-          审查 /censored, 类别总页 /categories (30 类)
-  - 列表/分页: {path}?page=N   (path=/videos 或 /videos/{cat} 或 /recommendation 等)
-  - 搜索: /search/videos/{kw}/?page=N
-  - 详情: /video/{id}/{slug} (slug 中文标题或 hash, 均有效; 详情即播放页, 无分集/线路)
-  - 封面: imgos.cctvm.xyz/media/videos/tmb5/{id}/1.jpg (真 JPEG, 无加密)
-播放本质:
-  - "视频"是 m3u8 PNG 图片序列(幻灯片): cdnmm1.m3uu.cc/url/{id}/index.m3u8
-    (123 帧 PNG, 详情页 hls.js+Plyr 渲染, 页面内嵌播放器)
-  - m3u8 为签名 URL(md5+expires, 有时效) -> playerContent 每次重新请求详情页
-    提取 og:video:url 拿新鲜签名, 交播放器直连 (parse=0)
-  - 用户实测: FongMi 播放器可播此 PNG 序列 m3u8 (别人源同款方案在 FongMi 正常)
-  - 扫不到直链时交壳内嗅探 (parse=1), 不编假直链
-自测: python3 /var/minis/skills/Quss/scripts/test_spider.py <本文件>
-"""
+# [5X社区¹⁸  更新于:2026-10-31 13:23]
 import gzip
 import html as html_mod
 import re
@@ -66,7 +48,6 @@ PAGE_SIZE = 28
 CACHE_TTL = 60
 STYLE = {"type": "rect", "ratio": 1.33}
 
-# 分类矩阵: 导航 4 + /categories 30 类 (type_id = 完整路径, 与站点 href 一致)
 _CATS = [
     ("/videos", "视频"),
     ("/recommendation", "精选视频"),
@@ -108,9 +89,7 @@ _DUR_RE = re.compile(r'(\d{1,2}:\d{2}(?::\d{2})?)')
 _ISO_DUR = re.compile(r'PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?')
 _VID_RE = re.compile(r'"/video/(\d+)/([^"]+)"')
 
-# ---- v2.0 迁移: requests.Session -> self.net 兼容适配器 (内联) ----
 class _NetResp(object):
-    """模拟 requests.Response: 基于 self.net.req 或 urllib 返回的 dict。"""
     def __init__(self, resp_dict, url):
         self._d = resp_dict or {}
         self.url = url
@@ -135,7 +114,6 @@ class _NetResp(object):
         return "<_NetResp %s %d>" % (self.url, self.status_code)
 
 class _NetSession(object):
-    """requests.Session 兼容层: 优先宿主注入 self.net, 无则 urllib 直连(标准库, 任何播放器可跑)。"""
     def __init__(self, net, headers=None, default_headers=None):
         self.net = net
         self.headers = headers if headers is not None else {}
@@ -276,7 +254,6 @@ class Spider(BaseSpider):
     def action(self, action):
         return {"msg": "不支持此操作"}
 
-    # ---------- 首页 ----------
     def homeContent(self, filter):
         return {"class": self._classes(), "filters": {}}
 
@@ -284,7 +261,6 @@ class Spider(BaseSpider):
         items = self._parse_cards(self._fetch(self.host + "/"))
         return {"list": [self._vod(x) for x in items][:PAGE_SIZE]}
 
-    # ---------- 分类 ----------
     def categoryContent(self, tid, pg, filter, extend):
         pg = self._int(pg, 1)
         if tid.startswith(("actor/", "director/", "tag/")):
@@ -297,7 +273,6 @@ class Spider(BaseSpider):
         items = self._parse_cards(self._fetch(self._list_url(path, pg)))
         return self._page(items, pg)
 
-    # ---------- 详情: vod_id = 详情路径, 直接请求 ----------
 
     def detailContent(self, ids):
         if not ids:
@@ -336,8 +311,6 @@ class Spider(BaseSpider):
         dm = re.search(r'"duration":\s*"(PT[^"]*)"', html_data)
         if dm:
             shell["vod_remarks"] = self._iso_dur(dm.group(1))
-        # 详情即播放页: 直接给 detailContent 提取的新鲜签名 m3u8 -> 播放零延迟;
-        # 提取不到(或历史点播已过期)则给详情 URL, 由 playerContent 重扫保新鲜
         m3u8 = self._og_video_url(html_data)
         if m3u8:
             shell["vod_play_url"] = "正片$" + m3u8
@@ -345,7 +318,6 @@ class Spider(BaseSpider):
             shell["vod_play_url"] = "正片$" + url
         return {"list": [shell]}
 
-    # ---------- 搜索 ----------
     def searchContent(self, key, quick, pg="1"):
         pg = self._int(pg, 1)
         key = str(key or "").strip()
@@ -354,14 +326,12 @@ class Spider(BaseSpider):
         items = self._parse_cards(self._fetch(self._search_url(key, pg)))
         return self._page(items, pg)
 
-    # ---------- 播放: 扫详情页新鲜 m3u8 直链, 否则交壳嗅探 ----------
     def playerContent(self, flag, id, vipFlags):
         raw = urllib.parse.unquote(str(id or "").strip())
         if "$" in raw:
             raw = raw.rsplit("$", 1)[-1].strip()
         header = {"User-Agent": UA, "Referer": self.host + "/"}
         if raw.lower().startswith("http") and ".m3u8" in raw.lower():
-            # detailContent 给的新鲜签名: 未过期直接用(零延迟), 过期则重扫保新鲜
             if self._sig_fresh(raw):
                 return {"parse": 0, "playUrl": "", "url": raw, "header": header}
             vm = re.search(r'/url/(\d+)/', raw)
@@ -381,15 +351,12 @@ class Spider(BaseSpider):
                     "header": {"User-Agent": UA, "Referer": url}}
         return {"parse": 1, "playUrl": "", "url": url, "header": header}
 
-    # ---------- 直播 ----------
     def liveContent(self, url):
         return "[]"
 
-    # ---------- localProxy: 本站无需 ----------
     def proxy(self, params):
         return [200, "text/plain;charset=utf-8", ""]
 
-    # ================= 内部工具 =================
 
     localProxy = proxy
 
@@ -505,15 +472,14 @@ class Spider(BaseSpider):
     def _sig_fresh(self, url):
         m = re.search(r'[?&]expires=(\d+)', str(url or ""))
         if not m:
-            return False  # 无 expires 标记, 不信任, 走重扫
+            return False
         try:
             exp = int(m.group(1))
         except Exception:
             return False
-        return exp > time.time() + 300  # 5 分钟以上剩余有效期才算新鲜
+        return exp > time.time() + 300
 
     def _scan_media(self, html_data):
-        # 优先 og:video:url (签名 m3u8)
         m = re.search(r'<meta[^>]+property="og:video:url"[^>]+content="([^"]+)"', html_data)
         if not m:
             m = re.search(r'<meta[^>]+content="([^"]+)"[^>]+property="og:video:url"', html_data)
@@ -561,4 +527,5 @@ class Spider(BaseSpider):
         if h:
             return f"{h:02d}:{mi:02d}:{se:02d}"
         return f"{mi:02d}:{se:02d}"
+
 

@@ -1,5 +1,5 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+# [蘑菇视频¹⁸  更新于:2026-10-31 13:23]
 
 import sys
 import os
@@ -38,22 +38,8 @@ def clean_label(text):
     t = re.sub(r"[\$#\r\n\t]+", " ", t)
     return t.strip()
 
-# ============================================================
-# AutoDNS —— 无视梯子状态的自动路由
-# ------------------------------------------------------------
-# 目标：不管当前设备有没有开 VPN，都让源站域名能通。
-# 策略：
-#   1) 系统 DNS 优先（快速、少绕路）
-#   2) 系统 DNS 拿到 0.0.0.0 / :: / 空 → 视为污染，走 DoH
-#   3) 系统 DNS 完全解析失败 → 直接走 DoH
-#   4) 通过 DoH 拿到真实 IP 后缓存 10 分钟
-#   5) 全局 monkey-patch socket.getaddrinfo：任何库发起的
-#      DNS 都自动走 AutoDNS（urllib / requests 都受益）
-#   6) _fetch 内再加一层 IP 直连兜底（SNI 保留原域名），
-#      即使 monkey-patch 没生效也能救活
-# ============================================================
 
-AUTO_DNS_CACHE_TTL = 600  # 10 分钟
+AUTO_DNS_CACHE_TTL = 600
 
 _BAD_ADDRS = ("0.0.0.0", "0.0.0.0/8", "127.0.0.0", "127.0.0.1", "::", "::1")
 
@@ -67,7 +53,6 @@ _DOH_ENDPOINTS = [
 ]
 
 class AutoDNS(object):
-    """跨 DNS 自动解析：系统 → 多个 DoH。线程安全 + 缓存。"""
 
     def __init__(self):
         self._cache = {}
@@ -97,7 +82,6 @@ class AutoDNS(object):
             self._cache.pop(host, None)
 
     def _resolve_inner(self, host):
-        # 1) 系统 DNS
         try:
             infos = socket.getaddrinfo(
                 host, 443, socket.AF_INET, socket.SOCK_STREAM)
@@ -110,7 +94,6 @@ class AutoDNS(object):
                 return list(dict.fromkeys(ips))
         except Exception:
             pass
-        # 2) DoH 兜底
         return self._doh_resolve(host)
 
     def _doh_resolve(self, host):
@@ -140,13 +123,11 @@ class AutoDNS(object):
                 continue
         return []
 
-# 全局 AutoDNS 实例（模块级）
 _autodns = AutoDNS()
 
 _orig_getaddrinfo = socket.getaddrinfo
 
 def _install_autodns():
-    """把 socket.getaddrinfo 替换成 AutoDNS 兜底版本。幂等。"""
     if getattr(socket.getaddrinfo, "_autodns_patched", False):
         return
 
@@ -192,7 +173,6 @@ except Exception:
     pass
 
 def _split_url(url):
-    """把 URL 拆成 (scheme, host, port, path, params, query, frag) 等。"""
     try:
         p = urlparse(url)
         if not p.hostname:
@@ -586,9 +566,7 @@ ZONE_MATRIX = [
     }
 ]
 
-# ---- v2.0 迁移: requests.Session -> self.net 兼容适配器 (内联) ----
 class _NetResp(object):
-    """模拟 requests.Response: 基于 self.net.req 或 urllib 返回的 dict。"""
     def __init__(self, resp_dict, url):
         self._d = resp_dict or {}
         self.url = url
@@ -613,7 +591,6 @@ class _NetResp(object):
         return "<_NetResp %s %d>" % (self.url, self.status_code)
 
 class _NetSession(object):
-    """requests.Session 兼容层: 优先宿主注入 self.net, 无则 urllib 直连(标准库, 任何播放器可跑)。"""
     def __init__(self, net, headers=None, default_headers=None):
         self.net = net
         self.headers = headers if headers is not None else {}
@@ -736,7 +713,6 @@ class Spider(SpiderBase):
         return False
 
     def _fetch(self, target_url, data=None, referer=""):
-        """统一请求入口：先走常规路径，失败后走 IP 直连兜底。"""
         if not target_url:
             return {"code": 0, "text": "", "bytes": b"", "err": "", "final_url": ""}
         if target_url.startswith("//"):
@@ -764,7 +740,6 @@ class Spider(SpiderBase):
         }
 
     def _fetch_internal(self, target_url, data=None, referer=""):
-        """真正的 HTTP 请求。target_url 需为绝对 http(s) URL。"""
         headers = {
             "User-Agent": self._ua,
             "Referer": referer if referer else (self.siteUrl + "/"),
@@ -826,10 +801,6 @@ class Spider(SpiderBase):
         return {"code": -1, "text": "", "bytes": b"", "err": last_err, "final_url": target_url}
 
     def _fetch_ip_direct(self, target_url, data=None, referer=""):
-        """
-        IP 直连兜底：AutoDNS 解析 → 把 URL 中的域名替换成 IP（保留 SNI）→ 逐个试。
-        适用场景：DNS 被污染 / 返回 0.0.0.0 / 边缘 IP 区域封锁。
-        """
         parts = _split_url(target_url)
         if not parts:
             return None
@@ -977,14 +948,14 @@ class Spider(SpiderBase):
                     "vod_name": title if title else "",
                     "vod_pic": pic if pic.startswith("http") else (self.siteUrl + pic if pic else ""),
                     "vod_remarks": format_remarks("蘑菇视频", duration),
-                   
+
                 })
         return vod_list
 
     def categoryContent(self, tid, pg, filter, extend):
         del filter
         zone_id = str(tid or "").strip("/")
-        
+
         try:
             cur_page = int(str(pg or "1").strip())
         except Exception:
@@ -992,7 +963,6 @@ class Spider(SpiderBase):
         if cur_page < 1:
             cur_page = 1
 
-        # 标签点击（[a=cr:...] → categoryContent("tag/<slug>")）→ 本站标签页
         if zone_id.startswith("tag/"):
             slug = unquote(zone_id.split("/", 1)[1])
             if cur_page == 1:
@@ -1077,8 +1047,6 @@ class Spider(SpiderBase):
         return ""
 
     def _clickable(self, kind, name, slug=""):
-        """官方格式: [a=cr:{"id":"...","name":"...","type_flag":"0"}/]显示名[/a]
-        type_flag=0: 点击后页面用用户 JSON 配置排列（=1 会强制单列）。"""
         if not name:
             return ""
         ident = "tag/%s" % (slug or quote(name, safe='')) if kind == "tag" else \
@@ -1132,7 +1100,6 @@ class Spider(SpiderBase):
             if rec_idx > 24:
                 break
 
-        # 标签可点击 → 本站标签页（/tag/{slug}/ 是真实视频列表，已验证返回 20 条）
         tag_bb = ""
         tag_seen = set()
         for t_m in re.finditer(r'href=["\'](/tag/[^"\']+/)["\'][^>]*>([^<]{1,60})</a>', d_html, re.I):

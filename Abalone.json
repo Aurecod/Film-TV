@@ -1,6 +1,6 @@
 {
   "name": "Abalone",
-  "notice": "@AQ_Film_TV",
+  "notice": "",
   "spider": "",
   "logo": "./logo/hunter.gif",
   "wallpaper": "./imgs/y3.webp",
@@ -261,10 +261,10 @@
       "ext": ""
     },
     {
-      "key": "local_getav",
-      "name": "getavᵖʸ",
+      "key": "local_[Aure]Hubff",
+      "name": "[Aure]Hubffᵖʸ",
       "type": 3,
-      "api": "./File/py/Abalone/getav.py",
+      "api": "./File/py/Abalone/[Aure]Hubff.py",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 1,
@@ -445,21 +445,6 @@
       "name": "香蕉ᵖʸ",
       "type": 3,
       "api": "./File/py/Abalone/香蕉.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect",
-        "ratio": 1.755
-      },
-      "ext": ""
-    },
-    {
-      "key": "local_hubff",
-      "name": "hubffᵖʸ",
-      "type": 3,
-      "api": "./File/py/Abalone/hubff.py",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 1,
@@ -1281,21 +1266,6 @@
       "ext": ""
     },
     {
-      "key": "local_yeguo_spider",
-      "name": "yeguo_spiderᵖʸ",
-      "type": 3,
-      "api": "./File/py/Abalone/yeguo_spider.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect",
-        "ratio": 1.755
-      },
-      "ext": ""
-    },
-    {
       "key": "local_[影]牛牛视频",
       "name": "[影]牛牛视频ᵖʸ",
       "type": 3,
@@ -1371,10 +1341,10 @@
       "ext": ""
     },
     {
-      "key": "local_GetAV_IOS专用",
-      "name": "GetAV_IOS专用ᵖʸ",
+      "key": "local_[Aure]野果短剧",
+      "name": "[Aure]野果短剧ᵖʸ",
       "type": 3,
-      "api": "./File/py/Abalone/GetAV_IOS专用.py",
+      "api": "./File/py/Abalone/[Aure]野果短剧.py",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 1,
@@ -1851,21 +1821,6 @@
       "ext": ""
     },
     {
-      "key": "local_t3_spider",
-      "name": "t3_spiderᵖʸ",
-      "type": 3,
-      "api": "./File/py/Abalone/t3_spider.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect",
-        "ratio": 1.755
-      },
-      "ext": ""
-    },
-    {
       "key": "local_采集合集",
       "name": "采集合集ᵖʸ",
       "type": 3,
@@ -2151,21 +2106,6 @@
       "ext": ""
     },
     {
-      "key": "local_Javtiful",
-      "name": "Javtifulᵖʸ",
-      "type": 3,
-      "api": "./File/py/Abalone/Javtiful.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "order_num": 0,
-      "style": {
-        "type": "rect",
-        "ratio": 1.755
-      },
-      "ext": ""
-    },
-    {
       "key": "local_Hanime1（免翻）",
       "name": "Hanime1（免翻）ᵖʸ",
       "type": 3,
@@ -2376,10 +2316,25 @@
       "ext": ""
     },
     {
-      "key": "local_[Aure]北斗影院",
-      "name": "[Aure]北斗影院ᵖʸ",
+      "key": "local_[Aure]Javtiful",
+      "name": "[Aure]Javtifulᵖʸ",
       "type": 3,
-      "api": "./File/py/Abalone/[Aure]北斗影院.py",
+      "api": "./File/py/Abalone/[Aure]Javtiful.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1,
+      "order_num": 0,
+      "style": {
+        "type": "rect",
+        "ratio": 1.755
+      },
+      "ext": ""
+    },
+    {
+      "key": "local_[Aure]GetAV",
+      "name": "[Aure]GetAVᵖʸ",
+      "type": 3,
+      "api": "./File/py/Abalone/[Aure]GetAV.py",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 1,

@@ -1,26 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-123AV (123av.com) — FongMi py spider
-站点：123av.com 聚合站（聚合 jable/missav/supjav 等），免 CF 盾，py 路线直连。
-官方主域名无 CF 挑战（首页/列表/详情/搜索裸请求 200）。
-
-结构（2026-10-28 逆向）：
-  列表   /en/new /en/hot /en/recent /en/all?sort=today|week|month
-        /en/censored /en/uncensored /en/uncensored-leaked
-        /en/genres/<slug> /en/actresses/<slug> /en/makers/<slug>
-        /en/series/<slug> /en/tags/<slug>    分页 ?page=N
-  卡片   div.card：<a class="card__cover" href="/en/v/<code>">
-        <img class="card__img" src=封面> <span class="card__dur">时长</span>
-        <h3 class="card__title"><a class="card__link" href="/en/v/<code>">标题</a>
-  详情   /en/v/<code>：h1.watch__title 标题；player(JSON.parse('...')) 分集，
-        每集 url = https://sadie-shop.site/e/<hashId>（嵌入页，无 token）；
-        watch__info 行：Code/Type/Release date/Duration/Cast/Maker/Genres/Tags
-  搜索   /en/search?keyword=<kw>&page=N
-  播放   sadie-shop.site/stream?id=<hashId> → {media:{stream}} → m3u8。
-        m3u8 CDN（*.clearpureheart.site）必须带 Referer=https://sadie-shop.site/，
-        分片文件名伪装 .css/.svg/.webp 等扩展名，实为 MPEG-TS 视频。
-        主 m3u8 返回 qc/v.m3u8（720p），流 token 稳定但可能过期 → playerContent 每次重取。
-"""
+# [123AV¹⁸  更新于:2026-10-31 13:23]
 import json
 import re
 import threading
@@ -54,7 +33,6 @@ TITLE_RE = re.compile(
 EP_RE = re.compile(r"JSON\.parse\('(\[[\s\S]*?\])'\)")
 ROW_RE = re.compile(r'<div class="watch__info-row">\s*<dt>([^<]+)</dt>\s*<dd[^>]*>([\s\S]*?)</dd>\s*</div>')
 
-# 分类表：(显示名, type_id)。type_id 语义见 _cat_path()。
 CATS = [
     ("最新", "new"),
     ("热门", "hot"),
@@ -65,7 +43,6 @@ CATS = [
     ("有码", "censored"),
     ("无码", "uncensored"),
     ("无码泄露", "uncensored-leaked"),
-    # 制作商
     ("[M]S-CUTE", "maker/s-cute"),
     ("[M]FC2", "maker/fc2"),
     ("[M]HEYZO", "maker/heyzo"),
@@ -75,7 +52,6 @@ CATS = [
     ("[M]Pacopacomama", "maker/pacopacomama"),
     ("[M]Tokyo Hot", "maker/tokyo-hot"),
     ("[M]XXX-AV", "maker/xxx-av"),
-    # 标签
     ("[T]SIRO", "tag/siro"),
     ("[T]LUXU", "tag/259luxu"),
     ("[T]200GANA", "tag/200gana"),
@@ -83,7 +59,6 @@ CATS = [
     ("[T]ORECO", "tag/230oreco"),
     ("[T]ARA", "tag/261ara"),
     ("[T]390JAC", "tag/390jac"),
-    # 演员
     ("[A]Yui Hatano", "actress/yui-hatano"),
     ("[A]Shinoda Yu", "actress/shinoda-yu"),
     ("[A]Hibiki Ohtsuki", "actress/hibiki-ohtsuki"),
@@ -96,7 +71,6 @@ CATS = [
     ("[A]Kobayakawa Reiko", "actress/kobayakawa-reiko"),
     ("[A]Waka Misono", "actress/waka-misono"),
     ("[A]Julia", "actress/julia"),
-    # 系列
     ("[S]Acrobatic Sex", "series/sex"),
     ("[S]Amateur AV Interview", "series/av"),
     ("[S]Luxury TV", "series/tv"),
@@ -108,7 +82,6 @@ CATS = [
     ("[S]Kawaii Orgy", "series/kawaii"),
     ("[S]Exclusive No.1 Style", "series/no1-style"),
     ("[S]NTR", "series/ntr"),
-    # 类型（top 30 by 数量）
     ("[G]Solowork", "genre/solowork"),
     ("[G]Creampie", "genre/creampie"),
     ("[G]Big Boobs", "genre/big-tits"),
@@ -217,7 +190,6 @@ class Spider(BaseSpider):
     def categoryContent(self, tid, pg, filter, extend):
         pg = self._int(pg, 1)
         tid = str(tid or "").strip()
-        # 演员/导演点击 → 本站搜索（FongMi 把 BBCode id 原样传回作 tid）
         if tid.startswith("actor/") or tid.startswith("director/"):
             name = unquote(tid.split("/", 1)[1])
             items = self._fetch_search(name, pg)
@@ -271,7 +243,6 @@ class Spider(BaseSpider):
             a = self._clean(mm.group(1))
             if a and a not in actors:
                 actors.append(a)
-        # 分集（每集一个嵌入页 URL，无 token，稳定）
         episodes = self._parse_episodes(html)
         plays = []
         for i, (nm, embed) in enumerate(episodes, 1):
@@ -327,7 +298,6 @@ class Spider(BaseSpider):
     def liveContent(self, url):
         return "[]"
 
-    # ================= 内部工具 =================
     def _cat_path(self, tid, pg, extend=None):
         tid = str(tid or "").strip()
         extend = extend or {}
@@ -372,7 +342,6 @@ class Spider(BaseSpider):
         if referer:
             h["Referer"] = referer
         data = ""
-        # 宿主注入 self.net: 用它
         if getattr(self, "net", None) is not None:
             try:
                 resp = self.net.req(url, {"headers": h, "timeout": 15000})
@@ -380,7 +349,6 @@ class Spider(BaseSpider):
                     data = resp.get("content", "")
             except Exception:
                 data = ""
-        # 回退 urllib (其他播放器无 self.net 时可用)
         if not data:
             try:
                 import urllib.request, ssl
@@ -510,3 +478,4 @@ class Spider(BaseSpider):
             return int(x)
         except Exception:
             return d
+

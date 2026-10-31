@@ -1,19 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-SUPJAV (supjav.pics) — FongMi Type3 Python Spider
-站点: WordPress REST API 型越南 JAV 站
-协议依据: FongMi/TV@fongmi 分支源码 (chaquo/base/spider.py, app.py, bean/*.java)
-
-关键逆向结论 (2026-10-28):
-- 主域名 supjav.com 被 CF managed challenge 整站 403; 真实活动域名是 supjav.pics (WP 站, 免 CF)
-- 全站走 WP REST API: /wp-json/wp/v2/{categories,posts,actor} + 自定义播放端点 /wp-json/fb/v1/player/
-- 播放: /wp-json/fb/v1/player/?id=<post_id> -> {"success":true,"data":"<ArtPlayer HTML>"} 内 url:'...m3u8'
-- 视频是 PNG 图片序列 m3u8 (948 帧, VOD, 无加密, byteimg CDN) —— FongMi 可直接播 (parse=0)
-- 封面为 .avif; FongMi Glide 5.0.9 带 glide-avif-integration, 原生支持
-- 演员是 WP 自定义分类法 (taxonomy=actor), 有 term id; 点击走 posts?actor=<id> (比搜索可靠)
-
-自测: python3 /var/minis/skills/Quss/scripts/test_spider.py "[Aure]SUPJAV.py"
-"""
+# [SupjavWP¹⁸  更新于:2026-10-31 13:23]
 
 import sys
 import json
@@ -64,9 +50,7 @@ STYLE = {"type": "rect", "ratio": 1.33}
 
 _CLS_KEY = "__cls"
 
-# ---- v2.0 迁移: requests.Session -> self.net 兼容适配器 (内联) ----
 class _NetResp(object):
-    """模拟 requests.Response: 基于 self.net.req 或 urllib 返回的 dict。"""
     def __init__(self, resp_dict, url):
         self._d = resp_dict or {}
         self.url = url
@@ -91,7 +75,6 @@ class _NetResp(object):
         return "<_NetResp %s %d>" % (self.url, self.status_code)
 
 class _NetSession(object):
-    """requests.Session 兼容层: 优先宿主注入 self.net, 无则 urllib 直连(标准库, 任何播放器可跑)。"""
     def __init__(self, net, headers=None, default_headers=None):
         self.net = net
         self.headers = headers if headers is not None else {}
@@ -481,3 +464,4 @@ class Spider(BaseSpider):
             return int(x)
         except Exception:
             return d
+

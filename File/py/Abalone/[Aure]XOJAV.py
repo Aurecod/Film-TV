@@ -1,21 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-FongMi Type3 Python Spider — xojav.tv (XOJAV.TV)
-协议依据：FongMi/TV@fongmi 分支源码 (chaquo/base/spider.py, app.py, bean/*.java)
-站点结构逆向 (2026-10-28):
-  - 非苹果CMS自定义站, 无 /api.php。列表/搜索/分类全部走 AJAX get_block 接口
-    <page_url>?mode=async&format=json&function=get_block&block_id=<bid>&sort_by=<s>&from=<N>
-  - 详情 /videos/<ID>: var stream = '...m3u8' 内嵌签名 m3u8 (token 有时效~2h, 每次请求刷新)
-  - 封面 data-src 懒加载 (src=占位符), 必须取 data-src
-  - 播放 m3u8 + 分片 .ts 均无需 Referer (裸连 200)
-  - 无演员页(404) → 演员点击走本站搜索; 标签有真实 /tags/<slug> 页 → 标签点真实标签页
-  - 分类: 一级 tab = 最近更新 + 热门影片 + 9 个分组 (按主题/衣著/身材/交合/玩法/剧情/角色/地点/杂项)
-    分组 tab (type_flag=0, 普通分类) 点击 → 返回该组二级分类卡片 (folder 卡带图片+数量) → 点二级分类进视频列表
-    /categories 页分组: 按主題=14 个 categories(带count), 其余 8 组=tags(图片 /tags/<dir>/<slug>.png)
-  - style: 所有卡片不带 style, 排列由用户 JSON 配置统一控制; 分组 tab/演员/标签点击 payload 都用 type_flag=0
-    (FongMi: type_flag=1 强制 Style.list() 单列; =0 用用户配置多列)
-自测: python3 /var/minis/skills/Quss/scripts/test_spider.py <本文件>
-"""
+# [XOJAV¹⁸  更新于:2026-10-31 13:23]
 import json
 import re
 import time
@@ -58,8 +42,6 @@ NAME = "XOJAV"
 HOST = "https://xojav.tv"
 UA = "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
 
-# 分组定义: group_id -> (tab名, [(slug, name, img, count, type)])
-#   type: category -> /categories/<slug> (按主題), tag -> /tags/<slug> (其余)
 GROUPS = {
     "subject": ("按主题", [
         ("chinese-subtitle", "中文字幕", "https://cdn.18jav.tv/assets/images/categories/chinese-subtitle.jpg", "11144 部影片", "category"),
@@ -205,25 +187,21 @@ GROUPS = {
     ]),
 }
 
-# block_id | sort_by 映射
 BLOCK = {
     "latest":  ("list_videos_latest_videos_list", "release_at", "/latest-updates"),
     "hot":     ("list_videos_common_videos_list", "views",      "/hot"),
-    "category":("list_videos_common_videos_list", "release_at", None),  # /categories/<slug>
-    "tag":     ("list_videos_common_videos_list", "release_at", None),  # /tags/<slug>
+    "category":("list_videos_common_videos_list", "release_at", None),
+    "tag":     ("list_videos_common_videos_list", "release_at", None),
     "search":  ("list_videos_videos_list_search_result", "most_relevant", None),
 }
 
-# 卡片正则 (列表 AJAX / 首页 HTML 通用)
 P_CARD = re.compile(r'<div class="item card-video[^"]*">(.*?)</div>\s*</div>', re.S)
 P_ID = re.compile(r'href="https?://xojav\.tv/videos/([^"/]+)"')
 P_PIC = re.compile(r'data-src="(https://cdn\.18jav\.tv[^"]+)"')
 P_DUR = re.compile(r'card-video__duration">([^<]+)<')
 P_TITLE = re.compile(r'card-video__title">\s*<a[^>]*>\s*([^<]+?)\s*</a>', re.S)
 
-# ---- v2.0 迁移: requests.Session -> self.net 兼容适配器 (内联) ----
 class _NetResp(object):
-    """模拟 requests.Response: 基于 self.net.req 或 urllib 返回的 dict。"""
     def __init__(self, resp_dict, url):
         self._d = resp_dict or {}
         self.url = url
@@ -248,7 +226,6 @@ class _NetResp(object):
         return "<_NetResp %s %d>" % (self.url, self.status_code)
 
 class _NetSession(object):
-    """requests.Session 兼容层: 优先宿主注入 self.net, 无则 urllib 直连(标准库, 任何播放器可跑)。"""
     def __init__(self, net, headers=None, default_headers=None):
         self.net = net
         self.headers = headers if headers is not None else {}
@@ -334,7 +311,6 @@ class _NetSession(object):
 
 class Spider(BaseSpider):
 
-    # ---------- 生命周期 ----------
     def __init__(self):
         super().__init__()
         self.host = HOST
@@ -344,7 +320,6 @@ class Spider(BaseSpider):
         self.options = {}
 
     def init(self, extend=""):
-        # 不发网络请求; 只解析配置
         if isinstance(extend, dict):
             cfg = extend
         elif extend:
@@ -381,9 +356,7 @@ class Spider(BaseSpider):
     def action(self, action):
         return {"msg": ""}
 
-    # ---------- HTTP (urllib, 可靠超时) ----------
     def _fetch(self, url, timeout=12, referer=None):
-        """GET 页面文本; gzip 解压; 失败返回 ''"""
         key = ("fetch", url)
         now = time.time()
         if key in self._cache_time and now - self._cache_time[key] < 20:
@@ -405,7 +378,6 @@ class Spider(BaseSpider):
             return ""
 
     def _ajax(self, page_url, block_id, sort_by, from_pg):
-        """调 get_block AJAX 接口, 返回 (html, pagecount)"""
         if not page_url:
             return "", 0
         sep = "&" if "?" in page_url else "?"
@@ -414,12 +386,10 @@ class Spider(BaseSpider):
         html = self._fetch(url)
         if not html:
             return "", 0
-        # 提取总页数 (pagination 里最大的 from:N)
         pages = re.findall(r'from:(\d+)', html)
         pc = max((int(p) for p in pages), default=0)
         return html, pc
 
-    # ---------- 解析 ----------
     def _parse_cards(self, html):
         items = []
         seen = set()
@@ -434,7 +404,6 @@ class Spider(BaseSpider):
             pic = P_PIC.search(blk)
             dur = P_DUR.search(blk)
             title = P_TITLE.search(blk)
-            # 标题兜底: alt 属性
             if not title:
                 ta = re.search(r'alt="([^"]+)"', blk)
                 title = ta
@@ -457,9 +426,6 @@ class Spider(BaseSpider):
         return items, pc
 
     def _classes(self):
-        # 一级 tab: 最近更新 + 热门影片 + 9 个分组 (点进显示二级分类卡片)
-        # 分组 tab 用 type_flag=0 (普通分类, 非资源夹) → FongMi folder=false
-        #   → 二级分类卡片与二层视频都用用户 JSON 配置的 style (多列), 不被强制单列
         cls = [
             {"type_id": "latest", "type_name": "最近更新"},
             {"type_id": "hot", "type_name": "热门影片"},
@@ -469,7 +435,6 @@ class Spider(BaseSpider):
         return cls
 
     def _group_cards(self, gid):
-        """分组下的二级分类卡片 (资源夹 folder 卡, 带图片+数量, 点击进视频列表)"""
         _, items = GROUPS.get(gid, (None, []))
         cards = []
         for slug, name, img, count, ty in items:
@@ -483,9 +448,6 @@ class Spider(BaseSpider):
         return cards
 
     def _clickable(self, kind, name):
-        """FongMi BBCode: 点击跳 categoryContent(id)
-        type_flag="0" → FongMi folder=false → 点击后页面用用户 JSON style(多列),
-        不强制单列 (type_flag="1" 会强制 Style.list() 单列)"""
         try:
             payload = json.dumps({"id": "%s/%s" % (kind, quote(name, safe="")),
                                   "name": name, "type_flag": "0"}, ensure_ascii=False)
@@ -493,7 +455,6 @@ class Spider(BaseSpider):
             return name
         return "[a=cr:%s/]%s[/a]" % (payload, name)
 
-    # ---------- 首页 ----------
     def homeContent(self, filter):
         classes = self._classes()
         items, pc = self._fetch_videos(self.host + "/latest-updates",
@@ -505,7 +466,6 @@ class Spider(BaseSpider):
                                        BLOCK["latest"][0], BLOCK["latest"][1], 1)
         return {"list": items, "pagecount": pc}
 
-    # ---------- 分类 ----------
     def categoryContent(self, tid, pg, filter, extend):
         try:
             pg_i = int(pg)
@@ -513,17 +473,14 @@ class Spider(BaseSpider):
             pg_i = 1
         tid = (tid or "").strip()
 
-        # 演员点击 → 本站搜索 (无演员页)
         if tid.startswith("actor/"):
             name = unquote(tid.split("/", 1)[1])
             return self._do_search(name, pg_i)
 
-        # 标签点击 (详情页) → 真实标签页
         if tid.startswith("tag/"):
             slug = tid.split("/", 1)[1]
             return self._cat_videos(slug, pg_i, BLOCK["tag"], tag=True)
 
-        # 二级分类 folder 卡点击 → 视频列表 (folder/cat/... 或 folder/tag/...)
         if tid.startswith("folder/"):
             parts = tid.split("/", 2)
             if len(parts) == 3 and parts[2]:
@@ -533,7 +490,6 @@ class Spider(BaseSpider):
                 return self._cat_videos(slug, pg_i, BLOCK["category"])
             return {"class": [], "list": [], "pagecount": 1}
 
-        # 分组 tab (按主题/衣著/.../杂项) → 返回该组二级分类卡片
         if tid in GROUPS:
             return {"class": [], "list": self._group_cards(tid), "pagecount": 1}
 
@@ -556,7 +512,6 @@ class Spider(BaseSpider):
         items, pc = self._fetch_videos(page_url, block_id, sort_by, pg)
         return {"class": [], "list": items, "pagecount": pc}
 
-    # ---------- 搜索 ----------
     def searchContent(self, key, quick, pg="1"):
         try:
             pg_i = int(pg)
@@ -570,7 +525,6 @@ class Spider(BaseSpider):
         items, pc = self._fetch_videos(page_url, block_id, sort_by, pg)
         return {"class": [], "list": items, "pagecount": pc}
 
-    # ---------- 详情 ----------
 
     def detailContent(self, ids):
         if not ids:
@@ -588,7 +542,6 @@ class Spider(BaseSpider):
         if not html:
             return {"list": []}
 
-        # 标题
         title = ""
         m = re.search(r'<meta property="og:title" content="([^"]*)"', html)
         if m:
@@ -599,18 +552,15 @@ class Spider(BaseSpider):
                 title = m.group(1).strip()
         title = title or vid
 
-        # 封面
         pic = ""
         m = re.search(r'<meta property="og:image" content="([^"]*)"', html)
         if m:
             pic = m.group(1).strip()
 
-        # 演员 (video:actor) → 可点击搜索
         actors = re.findall(r'<meta property="video:actor" content="([^"]*)"', html)
         actors = [a for a in actors if a.strip()]
         vod_actor = "、".join(self._clickable("actor", a) for a in actors)
 
-        # 标签 (真实 /tags/<slug> 页) → 可点击
         tags = []
         for m in re.finditer(r'href="https?://xojav\.tv/tags/([^"]+)"[^>]*>\s*([^<]+?)\s*<', html):
             slug, nm = m.group(1), m.group(2).strip()
@@ -618,7 +568,6 @@ class Spider(BaseSpider):
                 tags.append((slug, nm))
         vod_tag = ""
         if tags:
-            # id 用 slug (categoryContent 处理 tag/<slug>), 显示用名称
             def _tag_bb(slug, nm):
                 try:
                     payload = json.dumps({"id": "tag/%s" % quote(slug, safe=""),
@@ -628,25 +577,21 @@ class Spider(BaseSpider):
                 return "[a=cr:%s/]%s[/a]" % (payload, nm)
             vod_tag = "、".join(_tag_bb(slug, nm) for slug, nm in tags)
 
-        # 分类 (当前视频所属)
         cats = re.findall(r'href="https?://xojav\.tv/categories/([^"]+)"[^>]*>\s*([^<]+?)\s*<', html)
         type_name = ""
         if cats:
             type_name = cats[0][1].strip()
 
-        # 观看数 → vod_remarks (主视频: <span>N 觀看</span>, 相关视频是嵌套 span 不匹配)
         remarks = ""
         m = re.search(r'<span>([\d,]+)\s*觀看</span>', html)
         if m:
             remarks = m.group(1).strip() + " 觀看"
 
-        # 播放: 签名 m3u8 (var stream = '...')
         stream = ""
         m = re.search(r"var stream = '([^']+)'", html)
         if m:
             stream = m.group(1).strip()
 
-        # 描述
         desc = title
         if actors:
             desc += "\n演員: " + ", ".join(actors)
@@ -667,10 +612,8 @@ class Spider(BaseSpider):
         }
         return {"list": [vod]}
 
-    # ---------- 播放 ----------
     def playerContent(self, flag, id, vipFlags):
         url = (id or "").strip()
-        # 提取 URL 内时间戳 (有效期判据)
         m = re.search(r"/hls/[^/]+/(\d+)/", url)
         if m:
             try:
@@ -684,7 +627,6 @@ class Spider(BaseSpider):
         return {"parse": 0, "url": url, "header": {}}
 
     def _refresh_stream(self, old_url):
-        """签名 m3u8 时效不足 → 重取详情页拿新鲜流"""
         m = re.search(r"/storage/([^/]+)/", old_url)
         if not m:
             return ""
@@ -694,3 +636,4 @@ class Spider(BaseSpider):
             return ""
         m = re.search(r"var stream = '([^']+)'", html)
         return m.group(1).strip() if m else ""
+

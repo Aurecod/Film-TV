@@ -1,4 +1,5 @@
-# coding=utf-8
+# -*- coding: utf-8 -*-
+# [fcjav¹⁸  更新于:2026-10-31 13:23]
 import sys
 import re
 import json
@@ -37,9 +38,7 @@ except Exception:
         def getDependence(self):
                 return []
 
-# ---- v2.0 迁移: requests.Session -> self.net 兼容适配器 (内联) ----
 class _NetResp(object):
-    """模拟 requests.Response: 基于 self.net.req 或 urllib 返回的 dict。"""
     def __init__(self, resp_dict, url):
         self._d = resp_dict or {}
         self.url = url
@@ -64,7 +63,6 @@ class _NetResp(object):
         return "<_NetResp %s %d>" % (self.url, self.status_code)
 
 class _NetSession(object):
-    """requests.Session 兼容层: 优先宿主注入 self.net, 无则 urllib 直连(标准库, 任何播放器可跑)。"""
     def __init__(self, net, headers=None, default_headers=None):
         self.net = net
         self.headers = headers if headers is not None else {}
@@ -153,7 +151,6 @@ class Spider(BaseSpider):
         super().__init__()
         self.extend = ""
         self.host = "https://fcjav.com"
-        # 主分类结构：Movies, Genres, Actors, Studios, Labels, Directors (中文)
         self.classes = [
             {"type_id": "movies", "type_name": "电影"},
             {"type_id": "genres", "type_name": "分类"},
@@ -162,7 +159,6 @@ class Spider(BaseSpider):
             {"type_id": "labels", "type_name": "厂牌"},
             {"type_id": "directors", "type_name": "导演"},
         ]
-        # 筛选器：每个主分类下的子分类 (中文)
         self.filters = {
             "movies": [
                 {"key": "genre", "name": "类型", "init": "all", "value": [

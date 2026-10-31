@@ -1,4 +1,5 @@
-
+# -*- coding: utf-8 -*-
+# [LissAV¹⁸  更新于:2026-10-31 13:23]
 import sys
 import json
 import re
@@ -46,9 +47,7 @@ STYLE = {"type": "rect", "ratio": 1.33}
 
 LOCALE_PREFIX = "/asian/zh-CN"
 
-# ---- v2.0 迁移: requests.Session -> self.net 兼容适配器 (内联) ----
 class _NetResp(object):
-    """模拟 requests.Response: 基于 self.net.req 或 urllib 返回的 dict。"""
     def __init__(self, resp_dict, url):
         self._d = resp_dict or {}
         self.url = url
@@ -73,7 +72,6 @@ class _NetResp(object):
         return "<_NetResp %s %d>" % (self.url, self.status_code)
 
 class _NetSession(object):
-    """requests.Session 兼容层: 优先宿主注入 self.net, 无则 urllib 直连(标准库, 任何播放器可跑)。"""
     def __init__(self, net, headers=None, default_headers=None):
         self.net = net
         self.headers = headers if headers is not None else {}
@@ -603,3 +601,4 @@ class Spider(BaseSpider):
         if not isinstance(value, dict):
             return {}
         return {str(k): str(v) for k, v in value.items() if v is not None}
+

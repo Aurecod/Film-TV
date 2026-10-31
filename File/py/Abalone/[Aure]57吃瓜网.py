@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-57吃瓜网 - FongMi Type3 Python Spider (Quss 标准)
-双域名: 57duanju.net (AI短剧/热门/全部/搜索) + 57cg4.com (吃瓜分类)
-自测: python3 /var/minis/skills/Quss/scripts/test_spider.py /var/minis/workspace/57_quss.py
-"""
+# [57吃瓜网¹⁸  更新于:2026-10-31 13:23]
 import sys
 import json
 import re
@@ -83,7 +79,6 @@ class Spider(BaseSpider):
     def liveContent(self, url):
         return "[]"
 
-    # ================= 首页 =================
     def homeContent(self, filter):
         classes = self._classes()
         result = {"class": classes}
@@ -95,7 +90,6 @@ class Spider(BaseSpider):
     def homeVideoContent(self):
         return {"list": []}
 
-    # ================= 分类 =================
     def categoryContent(self, tid, pg, filter, extend):
         pg = self._int(pg, 1)
         extend = extend or {}
@@ -120,7 +114,6 @@ class Spider(BaseSpider):
             "total": 999999,
         }
 
-    # ================= 详情 =================
     def detailContent(self, ids):
         if not ids:
             return {"list": []}
@@ -168,7 +161,6 @@ class Spider(BaseSpider):
         }
         return {"list": [vod]}
 
-    # ================= 搜索 =================
     def searchContent(self, key, quick, pg="1"):
         pg = self._int(pg, 1)
         items = self._fetch_search(str(key or "").strip(), pg)
@@ -180,7 +172,6 @@ class Spider(BaseSpider):
             "total": 999999,
         }
 
-    # ================= 播放 =================
     def playerContent(self, flag, id, vipFlags):
         url = self._fetch_play(str(id or ""))
         if not url:
@@ -193,10 +184,8 @@ class Spider(BaseSpider):
         }
         return result
 
-    # ================= 业务方法实现 =================
 
     def _classes(self):
-        """硬编码分类：站点无分类 API，直接用导航栏分类"""
         return [
             {"type_id": "aichengduanju", "type_name": "成人AI短剧", "style": STYLE},
             {"type_id": "hot", "type_name": "热门精选", "style": STYLE},
@@ -219,11 +208,9 @@ class Spider(BaseSpider):
         return {c["type_id"]: [sort_filter] for c in classes}
 
     def _home_items(self):
-        """首页推荐：取成人AI短剧第一页前 12 条"""
         items = self._fetch_list("aichengduanju", 1, {})
         return items[:12]
 
-    # ================= 核心解析 =================
 
     def _extract_json_ld(self, html):
         scripts = re.findall(r'<script\s+type=["\']application/ld\+json["\']>([\s\S]*?)</script>', html)
@@ -236,17 +223,16 @@ class Spider(BaseSpider):
         return results
 
     def _pick_host_for_tid(self, tid):
-        """根据分类选择域名"""
         if tid in ("aichengduanju", "hot", "all", "search"):
-            return self.hosts[0]  # 57duanju.net
-        return self.hosts[1]  # 57cg4.com
+            return self.hosts[0]
+        return self.hosts[1]
 
     def _build_list_url(self, tid, pg, sort_val=""):
         host = self._pick_host_for_tid(tid)
         if tid == "all":
             url = f"{host}/page/{pg}/" if pg > 1 else f"{host}/"
         elif tid == "search":
-            return ""  # 搜索单独处理
+            return ""
         else:
             url = f"{host}/{tid}/{pg}/" if pg > 1 else f"{host}/{tid}/"
         if sort_val:
@@ -255,12 +241,10 @@ class Spider(BaseSpider):
         return url
 
     def _fetch_html(self, url, referer=""):
-        """GET 请求，返回 HTML 文本。优先宿主 self.net.req，无 net 或失败回退 urllib。"""
         if not url:
             return ""
         headers = dict(self.headers)
         headers["Referer"] = referer or "https://57cg4.com/"
-        # 宿主注入 self.net: 用它
         if getattr(self, "net", None) is not None:
             try:
                 resp = self.net.req(url, {"headers": headers, "timeout": 15000})
@@ -268,7 +252,6 @@ class Spider(BaseSpider):
                     return resp.get("content", "")
             except Exception:
                 pass
-        # 回退 urllib (其他播放器无 self.net 时可用)
         try:
             import urllib.request, ssl
             ctx = ssl._create_unverified_context()
@@ -287,7 +270,6 @@ class Spider(BaseSpider):
             return ""
 
     def _parse_list_from_jsonld(self, html):
-        """从 ItemList JSON-LD 解析列表项"""
         vod_list = []
         seen = set()
         for data in self._extract_json_ld(html):
@@ -311,7 +293,6 @@ class Spider(BaseSpider):
         return vod_list
 
     def _parse_list_from_html(self, html):
-        """兜底 HTML 正则解析"""
         vod_list = []
         seen = set()
         for m in re.finditer(r'<a[^>]+href=["\'](?:https?://[^/]+)?/events/(\d+)/?["\'][^>]*>([\s\S]*?)</a>', html):
@@ -348,12 +329,10 @@ class Spider(BaseSpider):
         if pg > 1:
             url += f"&page={pg}"
         html = self._fetch_html(url)
-        # 搜索页只有 HTML 结构，无 JSON-LD ItemList
         items = self._parse_list_from_html(html)
         return items
 
     def _fetch_detail(self, vid):
-        # 依次尝试三个域名
         for host in self.hosts:
             html = self._fetch_html(f"{host}/events/{vid}/")
             if html and len(html) >= 500:
@@ -372,13 +351,11 @@ class Spider(BaseSpider):
         director = ""
         actors = []
 
-        # 1. JSON-LD 解析
         for data in self._extract_json_ld(html):
             if not isinstance(data, dict):
                 continue
             dtype = data.get("@type", "")
 
-            # VideoObject 列表
             videos = data.get("video", [])
             if not videos and dtype == "VideoObject":
                 videos = [data]
@@ -388,7 +365,6 @@ class Spider(BaseSpider):
             for v in videos:
                 if not isinstance(v, dict):
                     continue
-                # 优先：HLS (data-hls-src)
                 stream_url = ""
                 m_hls = re.search(r'data-hls-src=["\']([^"\']+\.m3u8[^"\']*)["\']', html)
                 if m_hls:
@@ -403,22 +379,18 @@ class Spider(BaseSpider):
                 if not desc:
                     desc = v.get("description", "") or ""
 
-            # 标题
             if dtype in ("NewsArticle", "Article", "VideoObject"):
                 h = data.get("headline") or data.get("name")
                 if h:
                     title = h
-            # 分类
             if "articleSection" in data:
                 category = data.get("articleSection", "")
-            # 作者/导演
             author = data.get("author", {})
             if isinstance(author, dict):
                 director = author.get("name", "")
             elif isinstance(author, list) and author:
                 director = author[0].get("name", "") if isinstance(author[0], dict) else ""
 
-        # 2. 兜底：<video> 标签 HLS
         if not episodes:
             for attr in re.findall(r'<video([^>]+)>', html):
                 m_hls = re.search(r'data-hls-src=["\']([^"\']+)["\']', attr)
@@ -432,7 +404,6 @@ class Spider(BaseSpider):
                     ep_name = self._safe_label(f"片段 {len(episodes) + 1:02d}")
                     episodes.append({"name": ep_name, "url": stream_url})
 
-        # 3. 兜底：裸链接
         if not episodes:
             seen = set()
             for m_url in re.findall(r'["\'](https?://[^"\'\s]+\.(?:m3u8|mp4)[^"\'\s]*)["\']', html):
@@ -442,19 +413,16 @@ class Spider(BaseSpider):
                 ep_name = self._safe_label(f"播放 {len(episodes) + 1:02d}")
                 episodes.append({"name": ep_name, "url": m_url})
 
-        # 封面兜底
         if not cover:
             m = re.search(r'<meta property=["\']og:image["\'] content=["\']([^"\']+)["\']', html)
             if m:
                 cover = m.group(1).strip()
 
-        # 描述兜底
         if not desc:
             m = re.search(r'<meta[^>]+name=["\']description["\'][^>]+content=["\']([^"\']*)["\']', html)
             if m:
                 desc = m.group(1).strip()
 
-        # 标签/演员（从 tags 提取）
         for m in re.finditer(r'<a[^>]+href=["\']https?://[^/]+\.com/tags/([^/]+)/["\']', html):
             tag = unquote(m.group(1))
             if tag and tag not in actors:
@@ -474,10 +442,8 @@ class Spider(BaseSpider):
         }
 
     def _fetch_play(self, play_id):
-        """playerContent 直接传直链，这里透传"""
         return play_id
 
-    # ================= 工具方法 =================
 
     def _safe_label(self, text):
         return str(text or "").replace("$", "＄").replace("#", "＃").strip()
